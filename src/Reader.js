@@ -93,6 +93,7 @@ const ReaderContent = observer((props) => {
 
 const WordIcon = observer((props) => {
   const { word, index, style, store, doResponse } = props;
+  //console.log('word', word, index, store.responseIndex);
   const aStyle = {
     display: 'inline-block',
     background: 'solid',
@@ -110,11 +111,12 @@ const WordIcon = observer((props) => {
     fontSize,
     marginTop: -fontSize/4
   };
+  const isFocused = store.responseIndex===index;
   return (
     <button className="iconButton"
       onClick={() => doResponse(word)}
       style={aStyle}
-      ref={(input) => input && store.responseIndex===index && input.focus()} 
+      ref={(input) => input && isFocused && input.focus()} 
       onFocus={(e) => store.setResponseIndex(index)} >
       <figure>
       <img src={"/images/"+word+".png"} alt={word} style={iStyle} />
@@ -269,51 +271,31 @@ const Reader = observer((props) => {
   }
   const sc = store.screen;
   const rs = Math.min(sc.width, sc.height) * (0.1 + 0.25*store.responseSize/100);
-  var cbox = { width: 0, height: 0, left: 0, top: 0 };
+  var cbox = {
+    width: sc.width,
+    height: containerHeight,
+    left: 0,
+    top: 0
+  };
   var rboxes = []; // boxes for responses
-  switch(store.layout) {
-    case 'lr':
-      cbox.width = sc.width-2*rs;
-      cbox.height = containerHeight;
-      cbox.left = rs;
-      rboxes = [
-        { top: 0, left: 0, height: containerHeight, width: rs, align: 'v' },
-        { top: 0, left: sc.width-rs, height: containerHeight, width: rs, align: 'v' }
-      ];
-      break;
-    case 'l':
-      cbox.width = sc.width-rs;
-      cbox.height = containerHeight;
-      cbox.left = rs;
-      rboxes = [
-        { top: 0, left: 0, height: containerHeight, width: rs, align: 'v' },
-      ];
-      break;
-    case 'r':
-      cbox.width = sc.width-rs;
-      cbox.height = containerHeight;
-      rboxes = [
-        { top: 0, left: sc.width-rs, height: containerHeight, width: rs, align: 'v' }
-      ];
-      break;
-    case 't':
-      cbox.width = sc.width;
-      cbox.height = containerHeight-rs;
-      cbox.top = rs;
-      rboxes = [
-        { top: 0, left: 0, height: rs, width: sc.width, align: 'h' }
-      ];
-      break;
-    case 'b':
-      cbox.width = sc.width;
-      cbox.height = containerHeight-rs;
-      rboxes = [
-        { top: containerHeight-rs, left: 0, height: rs, width: sc.width, align: 'h' }
-      ];
-      break;
-    default:
-      cbox.width = sc.width;
-      cbox.height = containerHeight;
+  if (store.layout.indexOf('l') > -1) {
+    cbox.width -= rs;
+    cbox.left = rs;
+    rboxes.push({ top: 0, left: 0, height: cbox.height, width: rs, align: 'v' });
+  }
+  if (store.layout.indexOf('r') > -1) {
+    cbox.width -= rs;
+    rboxes.push({ top: 0, left: sc.width-rs, height: cbox.height, width: rs, align: 'v'});
+  }
+  if (store.layout.indexOf('t') > -1) {
+    cbox.height -= rs;
+    cbox.top = rs;
+    rboxes.push({ top: 0, left: cbox.left, height: rs, width: cbox.width, align: 'h'});
+  }
+  if (store.layout.indexOf('b') > -1) {
+    cbox.height -= rs;
+    rboxes.push({ top: containerHeight-rs, left: cbox.left, height: rs, width: cbox.width,
+                  align: 'h'});
   }
   const containerStyle = {
     width: store.screen.width,

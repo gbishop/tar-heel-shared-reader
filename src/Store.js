@@ -76,7 +76,7 @@ class Store {
       nreadings: computed(() => this.book.readings.length),
 
       // where the responses are on the screen
-      layout: 'l',
+      layout: 'ltb',
       // set the layout
       setLayout: action((l) => this.layout = l),
 
