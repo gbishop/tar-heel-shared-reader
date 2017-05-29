@@ -48,7 +48,7 @@ const ReaderContent = observer((props) => {
           <button className="next-link" onClick={store.nextPage}>
             <img src="/images/NextArrow.png" alt="next"/>Next
           </button>
-          <button className="back-link" onClick={store.previousPage}>
+          <button className="back-link" onClick={store.backPage}>
             <img src="/images/BackArrow.png" alt="back"/>Back
           </button>
         </div>
