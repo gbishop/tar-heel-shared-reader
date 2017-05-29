@@ -48,6 +48,16 @@ div.vocabulary {
   background-color: #99badd;
 }
 
+.iconButton figure {
+  margin: 0;
+  padding: 0;
+}
+
+.iconButton figure figcaption {
+  margin: 0;
+  padding: 0;
+}
+
 .next-link,.back-link {
   position: absolute;
   bottom: 0.5em;

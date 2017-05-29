@@ -5,7 +5,8 @@ import Modal from 'react-modal';
 
 // Reader component
 const ReaderContent = observer((props) => {
-  const {book, pageno, width, height, top, left, store} = props;
+  const {book, box, pageno, store} = props;
+  const {width, height, top, left} = box; 
   const fontSize = width/height < 4/3 ? width / 36 : height / 36;
   const pageStyle = {
     width, height, top, left, fontSize,
@@ -91,8 +92,7 @@ const ReaderContent = observer((props) => {
 })
 
 const WordIcon = observer((props) => {
-  const { word, index, iconSize, onClick, style, isFocused,
-          setResponseIndex } = props;
+  const { word, index, style, store, doResponse } = props;
   const aStyle = {
     display: 'inline-block',
     background: 'solid',
@@ -100,88 +100,64 @@ const WordIcon = observer((props) => {
     padding: 0,
     ...style
   };
+  const maxSize = Math.min(style.width, style.height);
+  const fontSize = maxSize / 5;
+  const iconSize = maxSize - fontSize - 10;
   const iStyle = {
-    width: iconSize-10
+    width: iconSize
+  };
+  const cStyle = {
+    fontSize,
+    marginTop: -fontSize/4
   };
   return (
-    <button className="iconButton" onClick={onClick} style={aStyle}
-      ref={(input) => isFocused && input && input.focus()} 
-      onFocus={(e) => setResponseIndex(index)} >
+    <button className="iconButton"
+      onClick={() => doResponse(word)}
+      style={aStyle}
+      ref={(input) => input && store.responseIndex===index && input.focus()} 
+      onFocus={(e) => store.setResponseIndex(index)} >
+      <figure>
       <img src={"/images/"+word+".png"} alt={word} style={iStyle} />
-      <span style={{fontSize: iconSize/5}}>{word}</span>
+      <figcaption style={cStyle}>{word}</figcaption>
+      </figure>
     </button>
   )
 })
 
 const Words = observer((props) => {
-  const {layout, size, vocabulary, width, height, responseIndex,
-         onClick, setResponseIndex } = props;
-  const nwords = vocabulary.length;
-  function stepStyle(style, vary, start, end, N) {
-    let styles = [];
-    for(var i=0; i<N; i++) {
-      let s = {...style};
-      s[vary] = start + end * i / N;
-      styles.push(s);
-    }
-    return styles;
-  }
+  const {store, boxes, responses, doResponse } = props;
+  var words = responses;
+  var index = 0;
 
-  let styles = [];
-  if (layout === 'none') {
-    return null;
-  }
-  if (layout === 'lr') {
-    let half = Math.ceil(nwords / 2), ohalf = nwords - half;
-    let style = {
-      position: 'absolute',
-      width: size
+  return (
+    <div>
+    { boxes.map((box, i) => {
+    const nchunk = Math.floor(words.length / (boxes.length - i));
+    const chunk = words.slice(0, nchunk);
+    console.log('chunk', chunk);
+    words = words.slice(nchunk);
+    const { pax, sax } = {'v': { pax: 'height', sax: 'width' },
+                          'h': { pax: 'width', sax: 'height' }}[box.align];
+    var bstyle = {};
+    bstyle[pax] = box[pax] / nchunk;
+    bstyle[sax] = box[sax];
+    const dstyle = { top: box.top, left: box.left, width: box.width, height: box.height,
+      position: 'absolute'};
+    return (
+      <div key={i} style={dstyle}>
+        {
+          chunk.map((w, j) => {
+            return (
+              <WordIcon key={w} word={w} index={index++} style={bstyle} store={store}
+                doResponse={doResponse} />
+            )
+          })
+        }
+      </div>
+    )
+  })
     }
-    let left = stepStyle({...style, height:height/half, left:0},
-                         'top', 0, height, half);
-
-    let right = stepStyle({...style, height:height/ohalf, right:0},
-                          'top', 0, height, ohalf);
-    styles = left.concat(right);
-  } else if (layout === 'l') {
-    let style = {
-      position: 'absolute',
-      width: size,
-      height: height/nwords,
-      left:0
-    };
-    styles = stepStyle(style, 'top', 0, height, nwords);
-  } else if (layout === 'r') {
-    let style = {
-      position: 'absolute',
-      width: size,
-      height: height/nwords,
-      right:0
-    };
-    styles = stepStyle(style, 'top', 0, height, nwords);
-  } else if (layout === 't') {
-    let style = {
-      position: 'absolute',
-      height: size,
-      width: width/nwords,
-      top: 0
-    };
-    styles = stepStyle(style, 'left', 0, width, nwords);
-  } else if (layout === 'b') {
-    let style = {
-      position: 'absolute',
-      height: size,
-      width: width/nwords,
-      bottom: 0
-    };
-    styles = stepStyle(style, 'left', 0, width, nwords);
-  }
-    
-  const icons = vocabulary.map((word, i) => (
-    <WordIcon key={i} word={word} index={i} iconSize={size} style={styles[i]} 
-      onClick={e => onClick(word)} isFocused={i === responseIndex} setResponseIndex={setResponseIndex} />
-  ));
-  return (<div>{icons}</div>);
+  </div>)
 })
 
 const NRKeyHandler = observer(class NRKeyHandler extends Component {
@@ -225,7 +201,6 @@ const Controls = observer((props) => {
       backgroundColor   : 'rgba(255, 255, 255, 0.0)'
     }
   };
-  const maxSize = Math.min(store.screen.width, store.screen.height) / 4;
 
   return (
     <div>
@@ -244,7 +219,7 @@ const Controls = observer((props) => {
           <h1>Reading controls</h1>
           <label>Layout:&nbsp;
             <select id="layout" value={store.layout}
-              onChange={e => store.layout = e.target.value}>
+              onChange={e => store.setLayout(e.target.value)}>
               <option value="none">None</option>
               <option value="l">Left</option>
               <option value="r">Right</option>
@@ -254,7 +229,7 @@ const Controls = observer((props) => {
             </select>
           </label>
           <label>Size:&nbsp;
-            <input type="range" min="50" max={maxSize} value={store.iconSize}
+            <input type="range" min="0" max="100" value={store.iconSize}
               onChange={e => store.setResponseSize(e.target.value)} />
           </label>
           <label>Page Navigation:&nbsp;
@@ -292,30 +267,53 @@ const Reader = observer((props) => {
     width: '100%',
     height: '100%'
   }
-  const responseSize = store.responseSize;
-  var width, height, left=0, top=0;;
-  var layout = store.layout;
-  if (layout === 'lr') {
-    width = store.screen.width-2*responseSize;
-    height = containerHeight;
-    left = responseSize;
-  } else if (layout === 'l') {
-    width = store.screen.width-responseSize;
-    height = containerHeight;
-    left = responseSize;
-  } else if (layout === 'r') {
-    width = store.screen.width-responseSize;
-    height = containerHeight;
-  } else if (layout === 't') {
-    height = containerHeight-responseSize;
-    width = store.screen.width;
-    top = responseSize;
-  } else if (layout === 'b') {
-    height = containerHeight-responseSize;
-    width = store.screen.width;
-  } else {
-    height = containerHeight;
-    width = store.screen.width;
+  const sc = store.screen;
+  const rs = Math.min(sc.width, sc.height) * (0.1 + 0.25*store.responseSize/100);
+  var cbox = { width: 0, height: 0, left: 0, top: 0 };
+  var rboxes = []; // boxes for responses
+  switch(store.layout) {
+    case 'lr':
+      cbox.width = sc.width-2*rs;
+      cbox.height = containerHeight;
+      cbox.left = rs;
+      rboxes = [
+        { top: 0, left: 0, height: containerHeight, width: rs, align: 'v' },
+        { top: 0, left: sc.width-rs, height: containerHeight, width: rs, align: 'v' }
+      ];
+      break;
+    case 'l':
+      cbox.width = sc.width-rs;
+      cbox.height = containerHeight;
+      cbox.left = rs;
+      rboxes = [
+        { top: 0, left: 0, height: containerHeight, width: rs, align: 'v' },
+      ];
+      break;
+    case 'r':
+      cbox.width = sc.width-rs;
+      cbox.height = containerHeight;
+      rboxes = [
+        { top: 0, left: sc.width-rs, height: containerHeight, width: rs, align: 'v' }
+      ];
+      break;
+    case 't':
+      cbox.width = sc.width;
+      cbox.height = containerHeight-rs;
+      cbox.top = rs;
+      rboxes = [
+        { top: 0, left: 0, height: rs, width: sc.width, align: 'h' }
+      ];
+      break;
+    case 'b':
+      cbox.width = sc.width;
+      cbox.height = containerHeight-rs;
+      rboxes = [
+        { top: containerHeight-rs, left: 0, height: rs, width: sc.width, align: 'h' }
+      ];
+      break;
+    default:
+      cbox.width = sc.width;
+      cbox.height = containerHeight;
   }
   const containerStyle = {
     width: store.screen.width,
@@ -325,10 +323,6 @@ const Reader = observer((props) => {
     top: commentHeight
   };
   const sayWord = (word) => {
-    if (word) {
-    } else if (store.responseIndex >= 0) {
-      word = book.vocabulary[store.responseIndex];
-    }
     var msg = new SpeechSynthesisUtterance(word);
     msg.lang = 'en-US';
 
@@ -338,14 +332,8 @@ const Reader = observer((props) => {
     <div style={pageStyle}>
       <div style={commentStyle}>{comment}</div>
       <div style={containerStyle}>
-      <ReaderContent width={width}
-        height={height}
-        top={top} left={left} book={book} pageno={store.pageno} 
-        store={store} />
-      <Words vocabulary={responses} layout={store.layout}
-        size={store.responseSize} width={store.screen.width}
-        height={containerHeight} onClick={sayWord}
-        responseIndex={store.responseIndex} setResponseIndex={store.setResponseIndex} />
+      <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store} />
+      <Words boxes={rboxes} responses={responses} store={store} doResponse={sayWord} />
       <Controls store={store} npages={store.npages} />
       </div>
     </div>
