@@ -93,7 +93,6 @@ const ReaderContent = observer((props) => {
 
 const WordIcon = observer((props) => {
   const { word, index, style, store, doResponse } = props;
-  //console.log('word', word, index, store.responseIndex);
   const aStyle = {
     display: 'inline-block',
     background: 'solid',
@@ -136,7 +135,6 @@ const Words = observer((props) => {
     { boxes.map((box, i) => {
     const nchunk = Math.floor(words.length / (boxes.length - i));
     const chunk = words.slice(0, nchunk);
-    console.log('chunk', chunk);
     words = words.slice(nchunk);
     const { pax, sax } = {'v': { pax: 'height', sax: 'width' },
                           'h': { pax: 'width', sax: 'height' }}[box.align];
@@ -186,7 +184,28 @@ const NRKeyHandler = observer(class NRKeyHandler extends Component {
     ));
     return (<div>{handlers}</div>)
   }
-})
+});
+
+function capitalize(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+const Layout = observer((props) => {
+  const store = props.store;
+  const sides = ['left', 'right', 'top', 'bottom'];
+  const onCheck = (e) => store.setLayout(e.target.name, e.target.checked);
+  return (
+    <fieldset>
+      <legend>Layout</legend>
+      {
+        sides.map(side => (
+          <label key={side}>{capitalize(side)}:
+            <input name={side} type="checkbox" checked={store.layout[side]}
+              onChange={onCheck} />
+          </label>))
+      }
+    </fieldset>)
+});
 
 const Controls = observer((props) => {
   const store = props.store;
@@ -219,17 +238,7 @@ const Controls = observer((props) => {
         style={customStyles} >
         <div className="controls">
           <h1>Reading controls</h1>
-          <label>Layout:&nbsp;
-            <select id="layout" value={store.layout}
-              onChange={e => store.setLayout(e.target.value)}>
-              <option value="none">None</option>
-              <option value="l">Left</option>
-              <option value="r">Right</option>
-              <option value="lr">Both</option>
-              <option value="t">Top</option>
-              <option value="b">Bottom</option>
-            </select>
-          </label>
+          <Layout store={store} />
           <label>Size:&nbsp;
             <input type="range" min="0" max="100" value={store.iconSize}
               onChange={e => store.setResponseSize(e.target.value)} />
@@ -278,21 +287,21 @@ const Reader = observer((props) => {
     top: 0
   };
   var rboxes = []; // boxes for responses
-  if (store.layout.indexOf('l') > -1) {
+  if (store.layout.left) {
     cbox.width -= rs;
     cbox.left = rs;
     rboxes.push({ top: 0, left: 0, height: cbox.height, width: rs, align: 'v' });
   }
-  if (store.layout.indexOf('r') > -1) {
+  if (store.layout.right) {
     cbox.width -= rs;
     rboxes.push({ top: 0, left: sc.width-rs, height: cbox.height, width: rs, align: 'v'});
   }
-  if (store.layout.indexOf('t') > -1) {
+  if (store.layout.top) {
     cbox.height -= rs;
     cbox.top = rs;
     rboxes.push({ top: 0, left: cbox.left, height: rs, width: cbox.width, align: 'h'});
   }
-  if (store.layout.indexOf('b') > -1) {
+  if (store.layout.bottom) {
     cbox.height -= rs;
     rboxes.push({ top: containerHeight-rs, left: cbox.left, height: rs, width: cbox.width,
                   align: 'h'});

@@ -76,9 +76,9 @@ class Store {
       nreadings: computed(() => this.book.readings.length),
 
       // where the responses are on the screen
-      layout: 'ltb',
+      layout: { left: true, right: true, top: false, bottom: false },
       // set the layout
-      setLayout: action((l) => this.layout = l),
+      setLayout: action((side, value) => this.layout[side] = value),
 
       // size of each response button in secondary direction % of screen size
       responseSize: 50,
