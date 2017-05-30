@@ -81,7 +81,7 @@ class Store {
       setLayout: action((side, value) => this.layout[side] = value),
 
       // size of each response button in secondary direction % of screen size
-      responseSize: 50,
+      responseSize: 30,
       // set response button size
       setResponseSize: action((i) => this.responseSize = +i),
 

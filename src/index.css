@@ -84,6 +84,11 @@ div.vocabulary {
   padding: 0.5em;
 }
 
+fieldset label {
+  display: inline-block !important;
+  padding: 0.1em !important;
+}
+
 .book-page .choices a {
   font-size: 1.5em;
   width: 12em;

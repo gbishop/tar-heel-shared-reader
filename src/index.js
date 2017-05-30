@@ -36,6 +36,7 @@ function startRouter(store) {
 }
 const store = new Store();
 startRouter(store);
+window.addEventListener("resize", store.resize);
 
 ReactDOM.render(
   <App store={store} />, 

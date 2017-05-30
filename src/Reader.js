@@ -240,7 +240,7 @@ const Controls = observer((props) => {
           <h1>Reading controls</h1>
           <Layout store={store} />
           <label>Size:&nbsp;
-            <input type="range" min="0" max="100" value={store.iconSize}
+            <input type="range" min="0" max="100" value={store.responseSize}
               onChange={e => store.setResponseSize(e.target.value)} />
           </label>
           <label>Page Navigation:&nbsp;
@@ -279,7 +279,7 @@ const Reader = observer((props) => {
     height: '100%'
   }
   const sc = store.screen;
-  const rs = Math.min(sc.width, sc.height) * (0.1 + 0.25*store.responseSize/100);
+  const rs = Math.hypot(sc.width, sc.height) * (0.04 + 0.1*store.responseSize/100);
   var cbox = {
     width: sc.width,
     height: containerHeight,
