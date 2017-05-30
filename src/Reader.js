@@ -61,7 +61,6 @@ const ReaderContent = observer((props) => {
     }
   });
 
-
   if (pageno === 1) {
     let titleStyle = {
       height: 4 * fontSize,
@@ -120,8 +119,8 @@ const WordIcon = observer((props) => {
       ref={(input) => input && isFocused && input.focus()} 
       onFocus={(e) => store.setResponseIndex(index)} >
       <figure>
-      <img src={"/images/"+word+".png"} alt={word} style={iStyle} />
-      <figcaption style={cStyle}>{word}</figcaption>
+        <img src={"/images/"+word+".png"} alt={word} style={iStyle} />
+        <figcaption style={cStyle}>{word}</figcaption>
       </figure>
     </button>
   )
@@ -325,9 +324,9 @@ const Reader = observer((props) => {
     <div style={pageStyle}>
       <div style={commentStyle}>{comment}</div>
       <div style={containerStyle}>
-      <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store} />
-      <Words boxes={rboxes} responses={responses} store={store} doResponse={sayWord} />
-      <Controls store={store} npages={store.npages} />
+        <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store} />
+        <Words boxes={rboxes} responses={responses} store={store} doResponse={sayWord} />
+        <Controls store={store} npages={store.npages} />
       </div>
     </div>
   );
