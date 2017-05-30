@@ -72,7 +72,7 @@ const ReaderContent = observer((props) => {
     return (
       <div className="book-page" style={pageStyle}>
         <h1 className="title" style={titleStyle}>{book.title}</h1>
-        <img src={"http://tarheelreader.org"+book.pages[0].url} className="pic" 
+        <img src={"https://tarheelreader.org"+book.pages[0].url} className="pic" 
           style={picStyle} alt="" />
         <PageNavButtons />
       </div>
@@ -81,7 +81,7 @@ const ReaderContent = observer((props) => {
     return (
       <div className="book-page" style={pageStyle}>
         <p className="page-number">{pageno}</p>
-        <img src={"http://tarheelreader.org"+page.url}
+        <img src={"https://tarheelreader.org"+page.url}
           className="pic" style={picStyle} alt=""/>
         <div className="caption-box">
           <p className="caption">{page.text}</p>
@@ -119,7 +119,7 @@ const WordIcon = observer((props) => {
       ref={(input) => input && isFocused && input.focus()} 
       onFocus={(e) => store.setResponseIndex(index)} >
       <figure>
-        <img src={"/images/"+word+".png"} alt={word} style={iStyle} />
+        <img src={process.env.PUBLIC_URL + "/images/"+word+".png"} alt={word} style={iStyle} />
         <figcaption style={cStyle}>{word}</figcaption>
       </figure>
     </button>

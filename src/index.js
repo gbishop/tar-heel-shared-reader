@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Store from './Store';
 import App from './App';
-import registerServiceWorker from './registerServiceWorker';
+//import registerServiceWorker from './registerServiceWorker';
 import './index.css';
 // https://github.com/flatiron/director/issues/349 explains
 // why I need the strange path.
@@ -12,14 +12,14 @@ useStrict(true);
 
 function startRouter(store) {
 
-    const baseUrl = process.env.PUBLIC_URL;;
+    const baseUrl = process.env.PUBLIC_URL;
 
     // update state on url change
     let router = new Router();
     router.on(baseUrl + "/(\\d+)", id => store.setIdPage(id, 1));
     router.on(baseUrl + "/(\\d+)/(\\d+)", (id, pageno) => store.setIdPage(id, +pageno));
     router.configure({
-        notfound: () => store.setIdPage(-1, 1),
+        notfound: () => store.setIdPage(1, 1),
         html5history: true
     });
     router.init();
@@ -42,4 +42,4 @@ ReactDOM.render(
   <App store={store} />, 
   document.getElementById('root')
 );
-registerServiceWorker();
+//registerServiceWorker();
