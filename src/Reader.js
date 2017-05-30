@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { observer } from 'mobx-react';
 import KeyHandler from 'react-key-handler';
 import Modal from 'react-modal';
+import NextArrow from './NextArrow.png';
+import BackArrow from './BackArrow.png';
 
 // Reader component
 const ReaderContent = observer((props) => {
@@ -39,7 +41,7 @@ const ReaderContent = observer((props) => {
   } else {
     picStyle = {
       width: maxPicWidth,
-      marginTop: pageno===1 ? 30 : (maxPicHeight - horizontalScale * page.height)
+      marginTop: pageno===1 ? 0 : (maxPicHeight - horizontalScale * page.height)
     }
   }
   const PageNavButtons = observer(() => {
@@ -47,10 +49,10 @@ const ReaderContent = observer((props) => {
       return (
         <div>
           <button className="next-link" onClick={store.nextPage}>
-            <img src="/images/NextArrow.png" alt="next"/>Next
+            <img src={NextArrow} alt="next"/>Next
           </button>
           <button className="back-link" onClick={store.backPage}>
-            <img src="/images/BackArrow.png" alt="back"/>Back
+            <img src={BackArrow} alt="back"/>Back
           </button>
         </div>
       )
