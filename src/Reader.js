@@ -208,6 +208,19 @@ const Layout = observer((props) => {
     </fieldset>)
 });
 
+const ReadingSelector = observer((props) => {
+  const { value, max, set } = props;
+  const spelled = [ 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth',
+                    'eleventh', 'twelth' ];
+  const options = spelled.slice(0, max).map((option, i) => (
+    <option key={option} value={i} >{option}</option>));
+  return (
+    <select value={value} onChange={(e) => set(+e.target.value)}>
+      {options}
+    </select>
+  )
+});
+  
 const Controls = observer((props) => {
   const store = props.store;
   const customStyles = {
@@ -239,6 +252,9 @@ const Controls = observer((props) => {
         style={customStyles} >
         <div className="controls">
           <h1>Reading controls</h1>
+          <label>Reading:&nbsp; 
+            <ReadingSelector value={store.reading} max={store.nreadings} set={store.setReading} />
+          </label>
           <Layout store={store} />
           <label>Size:&nbsp;
             <input type="range" min="0" max="100" value={store.responseSize}
@@ -249,7 +265,7 @@ const Controls = observer((props) => {
               onChange={store.togglePageTurn} />
           </label>
 
-          <button onClick={store.toggleControls}>Close</button>
+          <button onClick={store.toggleControls} aria-label="Close settings">Done</button>
         </div>
       </Modal>
     </div>

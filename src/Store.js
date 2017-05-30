@@ -72,6 +72,9 @@ class Store {
 
       // index for which set of comments and responses to use
       reading: 0, 
+      // set the reading
+      setReading: action((i) => this.reading = i),
+
       // number of readings supplied
       nreadings: computed(() => this.book.readings.length),
 
