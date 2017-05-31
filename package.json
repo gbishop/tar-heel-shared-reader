@@ -18,7 +18,7 @@
   },
   "proxy": {
     "/api": {
-      "target": "https://gb.cs.unc.edu/"
+      "target": "http://gb.cs.unc.edu/"
     }
   },
   "scripts": {
