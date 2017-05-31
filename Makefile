@@ -1,3 +1,4 @@
 deploy:
 	npm run build
-	rsync -a build/ /var/www/THSR
+	cp -a ../symbols.dynavox/* build/symbols
+	rsync -a --delete-after build/ /var/www/THSR

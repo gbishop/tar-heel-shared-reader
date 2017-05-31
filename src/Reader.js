@@ -119,7 +119,7 @@ const WordIcon = observer((props) => {
       ref={(input) => input && isFocused && input.focus()} 
       onFocus={(e) => store.setResponseIndex(index)} >
       <figure>
-        <img src={process.env.PUBLIC_URL + "/images/"+word+".png"} alt={word} style={iStyle} />
+        <img src={process.env.PUBLIC_URL + "/symbols/"+word+".png"} alt={word} style={iStyle} />
         <figcaption style={cStyle}>{word}</figcaption>
       </figure>
     </button>
