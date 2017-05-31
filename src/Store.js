@@ -122,6 +122,23 @@ class Store {
         this.screen.width = window.innerWidth;
         this.screen.height = window.innerHeight;
       }),
+
+      get persist() {
+        return {
+          layout: this.layout,
+          responseSize: this.responseSize,
+          showPageTurn: this.showPageTurn,
+          reading: this.reading
+        }
+      },
+
+      set persist(v) {
+        this.layout = v.layout;
+        this.responseSize = v.responseSize;
+        this.showPageTurn = v.showPageTurn;
+        this.reading = v.reading;
+      }
+
     });
     // fetch the book when the id changes
     // figure out when to dispose of this

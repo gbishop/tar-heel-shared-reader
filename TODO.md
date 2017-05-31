@@ -1,6 +1,6 @@
 # TODOs for Tar Heel Shared Reader
 
-- [ ] Sticky settings using local storage for reading controls
+- [x] Sticky settings using local storage for reading controls
 - [x] Reading control
 - [ ] Query parameter for reading control?
 - [ ] Position response text based on shape of button

@@ -34,8 +34,20 @@ function startRouter(store) {
     })
 
 }
+
+function startPersist(store) {
+  var persist = window.localStorage.getItem('settings');
+  if (persist) {
+    store.persist = JSON.parse(persist);
+  }
+  autorun(() => {
+    window.localStorage.setItem('settings', JSON.stringify(store.persist));
+  });
+}
+
 const store = new Store();
 startRouter(store);
+startPersist(store);
 window.addEventListener("resize", store.resize);
 
 ReactDOM.render(
