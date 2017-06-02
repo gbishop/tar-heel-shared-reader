@@ -6,7 +6,7 @@ import NextArrow from './NextArrow.png';
 import BackArrow from './BackArrow.png';
 
 // Reader component
-const ReaderContent = observer((props) => {
+const ReaderContent = observer(function ReaderContent(props) {
   const {book, box, pageno, store} = props;
   const {width, height, top, left} = box; 
   const fontSize = width/height < 4/3 ? width / 36 : height / 36;
@@ -44,7 +44,7 @@ const ReaderContent = observer((props) => {
       marginTop: pageno===1 ? 0 : (maxPicHeight - horizontalScale * page.height)
     }
   }
-  const PageNavButtons = observer(() => {
+  const PageNavButtons = observer(function PageNavButtons() {
     if (store.showPageTurn) {
       return (
         <div>
@@ -92,7 +92,7 @@ const ReaderContent = observer((props) => {
   }
 })
 
-const WordIcon = observer((props) => {
+const WordIcon = observer(function WordIcon(props) {
   const { word, index, style, store, doResponse } = props;
   const aStyle = {
     display: 'inline-block',
@@ -126,7 +126,7 @@ const WordIcon = observer((props) => {
   )
 })
 
-const Words = observer((props) => {
+const Words = observer(function Words(props) {
   const {store, boxes, responses, doResponse } = props;
   var words = responses;
   var index = 0;
@@ -191,7 +191,7 @@ function capitalize(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-const Layout = observer((props) => {
+const Layout = observer(function Layout(props) {
   const store = props.store;
   const sides = ['left', 'right', 'top', 'bottom'];
   const onCheck = (e) => store.setLayout(e.target.name, e.target.checked);
@@ -208,7 +208,7 @@ const Layout = observer((props) => {
     </fieldset>)
 });
 
-const ReadingSelector = observer((props) => {
+const ReadingSelector = observer(function ReadingSelector(props) {
   const { value, max, set } = props;
   const spelled = [ 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth',
                     'eleventh', 'twelth' ];
@@ -221,7 +221,7 @@ const ReadingSelector = observer((props) => {
   )
 });
   
-const Controls = observer((props) => {
+const Controls = observer(function Controls(props) {
   const store = props.store;
   const customStyles = {
     content : {
@@ -272,7 +272,7 @@ const Controls = observer((props) => {
   );
 })
 
-const Reader = observer((props) => {
+const Reader = observer(function Reader(props) {
   const { store } = props;
   const book = store.book;
   let comment = '';
@@ -330,7 +330,7 @@ const Reader = observer((props) => {
     left: 0,
     top: commentHeight
   };
-  const sayWord = (word) => {
+  function sayWord(word) {
     var msg = new SpeechSynthesisUtterance(word);
     msg.lang = 'en-US';
 
