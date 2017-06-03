@@ -5,8 +5,6 @@ import './App.css';
 import Store from './Store';
 import Reader from './Reader';
 
-const logo = require('./logo.svg');
-
 @observer
 class App extends React.Component<{store: Store}, void> {
   render() {
