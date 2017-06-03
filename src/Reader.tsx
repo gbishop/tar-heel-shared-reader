@@ -221,14 +221,14 @@ interface NRKeyHandlerProps {
 @observer
 class NRKeyHandler extends React.Component<NRKeyHandlerProps, void> {
   isDown = false;
-  keyDown = (e) => {
+  keyDown = (e: Event) => {
     e.preventDefault();
     if (!this.isDown) {
       this.isDown = true;
       this.props.onKeyHandle(e);
     }
   }
-  keyUp = (e) => {
+  keyUp = (e: Event) => {
     this.isDown = false;
   }
   render() {
@@ -257,7 +257,8 @@ function capitalize(s: string) {
 const Layout = observer(function Layout(props: {store: Store}) {
   const store = props.store;
   const sides = ['left', 'right', 'top', 'bottom'];
-  const onCheck = (e) => store.setLayout(e.target.name, e.target.checked);
+  const onCheck = (e: React.FormEvent<HTMLInputElement>) =>
+    store.setLayout(e.currentTarget.name, e.currentTarget.checked);
   return (
     <fieldset>
       <legend>Layout</legend>

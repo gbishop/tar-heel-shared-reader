@@ -11,18 +11,12 @@ import { Router } from 'director/build/director';
 import { autorun, useStrict } from 'mobx';
 useStrict(true);
 
-interface RouterDecl {
-  on(pat: string, func: (value: string, ...restOfValue: string[]) => void);
-  configure(config: {});
-  init();
-}
-
 function startRouter(store: Store) {
 
   const baseUrl = process.env.PUBLIC_URL;
 
   // update state on url change
-  let router = new Router() as RouterDecl;
+  let router = new Router();
   router.on(baseUrl + '/(\\d+)', id => store.setIdPage(+id, 1));
   router.on(baseUrl + '/(\\d+)/(\\d+)', (id, pageno) => store.setIdPage(+id, +pageno));
   router.configure({

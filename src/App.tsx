@@ -16,7 +16,7 @@ class App extends React.Component<{store: Store}, void> {
       console.log('store', store);
       return (
         <div>
-          <Error error={store.bookP.value} />
+          <ErrorMsg error={store.bookP.reason} />
           <p> /1 is the only functioning url right now</p>
         </div>
       );
@@ -32,14 +32,15 @@ class App extends React.Component<{store: Store}, void> {
   }
 }
 
-const Error = ({ error }) => {
+const ErrorMsg = (props: { error: Response|Error }) => {
+  const error = props.error;
   console.log('Error', error, typeof(error), Object.keys(error));
-  if ('status' in error) {
+  if (error instanceof Response) {
     return <h1>{'Error: ' + error.status + '/' + error.statusText}</h1>;
-  } else if ('message' in error) {
+  } else if (error instanceof Error) {
     return <h1>{'Error: ' + error.message}</h1>;
   } else {
-    return <h1>Network Error</h1>;
+    return <h1>Unknown Error</h1>;
   }
 };
 export default App;
