@@ -1,19 +1,36 @@
-import React, { Component } from 'react';
+import * as React from 'react';
 import { observer } from 'mobx-react';
 import KeyHandler from 'react-key-handler';
-import Modal from 'react-modal';
-import NextArrow from './NextArrow.png';
-import BackArrow from './BackArrow.png';
+import Modal = require('react-modal');
+const NextArrow = require('./NextArrow.png');
+const BackArrow = require('./BackArrow.png');
+import Store from './Store';
+import SharedBook from './SharedBook';
 
 // Reader component
-const ReaderContent = observer(function ReaderContent(props) {
+interface Box {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+  align: string;
+}
+
+interface ReaderContentProps {
+  book: SharedBook;
+  box: Box;
+  pageno: number;
+  store: Store;
+}
+
+const ReaderContent = observer(function ReaderContent(props: ReaderContentProps) {
   const {book, box, pageno, store} = props;
   const {width, height, top, left} = box; 
-  const fontSize = width/height < 4/3 ? width / 36 : height / 36;
+  const fontSize = width / height < 4 / 3 ? width / 36 : height / 36;
   const pageStyle = {
     width, height, top, left, fontSize,
     position: 'absolute'
-  }
+  } as React.CSSProperties;
   if (pageno > store.npages) {
     // past the end
     return (
@@ -25,9 +42,9 @@ const ReaderContent = observer(function ReaderContent(props) {
           <li><button>Go to Tar Heel Reader</button></li>
         </ul>
       </div>
-    )
+    );
   }
-  const page = book.pages[pageno-1];
+  const page = book.pages[pageno - 1];
   const textHeight = pageno === 1 ? 4 * fontSize + 8 : 6.5 * fontSize;
   const maxPicHeight = height - textHeight;
   const maxPicWidth = width;
@@ -41,10 +58,10 @@ const ReaderContent = observer(function ReaderContent(props) {
   } else {
     picStyle = {
       width: maxPicWidth,
-      marginTop: pageno===1 ? 0 : (maxPicHeight - horizontalScale * page.height)
-    }
+      marginTop: pageno === 1 ? 0 : (maxPicHeight - horizontalScale * page.height)
+    };
   }
-  const PageNavButtons = observer(function PageNavButtons() {
+  const PageNavButtons = () => {
     if (store.showPageTurn) {
       return (
         <div>
@@ -55,44 +72,60 @@ const ReaderContent = observer(function ReaderContent(props) {
             <img src={BackArrow} alt="back"/>Back
           </button>
         </div>
-      )
+      );
     } else {
       return null;
     }
-  });
+  };
 
   if (pageno === 1) {
     let titleStyle = {
       height: 4 * fontSize,
-      fontSize: 2*fontSize,
+      fontSize: 2 * fontSize,
       padding: 0,
       margin: 0,
       display: 'block'
-    }
+    };
     return (
       <div className="book-page" style={pageStyle}>
         <h1 className="title" style={titleStyle}>{book.title}</h1>
-        <img src={"https://tarheelreader.org"+book.pages[0].url} className="pic" 
-          style={picStyle} alt="" />
+        <img 
+         src={'https://tarheelreader.org' + book.pages[0].url} 
+         className="pic" 
+         style={picStyle}
+         alt=""
+        />
         <PageNavButtons />
       </div>
     );
-  } else if (pageno <= book.pages.length) {
+  } else {
     return (
       <div className="book-page" style={pageStyle}>
         <p className="page-number">{pageno}</p>
-        <img src={"https://tarheelreader.org"+page.url}
-          className="pic" style={picStyle} alt=""/>
+        <img
+          src={'https://tarheelreader.org' + page.url}
+          className="pic"
+          style={picStyle}
+          alt=""
+        />
         <div className="caption-box">
           <p className="caption">{page.text}</p>
         </div>
         <PageNavButtons />
       </div>
-    )
+    );
   }
-})
+});
 
-const WordIcon = observer(function WordIcon(props) {
+interface WordIconProps {
+  word: string;
+  index: number;
+  style: React.CSSProperties;
+  store: Store;
+  doResponse: (word: string) => void;
+}
+
+const WordIcon = observer(function WordIcon(props: WordIconProps) {
   const { word, index, style, store, doResponse } = props;
   const aStyle = {
     display: 'inline-block',
@@ -109,24 +142,37 @@ const WordIcon = observer(function WordIcon(props) {
   };
   const cStyle = {
     fontSize,
-    marginTop: -fontSize/4
+    marginTop: -fontSize / 4
   };
-  const isFocused = store.responseIndex===index;
+  const isFocused = store.responseIndex === index;
   return (
-    <button className="iconButton"
+    <button
+      className="iconButton"
       onClick={() => doResponse(word)}
       style={aStyle}
       ref={(input) => input && isFocused && input.focus()} 
-      onFocus={(e) => store.setResponseIndex(index)} >
+      onFocus={(e) => store.setResponseIndex(index)}
+    >
       <figure>
-        <img src={process.env.PUBLIC_URL + "/symbols/"+word+".png"} alt={word} style={iStyle} />
+        <img
+          src={process.env.PUBLIC_URL + '/symbols/' + word + '.png'}
+          alt={word}
+          style={iStyle}
+        />
         <figcaption style={cStyle}>{word}</figcaption>
       </figure>
     </button>
-  )
-})
+  );
+});
 
-const Words = observer(function Words(props) {
+interface WordsProps {
+  store: Store;
+  boxes: Array<Box>;
+  responses: Array<string>;
+  doResponse: (word: string) => void;
+}
+
+const Words = observer(function Words(props: WordsProps) {
   const {store, boxes, responses, doResponse } = props;
   var words = responses;
   var index = 0;
@@ -143,25 +189,37 @@ const Words = observer(function Words(props) {
     bstyle[pax] = box[pax] / nchunk;
     bstyle[sax] = box[sax];
     const dstyle = { top: box.top, left: box.left, width: box.width, height: box.height,
-      position: 'absolute'};
+      position: 'absolute'} as React.CSSProperties;
     return (
       <div key={i} style={dstyle}>
         {
           chunk.map((w, j) => {
             return (
-              <WordIcon key={w} word={w} index={index++} style={bstyle} store={store}
-                doResponse={doResponse} />
-            )
+              <WordIcon
+                key={w}
+                word={w}
+                index={index++}
+                style={bstyle}
+                store={store}
+                doResponse={doResponse}
+              />
+            );
           })
         }
       </div>
-    )
+    );
   })
     }
-  </div>)
-})
+  </div>);
+});
 
-const NRKeyHandler = observer(class NRKeyHandler extends Component {
+interface NRKeyHandlerProps {
+  keyValue: string;
+  onKeyHandle: (e: Event) => void;
+}
+
+@observer
+class NRKeyHandler extends React.Component<NRKeyHandlerProps, void> {
   isDown = false;
   keyDown = (e) => {
     e.preventDefault();
@@ -174,24 +232,29 @@ const NRKeyHandler = observer(class NRKeyHandler extends Component {
     this.isDown = false;
   }
   render() {
-    const keyValueList = [].concat(this.props.keyValue);
-    const handlers = keyValueList.map((keyValue, i) => (
-      <div key={i}>
-        <KeyHandler keyEventName={'keydown'} keyValue={keyValue}
-          onKeyHandle={this.keyDown} />
-        <KeyHandler keyEventName={'keyup'} keyValue={keyValue}
-          onKeyHandle={this.keyUp} />
+    const keyValue = this.props.keyValue;
+    return (
+      <div>
+        <KeyHandler
+          keyEventName={'keydown'}
+          keyValue={keyValue}
+          onKeyHandle={this.keyDown}
+        />
+        <KeyHandler
+          keyEventName={'keyup'}
+          keyValue={keyValue}
+          onKeyHandle={this.keyUp}
+        />
       </div>
-    ));
-    return (<div>{handlers}</div>)
+    );
   }
-});
-
-function capitalize(string) {
-  return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-const Layout = observer(function Layout(props) {
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+const Layout = observer(function Layout(props: {store: Store}) {
   const store = props.store;
   const sides = ['left', 'right', 'top', 'bottom'];
   const onCheck = (e) => store.setLayout(e.target.name, e.target.checked);
@@ -201,14 +264,24 @@ const Layout = observer(function Layout(props) {
       {
         sides.map(side => (
           <label key={side}>{capitalize(side)}:
-            <input name={side} type="checkbox" checked={store.layout[side]}
-              onChange={onCheck} />
+            <input
+              name={side}
+              type="checkbox"
+              checked={store.layout[side]}
+              onChange={onCheck}
+            />
           </label>))
       }
-    </fieldset>)
+    </fieldset>);
 });
 
-const ReadingSelector = observer(function ReadingSelector(props) {
+interface ReadingSelectProps {
+  value: number;
+  max: number;
+  set: (value: number) => void;
+}
+
+const ReadingSelector = observer(function ReadingSelector(props: ReadingSelectProps) {
   const { value, max, set } = props;
   const spelled = [ 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth',
                     'eleventh', 'twelth' ];
@@ -218,10 +291,10 @@ const ReadingSelector = observer(function ReadingSelector(props) {
     <select value={value} onChange={(e) => set(+e.target.value)}>
       {options}
     </select>
-  )
+  );
 });
   
-const Controls = observer(function Controls(props) {
+const Controls = observer(function Controls(props: {store: Store}) {
   const store = props.store;
   const customStyles = {
     content : {
@@ -239,17 +312,27 @@ const Controls = observer(function Controls(props) {
 
   return (
     <div>
-      <NRKeyHandler keyValue={["ArrowRight"]}
-        onKeyHandle={store.nextPage}/>
-      <NRKeyHandler keyValue={["ArrowLeft"]}
-        onKeyHandle={store.backPage}/>
-      <NRKeyHandler keyValue={[" "]}
-        onKeyHandle={store.nextResponseIndex}/>
-      <NRKeyHandler keyValue="Escape"
-        onKeyHandle={store.toggleControls}/>
+      <NRKeyHandler
+        keyValue={'ArrowRight'}
+        onKeyHandle={store.nextPage}
+      />
+      <NRKeyHandler
+        keyValue={'ArrowLeft'}
+        onKeyHandle={store.backPage}
+      />
+      <NRKeyHandler
+        keyValue={' '}
+        onKeyHandle={store.nextResponseIndex}
+      />
+      <NRKeyHandler
+        keyValue="Escape"
+        onKeyHandle={store.toggleControls}
+      />
       <Modal 
-        isOpen={store.showControls} contentLabel="Reading controls"
-        style={customStyles} >
+        isOpen={store.showControls}
+        contentLabel="Reading controls"
+        style={customStyles}
+      >
         <div className="controls">
           <h1>Reading controls</h1>
           <label>Reading:&nbsp; 
@@ -257,12 +340,20 @@ const Controls = observer(function Controls(props) {
           </label>
           <Layout store={store} />
           <label>Size:&nbsp;
-            <input type="range" min="0" max="100" value={store.responseSize}
-              onChange={e => store.setResponseSize(e.target.value)} />
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={store.responseSize}
+              onChange={e => store.setResponseSize(+e.target.value)}
+            />
           </label>
           <label>Page Navigation:&nbsp;
-            <input type="checkbox" checked={store.showPageTurn}
-              onChange={store.togglePageTurn} />
+            <input
+              type="checkbox"
+              checked={store.showPageTurn}
+              onChange={store.togglePageTurn}
+            />
           </label>
 
           <button onClick={store.toggleControls} aria-label="Close settings">Done</button>
@@ -270,9 +361,9 @@ const Controls = observer(function Controls(props) {
       </Modal>
     </div>
   );
-})
+});
 
-const Reader = observer(function Reader(props) {
+const Reader = observer(function Reader(props: {store: Store}) {
   const { store } = props;
   const book = store.book;
   let comment = '';
@@ -284,26 +375,27 @@ const Reader = observer(function Reader(props) {
     height: 20,
     fontSize: 16,
     color: '#333',
-    padding:5,
+    padding: 5,
     position: 'absolute',
     top: 0,
     left: 0
-  };
+  } as React.CSSProperties;
   const commentHeight = 30;
   const containerHeight = store.screen.height - commentHeight;
   const pageStyle = {
     width: '100%',
     height: '100%'
-  }
+  } as React.CSSProperties;
   const sc = store.screen;
-  const rs = Math.hypot(sc.width, sc.height) * (0.04 + 0.1*store.responseSize/100);
-  var cbox = {
+  const rs = Math.hypot(sc.width, sc.height) * (0.04 + 0.1 * store.responseSize / 100);
+  var cbox: Box = {
     width: sc.width,
     height: containerHeight,
     left: 0,
-    top: 0
+    top: 0,
+    align: 'v'
   };
-  var rboxes = []; // boxes for responses
+  var rboxes: Array<Box> = []; // boxes for responses
   if (store.layout.left) {
     cbox.width -= rs;
     cbox.left = rs;
@@ -311,7 +403,7 @@ const Reader = observer(function Reader(props) {
   }
   if (store.layout.right) {
     cbox.width -= rs;
-    rboxes.push({ top: 0, left: sc.width-rs, height: cbox.height, width: rs, align: 'v'});
+    rboxes.push({ top: 0, left: sc.width - rs, height: cbox.height, width: rs, align: 'v'});
   }
   if (store.layout.top) {
     cbox.height -= rs;
@@ -320,7 +412,7 @@ const Reader = observer(function Reader(props) {
   }
   if (store.layout.bottom) {
     cbox.height -= rs;
-    rboxes.push({ top: containerHeight-rs, left: cbox.left, height: rs, width: cbox.width,
+    rboxes.push({ top: containerHeight - rs, left: cbox.left, height: rs, width: cbox.width,
                   align: 'h'});
   }
   const containerStyle = {
@@ -329,8 +421,8 @@ const Reader = observer(function Reader(props) {
     position: 'absolute',
     left: 0,
     top: commentHeight
-  };
-  function sayWord(word) {
+  } as React.CSSProperties;
+  function sayWord(word: string) {
     var msg = new SpeechSynthesisUtterance(word);
     msg.lang = 'en-US';
 
@@ -342,7 +434,7 @@ const Reader = observer(function Reader(props) {
       <div style={containerStyle}>
         <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store} />
         <Words boxes={rboxes} responses={responses} store={store} doResponse={sayWord} />
-        <Controls store={store} npages={store.npages} />
+        <Controls store={store} />
       </div>
     </div>
   );
