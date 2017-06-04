@@ -17,10 +17,11 @@ function startRouter(store: Store) {
 
   // update state on url change
   let router = new Router();
-  router.on(baseUrl + '/(\\d+)', id => store.setIdPage(+id, 1));
-  router.on(baseUrl + '/(\\d+)/(\\d+)', (id, pageno) => store.setIdPage(+id, +pageno));
+  router.on(baseUrl + '/([-a-z0-9]*)', id => store.setIdPage(id, 1));
+  router.on(baseUrl + '/([-a-z0-9]+)/(\\d+)',
+    (id, pageno) => store.setIdPage(id, +pageno));
   router.configure({
-    notfound: () => store.setIdPage(1, 1),
+    notfound: () => store.setIdPage('', 1),
     html5history: true
   });
   router.init();

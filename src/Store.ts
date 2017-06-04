@@ -7,21 +7,33 @@ type Layout = {
 };
 
 class Store {
-  @observable bookid: number = 0;
+  // the id of the book to read or '' for the landing page
+  @observable bookid: string = '';
+  // an observable promise for the book associated with bookid
   @observable bookP: IPromiseBasedObservable<SharedBook>;
+  // get the book without having to say bookP.value all the time
+  // these computed are cached so this function only runs once after a change
   @computed get book() { return this.bookP.value; }
+  // the page number we're reading
   @observable pageno: number = 1;
+  // number of pages in the book
   @computed get npages() { return this.book.pages.length; }
-  @action.bound setIdPage(id: number, page: number) {
+  // update the state typically from a URL
+  @action.bound setIdPage(id: string, page: number) {
     this.bookid = id;
     this.pageno = page;
   }
-  @computed get currentPath() { return `/${this.bookid}` + (this.pageno > 1 ? `/${this.pageno}` : ''); }
+  // map the state to a url
+  @computed get currentPath() {
+    return `/${this.bookid}` + (this.pageno > 1 ? `/${this.pageno}` : '');
+  }
+  // step to the next page
   @action.bound nextPage() {
     if (this.pageno <= this.npages) {
       this.pageno += 1;
     }
   }
+  // step back to previous page
   @action.bound backPage() {
     if (this.pageno > 1) {
       this.pageno -= 1;
@@ -29,44 +41,47 @@ class Store {
       this.pageno = this.npages + 1;
     }
   }
+  // set the page number
   @action.bound setPage(i: number) {
     this.pageno = i;
   }
+  // index to the readings array
   @observable reading: number = 0;
   @action.bound setReading(n: number) {
     this.reading = n;
   }
   @computed get nreadings() { return this.book.readings.length; }
-
+  // placement of the response symbols
   @observable layout: Layout = {
     left: true, right: true, top: false, bottom: false };
   @action.bound setLayout(side: string, value: boolean) {
     this.layout[side] = value;
   }
 
+  // size of the response symbols
   @observable responseSize: number = 30;
   @action.bound setResponseSize(i: number) {
     this.responseSize = i;
   }
 
+  // currently selected response symbol
   @observable responseIndex: number = 0;
   @computed get nresponses() { return this.book.readings[this.reading].responses.length; }
   @action.bound nextResponseIndex() {
     this.responseIndex = (this.responseIndex + 1) % this.nresponses;
-    console.log('nri', this.responseIndex);
   }
   @action.bound setResponseIndex(i: number) {
     this.responseIndex = i;
   }
 
-  @observable showControls: boolean = false;
-  @action.bound toggleControls() {
-    this.showControls = !this.showControls;
+  @observable controlsVisible: boolean = false;
+  @action.bound toggleControlsVisible() {
+    this.controlsVisible = !this.controlsVisible;
   }
 
-  @observable showPageTurn: boolean = false;
-  @action.bound togglePageTurn() {
-    this.showPageTurn = !this.showPageTurn;
+  @observable pageTurnVisible: boolean = false;
+  @action.bound togglePageTurnVisible() {
+    this.pageTurnVisible = !this.pageTurnVisible;
   }
 
   @observable screen = {
@@ -82,8 +97,7 @@ class Store {
     return JSON.stringify({
       layout: this.layout,
       responseSize: this.responseSize,
-      showPageTurn: this.showPageTurn,
-      reading: this.reading
+      pageTurnVisible: this.pageTurnVisible
     });
   }
 
@@ -91,8 +105,7 @@ class Store {
     var v = JSON.parse(js);
     this.layout = v.layout;
     this.responseSize = v.responseSize;
-    this.showPageTurn = v.showPageTurn;
-    this.reading = v.reading;
+    this.pageTurnVisible = v.pageTurnVisible;
   }
 
   fetchHandler: {};
@@ -103,8 +116,10 @@ class Store {
     this.fetchHandler = reaction(
       () => this.bookid,
       (bookid) => {
-        this.bookP = fromPromise(fetchBook(`/api/sharedbooks/${this.bookid}.json`)) as
-          IPromiseBasedObservable<SharedBook>;
+        if (this.bookid.length > 0) {
+          this.bookP = fromPromise(fetchBook(`/api/sharedbooks/${this.bookid}.json`)) as
+            IPromiseBasedObservable<SharedBook>;
+        }
       });
   }
 }

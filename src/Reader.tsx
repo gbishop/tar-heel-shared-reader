@@ -6,6 +6,7 @@ const NextArrow = require('./NextArrow.png');
 const BackArrow = require('./BackArrow.png');
 import Store from './Store';
 import SharedBook from './SharedBook';
+import './Reader.css';
 
 // Reader component
 interface Box {
@@ -62,7 +63,7 @@ const ReaderContent = observer(function ReaderContent(props: ReaderContentProps)
     };
   }
   const PageNavButtons = () => {
-    if (store.showPageTurn) {
+    if (store.pageTurnVisible) {
       return (
         <div>
           <button className="next-link" onClick={store.nextPage}>
@@ -127,13 +128,6 @@ interface WordIconProps {
 
 const WordIcon = observer(function WordIcon(props: WordIconProps) {
   const { word, index, style, store, doResponse } = props;
-  const aStyle = {
-    display: 'inline-block',
-    background: 'solid',
-    textAlign: 'center',
-    padding: 0,
-    ...style
-  };
   const maxSize = Math.min(style.width, style.height);
   const fontSize = maxSize / 5;
   const iconSize = maxSize - fontSize - 10;
@@ -149,7 +143,7 @@ const WordIcon = observer(function WordIcon(props: WordIconProps) {
     <button
       className="iconButton"
       onClick={() => doResponse(word)}
-      style={aStyle}
+      style={style}
       ref={(input) => input && isFocused && input.focus()} 
       onFocus={(e) => store.setResponseIndex(index)}
     >
@@ -327,17 +321,21 @@ const Controls = observer(function Controls(props: {store: Store}) {
       />
       <NRKeyHandler
         keyValue="Escape"
-        onKeyHandle={store.toggleControls}
+        onKeyHandle={store.toggleControlsVisible}
       />
       <Modal 
-        isOpen={store.showControls}
+        isOpen={store.controlsVisible}
         contentLabel="Reading controls"
         style={customStyles}
       >
         <div className="controls">
           <h1>Reading controls</h1>
           <label>Reading:&nbsp; 
-            <ReadingSelector value={store.reading} max={store.nreadings} set={store.setReading} />
+            <ReadingSelector
+              value={store.reading}
+              max={store.nreadings}
+              set={store.setReading}
+            />
           </label>
           <Layout store={store} />
           <label>Size:&nbsp;
@@ -352,12 +350,14 @@ const Controls = observer(function Controls(props: {store: Store}) {
           <label>Page Navigation:&nbsp;
             <input
               type="checkbox"
-              checked={store.showPageTurn}
-              onChange={store.togglePageTurn}
+              checked={store.pageTurnVisible}
+              onChange={store.togglePageTurnVisible}
             />
           </label>
 
-          <button onClick={store.toggleControls} aria-label="Close settings">Done</button>
+          <button onClick={store.toggleControlsVisible}>
+            Done
+          </button>
         </div>
       </Modal>
     </div>
@@ -372,21 +372,8 @@ const Reader = observer(function Reader(props: {store: Store}) {
   if (store.pageno <= store.npages) {
     comment = comments[store.pageno];
   }
-  const commentStyle = {
-    height: 20,
-    fontSize: 16,
-    color: '#333',
-    padding: 5,
-    position: 'absolute',
-    top: 0,
-    left: 0
-  } as React.CSSProperties;
   const commentHeight = 30;
   const containerHeight = store.screen.height - commentHeight;
-  const pageStyle = {
-    width: '100%',
-    height: '100%'
-  } as React.CSSProperties;
   const sc = store.screen;
   const rs = Math.hypot(sc.width, sc.height) * (0.04 + 0.1 * store.responseSize / 100);
   var cbox: Box = {
@@ -396,6 +383,7 @@ const Reader = observer(function Reader(props: {store: Store}) {
     top: 0,
     align: 'v'
   };
+
   var rboxes: Array<Box> = []; // boxes for responses
   if (store.layout.left) {
     cbox.width -= rs;
@@ -416,6 +404,7 @@ const Reader = observer(function Reader(props: {store: Store}) {
     rboxes.push({ top: containerHeight - rs, left: cbox.left, height: rs, width: cbox.width,
                   align: 'h'});
   }
+
   const containerStyle = {
     width: store.screen.width,
     height: store.screen.height - 30,
@@ -423,15 +412,16 @@ const Reader = observer(function Reader(props: {store: Store}) {
     left: 0,
     top: commentHeight
   } as React.CSSProperties;
+
   function sayWord(word: string) {
     var msg = new SpeechSynthesisUtterance(word);
     msg.lang = 'en-US';
-
     speechSynthesis.speak(msg);
   }
+
   return (
-    <div style={pageStyle}>
-      <div style={commentStyle}>{comment}</div>
+    <div>
+      <div className="comment" >{comment}</div>
       <div style={containerStyle}>
         <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store} />
         <Words boxes={rboxes} responses={responses} store={store} doResponse={sayWord} />

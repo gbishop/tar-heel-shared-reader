@@ -9,7 +9,10 @@ import Reader from './Reader';
 class App extends React.Component<{store: Store}, void> {
   render() {
     const {store} = this.props;
-    if (store.bookP.state === 'pending') {
+    if (store.bookid.length === 0) {
+      return <h1>Landing Page</h1>;
+
+    } else if (store.bookP.state === 'pending') {
       return <h1>Loading</h1>;
 
     } else if (store.bookP.state === 'rejected') {
@@ -32,9 +35,8 @@ class App extends React.Component<{store: Store}, void> {
   }
 }
 
-const ErrorMsg = (props: { error: Response|Error }) => {
+const ErrorMsg = observer((props: { error: Response|Error }) => {
   const error = props.error;
-  console.log('Error', error, typeof(error), Object.keys(error));
   if (error instanceof Response) {
     return <h1>{'Error: ' + error.status + '/' + error.statusText}</h1>;
   } else if (error instanceof Error) {
@@ -42,5 +44,6 @@ const ErrorMsg = (props: { error: Response|Error }) => {
   } else {
     return <h1>Unknown Error</h1>;
   }
-};
+});
+
 export default App;
