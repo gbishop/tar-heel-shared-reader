@@ -8,7 +8,7 @@
 - [ ] iOS
 - [ ] Stats
 - [ ] Landing and last pages
-- [ ] Import response images?
+- [x] Import response images?
 - [ ] Standardize voice?
 - [ ] Offline?
 - [ ] Display author on title page?

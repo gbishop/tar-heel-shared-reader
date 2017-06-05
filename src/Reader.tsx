@@ -24,24 +24,27 @@ interface ReaderContentProps {
   store: Store;
 }
 
+// make it easier to write typed CSS
+// seems like a bug: https://github.com/Microsoft/TypeScript/issues/11465
+const absolute = 'absolute' as 'absolute';
+
 const ReaderContent = observer(function ReaderContent(props: ReaderContentProps) {
   const {book, box, pageno, store} = props;
   const {width, height, top, left} = box; 
   const fontSize = width / height < 4 / 3 ? width / 36 : height / 36;
-  const pageStyle = {
-    width, height, top, left, fontSize,
-    position: 'absolute'
-  } as React.CSSProperties;
+  let pageStyle = {
+    width, height, top, left, fontSize
+  };
   if (pageno > store.npages) {
     // past the end
     return (
       <div className="book-page" style={pageStyle}>
         <h1 className="title">What would you like to do now?</h1>
-        <ul className="choices">
-          <li><button onClick={e => store.setPage(1)}>Read this book again</button></li>
-          <li><button>Read another book</button></li>
-          <li><button>Go to Tar Heel Reader</button></li>
-        </ul>
+        <div className="choices">
+          <button onClick={e => store.setPage(1)}>Read this book again</button>
+          <button>Read another book</button>
+          <button>Go to Tar Heel Reader</button>
+        </div>
       </div>
     );
   }
@@ -183,7 +186,7 @@ const Words = observer(function Words(props: WordsProps) {
     bstyle[pax] = box[pax] / nchunk;
     bstyle[sax] = box[sax];
     const dstyle = { top: box.top, left: box.left, width: box.width, height: box.height,
-      position: 'absolute'} as React.CSSProperties;
+      position: absolute };
     return (
       <div key={i} style={dstyle}>
         {
@@ -408,10 +411,10 @@ const Reader = observer(function Reader(props: {store: Store}) {
   const containerStyle = {
     width: store.screen.width,
     height: store.screen.height - 30,
-    position: 'absolute',
+    position: absolute,
     left: 0,
     top: commentHeight
-  } as React.CSSProperties;
+  };
 
   function sayWord(word: string) {
     var msg = new SpeechSynthesisUtterance(word);

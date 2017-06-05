@@ -2,6 +2,7 @@ import { observable, computed, action, reaction } from 'mobx';
 import { fromPromise, IPromiseBasedObservable } from 'mobx-utils';
 import { SharedBook, fetchBook } from './SharedBook';
 
+// sides of the display to include responses
 type Layout = {
   left: boolean, right: boolean, top: boolean, bottom: boolean;
 };
@@ -73,17 +74,17 @@ class Store {
   @action.bound setResponseIndex(i: number) {
     this.responseIndex = i;
   }
-
+  // visibility of the controls modal
   @observable controlsVisible: boolean = false;
   @action.bound toggleControlsVisible() {
     this.controlsVisible = !this.controlsVisible;
   }
-
+  // visibility of page turn buttons on book page
   @observable pageTurnVisible: boolean = false;
   @action.bound togglePageTurnVisible() {
     this.pageTurnVisible = !this.pageTurnVisible;
   }
-
+  // screen dimensions updated on resize
   @observable screen = {
     width: window.innerWidth,
     height: window.innerHeight
@@ -92,7 +93,7 @@ class Store {
     this.screen.width = window.innerWidth;
     this.screen.height = window.innerHeight;
   }
-
+  // json string to persist the state
   @computed get persist(): string {
     return JSON.stringify({
       layout: this.layout,
@@ -100,14 +101,14 @@ class Store {
       pageTurnVisible: this.pageTurnVisible
     });
   }
-
+  // restore the state from json
   @action.bound setPersist(js: string) {
     var v = JSON.parse(js);
     this.layout = v.layout;
     this.responseSize = v.responseSize;
     this.pageTurnVisible = v.pageTurnVisible;
   }
-
+  // handle updating the book when the id changes
   fetchHandler: {};
 
   constructor() {
