@@ -28,10 +28,10 @@
 }
 
 .comment {
-  height: 20;
-  font-size: 16;
+  height: 20px;
+  font-size: 16px;
   color: #333;
-  padding: 5;
+  padding: 5px;
   position: absolute;
   top: 0;
   left: 0;
@@ -89,14 +89,12 @@ fieldset label {
   padding: 0.1em !important;
 }
 
-.book-page .choices a {
+.book-page .choices button {
   font-size: 1.5em;
   width: 12em;
   padding: 2em;
-  background: solid;
-  border: 1px solid black;
   border-radius: 0.5em;
-  display: inline-block;
-  text-decoration: none;
-  appearance: button;
+  display: block;
+  margin: 10px auto;
+  background: white;
 }
