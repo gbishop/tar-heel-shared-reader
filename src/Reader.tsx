@@ -144,10 +144,9 @@ const WordIcon = observer(function WordIcon(props: WordIconProps) {
   const isFocused = store.responseIndex === index;
   return (
     <button
-      className="iconButton"
+      className={`iconButton ${isFocused ? 'selected' : ''}`}
       onClick={() => doResponse(word)}
       style={style}
-      ref={(input) => input && isFocused && input.focus()} 
       onFocus={(e) => store.setResponseIndex(index)}
     >
       <figure>
@@ -307,6 +306,11 @@ const Controls = observer(function Controls(props: {store: Store}) {
       backgroundColor   : 'rgba(255, 255, 255, 0.0)'
     }
   };
+  function triggerResponse() {
+    let selectedResponse = document.getElementsByClassName('iconButton selected')[0] as
+      HTMLElement;
+    selectedResponse.click();
+  }
 
   return (
     <div>
@@ -321,6 +325,10 @@ const Controls = observer(function Controls(props: {store: Store}) {
       <NRKeyHandler
         keyValue={' '}
         onKeyHandle={store.nextResponseIndex}
+      />
+      <NRKeyHandler
+        keyValue={'Enter'}
+        onKeyHandle={triggerResponse}
       />
       <NRKeyHandler
         keyValue="Escape"

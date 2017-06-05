@@ -44,7 +44,7 @@
   padding: 0;
 }
 
-.iconButton:focus {
+.iconButton.selected {
   background-color: #99badd;
 }
 
