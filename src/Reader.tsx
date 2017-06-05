@@ -28,6 +28,23 @@ interface ReaderContentProps {
 // seems like a bug: https://github.com/Microsoft/TypeScript/issues/11465
 const absolute = 'absolute' as 'absolute';
 
+const PageNavButtons = observer(function PageNavButtons(props: {store: Store}) {
+  if (props.store.pageTurnVisible) {
+    return (
+      <div>
+        <button className="next-link" onClick={props.store.nextPage}>
+          <img src={NextArrow} alt="next"/>Next
+        </button>
+        <button className="back-link" onClick={props.store.backPage}>
+          <img src={BackArrow} alt="back"/>Back
+        </button>
+      </div>
+    );
+  } else {
+    return null!;
+  }
+});
+
 const ReaderContent = observer(function ReaderContent(props: ReaderContentProps) {
   const {book, box, pageno, store} = props;
   const {width, height, top, left} = box; 
@@ -65,22 +82,6 @@ const ReaderContent = observer(function ReaderContent(props: ReaderContentProps)
       marginTop: pageno === 1 ? 0 : (maxPicHeight - horizontalScale * page.height)
     };
   }
-  const PageNavButtons = () => {
-    if (store.pageTurnVisible) {
-      return (
-        <div>
-          <button className="next-link" onClick={store.nextPage}>
-            <img src={NextArrow} alt="next"/>Next
-          </button>
-          <button className="back-link" onClick={store.backPage}>
-            <img src={BackArrow} alt="back"/>Back
-          </button>
-        </div>
-      );
-    } else {
-      return null;
-    }
-  };
 
   if (pageno === 1) {
     let titleStyle = {
@@ -99,7 +100,7 @@ const ReaderContent = observer(function ReaderContent(props: ReaderContentProps)
          style={picStyle}
          alt=""
         />
-        <PageNavButtons />
+        <PageNavButtons store={store}/>
       </div>
     );
   } else {
@@ -115,7 +116,7 @@ const ReaderContent = observer(function ReaderContent(props: ReaderContentProps)
         <div className="caption-box">
           <p className="caption">{page.text}</p>
         </div>
-        <PageNavButtons />
+        <PageNavButtons store={store}/>
       </div>
     );
   }
