@@ -41,6 +41,9 @@ const PageNavButtons = observer(function PageNavButtons(props: {store: Store}) {
       </div>
     );
   } else {
+    // This strange return value is keeping typescript happy 
+    // https://github.com/Microsoft/TypeScript/wiki/What%27s-new-in-TypeScript#non-null-assertion-operator
+    // We're asking it to ignore the possibility of returning null
     return null!;
   }
 });
