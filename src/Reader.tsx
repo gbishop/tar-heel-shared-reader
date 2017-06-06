@@ -24,10 +24,6 @@ interface ReaderContentProps {
   store: Store;
 }
 
-// make it easier to write typed CSS
-// seems like a bug: https://github.com/Microsoft/TypeScript/issues/11465
-const absolute = 'absolute' as 'absolute';
-
 const PageNavButtons = observer(function PageNavButtons(props: {store: Store}) {
   if (props.store.pageTurnVisible) {
     return (
@@ -148,7 +144,7 @@ const WordIcon = observer(function WordIcon(props: WordIconProps) {
   const isFocused = store.responseIndex === index;
   return (
     <button
-      className={`iconButton ${isFocused ? 'selected' : ''}`}
+      className={`${isFocused ? 'selected' : ''}`}
       onClick={() => doResponse(word)}
       style={style}
       onFocus={(e) => store.setResponseIndex(index)}
@@ -188,10 +184,9 @@ const Words = observer(function Words(props: WordsProps) {
     var bstyle = {};
     bstyle[pax] = box[pax] / nchunk;
     bstyle[sax] = box[sax];
-    const dstyle = { top: box.top, left: box.left, width: box.width, height: box.height,
-      position: absolute };
+    const dstyle = { top: box.top, left: box.left, width: box.width, height: box.height };
     return (
-      <div key={i} style={dstyle}>
+      <div key={i} style={dstyle} className="responseContainer">
         {
           chunk.map((w, j) => {
             return (
@@ -423,7 +418,7 @@ const Reader = observer(function Reader(props: {store: Store}) {
   const containerStyle = {
     width: store.screen.width,
     height: store.screen.height - 30,
-    position: absolute,
+    position: 'absolute' as 'absolute',
     left: 0,
     top: commentHeight
   };

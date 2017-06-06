@@ -37,23 +37,27 @@
   left: 0;
 }
 
-.iconButton {
+.responseContainer {
+  position: absolute;
+}
+
+.responseContainer button {
   display: inline-block;
   background: solid;
   text-align: center;
   padding: 0;
 }
 
-.iconButton.selected {
+.responseContainer button.selected {
   background-color: #99badd;
 }
 
-.iconButton figure {
+.responseContainer button figure {
   margin: 0;
   padding: 0;
 }
 
-.iconButton figure figcaption {
+.responseContainer button figure figcaption {
   margin: 0;
   padding: 0;
 }
