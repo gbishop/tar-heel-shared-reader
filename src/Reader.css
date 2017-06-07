@@ -37,27 +37,27 @@
   left: 0;
 }
 
-.responseContainer {
+.response-container {
   position: absolute;
 }
 
-.responseContainer button {
+.response-container button {
   display: inline-block;
   background: solid;
   text-align: center;
   padding: 0;
 }
 
-.responseContainer button.selected {
+.response-container button.selected {
   background-color: #99badd;
 }
 
-.responseContainer button figure {
+.response-container button figure {
   margin: 0;
   padding: 0;
 }
 
-.responseContainer button figure figcaption {
+.response-container button figure figcaption {
   margin: 0;
   padding: 0;
 }

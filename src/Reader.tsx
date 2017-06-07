@@ -126,7 +126,7 @@ interface ResponseButtonProps {
   index: number;
   style: React.CSSProperties;
   store: Store;
-  doResponse: (word: string) => void;
+  doResponse: () => void;
 }
 
 const ResponseButton = observer(function ResponseButton(props: ResponseButtonProps) {
@@ -145,7 +145,7 @@ const ResponseButton = observer(function ResponseButton(props: ResponseButtonPro
   return (
     <button
       className={`${isFocused ? 'selected' : ''}`}
-      onClick={() => doResponse(word)}
+      onClick={() => doResponse()}
       style={style}
       onFocus={(e) => store.setResponseIndex(index)}
     >
@@ -165,7 +165,7 @@ interface ResponsesProps {
   store: Store;
   boxes: Array<Box>;
   responses: Array<string>;
-  doResponse: (word: string) => void;
+  doResponse: () => void;
 }
 
 const Responses = observer(function Responses(props: ResponsesProps) {
@@ -173,7 +173,7 @@ const Responses = observer(function Responses(props: ResponsesProps) {
   var words = responses;
   var index = 0;
   const responseGroups = boxes.map((box, i) => {
-    const nchunk = Math.floor(words.length / (boxes.length - i));
+    const nchunk = Math.max(1, Math.floor(words.length / (boxes.length - i)));
     const chunk = words.slice(0, nchunk);
     words = words.slice(nchunk);
     const { pax, sax } = {'v': { pax: 'height', sax: 'width' },
@@ -193,7 +193,7 @@ const Responses = observer(function Responses(props: ResponsesProps) {
       />
     ));
     return (
-      <div key={i} style={dstyle} className="responseContainer">
+      <div key={i} style={dstyle} className="response-container">
         {responseGroup}
       </div>
     );
@@ -283,8 +283,13 @@ const ReadingSelector = observer(function ReadingSelector(props: ReadingSelectPr
   );
 });
   
-const Controls = observer(function Controls(props: {store: Store}) {
-  const store = props.store;
+interface ControlsProps {
+  store: Store;
+  doResponse: () => void;
+}
+
+const Controls = observer(function Controls(props: ControlsProps) {
+  const { store, doResponse } = props;
   const customStyles = {
     content : {
       top                   : '50%',
@@ -298,11 +303,6 @@ const Controls = observer(function Controls(props: {store: Store}) {
       backgroundColor   : 'rgba(255, 255, 255, 0.0)'
     }
   };
-  function triggerResponse() {
-    let selectedResponse = document.getElementsByClassName('iconButton selected')[0] as
-      HTMLElement;
-    selectedResponse.click();
-  }
 
   return (
     <div>
@@ -320,7 +320,7 @@ const Controls = observer(function Controls(props: {store: Store}) {
       />
       <NRKeyHandler
         keyValue={'Enter'}
-        onKeyHandle={triggerResponse}
+        onKeyHandle={doResponse}
       />
       <NRKeyHandler
         keyValue="Escape"
@@ -383,21 +383,21 @@ const Reader = observer(function Reader(props: {store: Store}) {
   };
 
   var rboxes: Array<Box> = []; // boxes for responses
-  if (store.layout.left) {
+  if (store.layout.left && rboxes.length < store.nresponses) {
     cbox.width -= rs;
     cbox.left = rs;
     rboxes.push({ top: 0, left: 0, height: cbox.height, width: rs, align: 'v' });
   }
-  if (store.layout.right) {
+  if (store.layout.right && rboxes.length < store.nresponses) {
     cbox.width -= rs;
     rboxes.push({ top: 0, left: sc.width - rs, height: cbox.height, width: rs, align: 'v'});
   }
-  if (store.layout.top) {
+  if (store.layout.top && rboxes.length < store.nresponses) {
     cbox.height -= rs;
     cbox.top = rs;
     rboxes.push({ top: 0, left: cbox.left, height: rs, width: cbox.width, align: 'h'});
   }
-  if (store.layout.bottom) {
+  if (store.layout.bottom && rboxes.length < store.nresponses) {
     cbox.height -= rs;
     rboxes.push({ top: containerHeight - rs, left: cbox.left, height: rs, width: cbox.width,
                   align: 'h'});
@@ -407,12 +407,13 @@ const Reader = observer(function Reader(props: {store: Store}) {
     width: store.screen.width,
     height: store.screen.height - 30,
     position: 'absolute' as 'absolute',
+    overflow: 'hidden' as 'hidden',
     left: 0,
     top: commentHeight
   };
 
-  function sayWord(word: string) {
-    var msg = new SpeechSynthesisUtterance(word);
+  function sayWord() {
+    var msg = new SpeechSynthesisUtterance(store.word);
     msg.lang = 'en-US';
     speechSynthesis.speak(msg);
   }
@@ -423,7 +424,7 @@ const Reader = observer(function Reader(props: {store: Store}) {
       <div style={containerStyle}>
         <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store} />
         <Responses boxes={rboxes} responses={store.responses} store={store} doResponse={sayWord} />
-        <Controls store={store} />
+        <Controls store={store} doResponse={sayWord}/>
       </div>
     </div>
   );

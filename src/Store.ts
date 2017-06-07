@@ -85,6 +85,9 @@ class Store {
   @action.bound setResponseIndex(i: number) {
     this.responseIndex = i;
   }
+  // current response
+  @computed get word() { return this.responses[this.responseIndex]; }
+
   // visibility of the controls modal
   @observable controlsVisible: boolean = false;
   @action.bound toggleControlsVisible() {
