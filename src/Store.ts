@@ -52,6 +52,17 @@ class Store {
     this.reading = n;
   }
   @computed get nreadings() { return this.book.readings.length; }
+  // get comment for page and reading
+  @computed get comment() {
+    if (this.pageno <= this.npages) {
+      return this.book.readings[this.reading].comments[this.pageno - 1];
+    } else {
+      return '';
+    }
+  }
+  // get responses for this reading
+  @computed get responses() { return this.book.readings[this.reading].responses; }
+
   // placement of the response symbols
   @observable layout: Layout = {
     left: true, right: true, top: false, bottom: false };

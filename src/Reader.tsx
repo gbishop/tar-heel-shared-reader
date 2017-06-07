@@ -370,11 +370,6 @@ const Controls = observer(function Controls(props: {store: Store}) {
 const Reader = observer(function Reader(props: {store: Store}) {
   const { store } = props;
   const book = store.book;
-  let comment = '';
-  const { comments, responses } = book.readings[store.reading];
-  if (store.pageno <= store.npages) {
-    comment = comments[store.pageno - 1];
-  }
   const commentHeight = 30;
   const containerHeight = store.screen.height - commentHeight;
   const sc = store.screen;
@@ -424,10 +419,10 @@ const Reader = observer(function Reader(props: {store: Store}) {
 
   return (
     <div>
-      <div className="comment" >{comment}</div>
+      <div className="comment" >{store.comment}</div>
       <div style={containerStyle}>
         <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store} />
-        <Responses boxes={rboxes} responses={responses} store={store} doResponse={sayWord} />
+        <Responses boxes={rboxes} responses={store.responses} store={store} doResponse={sayWord} />
         <Controls store={store} />
       </div>
     </div>
