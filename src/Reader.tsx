@@ -373,7 +373,7 @@ const Reader = observer(function Reader(props: {store: Store}) {
   let comment = '';
   const { comments, responses } = book.readings[store.reading];
   if (store.pageno <= store.npages) {
-    comment = comments[store.pageno];
+    comment = comments[store.pageno - 1];
   }
   const commentHeight = 30;
   const containerHeight = store.screen.height - commentHeight;
