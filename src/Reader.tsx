@@ -121,7 +121,7 @@ const ReaderContent = observer(function ReaderContent(props: ReaderContentProps)
   }
 });
 
-interface WordIconProps {
+interface ResponseButtonProps {
   word: string;
   index: number;
   style: React.CSSProperties;
@@ -129,7 +129,7 @@ interface WordIconProps {
   doResponse: (word: string) => void;
 }
 
-const WordIcon = observer(function WordIcon(props: WordIconProps) {
+const ResponseButton = observer(function ResponseButton(props: ResponseButtonProps) {
   const { word, index, style, store, doResponse } = props;
   const maxSize = Math.min(style.width, style.height);
   const fontSize = maxSize / 5;
@@ -161,21 +161,18 @@ const WordIcon = observer(function WordIcon(props: WordIconProps) {
   );
 });
 
-interface WordsProps {
+interface ResponsesProps {
   store: Store;
   boxes: Array<Box>;
   responses: Array<string>;
   doResponse: (word: string) => void;
 }
 
-const Words = observer(function Words(props: WordsProps) {
+const Responses = observer(function Responses(props: ResponsesProps) {
   const {store, boxes, responses, doResponse } = props;
   var words = responses;
   var index = 0;
-
-  return (
-    <div>
-    { boxes.map((box, i) => {
+  const responseGroups = boxes.map((box, i) => {
     const nchunk = Math.floor(words.length / (boxes.length - i));
     const chunk = words.slice(0, nchunk);
     words = words.slice(nchunk);
@@ -185,27 +182,23 @@ const Words = observer(function Words(props: WordsProps) {
     bstyle[pax] = box[pax] / nchunk;
     bstyle[sax] = box[sax];
     const dstyle = { top: box.top, left: box.left, width: box.width, height: box.height };
+    const responseGroup = chunk.map((w, j) => (
+      <ResponseButton
+        key={w}
+        word={w}
+        index={index++}
+        style={bstyle}
+        store={store}
+        doResponse={doResponse}
+      />
+    ));
     return (
       <div key={i} style={dstyle} className="responseContainer">
-        {
-          chunk.map((w, j) => {
-            return (
-              <WordIcon
-                key={w}
-                word={w}
-                index={index++}
-                style={bstyle}
-                store={store}
-                doResponse={doResponse}
-              />
-            );
-          })
-        }
+        {responseGroup}
       </div>
     );
-  })
-    }
-  </div>);
+  });
+  return <div>{responseGroups}</div>;
 });
 
 interface NRKeyHandlerProps {
@@ -434,7 +427,7 @@ const Reader = observer(function Reader(props: {store: Store}) {
       <div className="comment" >{comment}</div>
       <div style={containerStyle}>
         <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store} />
-        <Words boxes={rboxes} responses={responses} store={store} doResponse={sayWord} />
+        <Responses boxes={rboxes} responses={responses} store={store} doResponse={sayWord} />
         <Controls store={store} />
       </div>
     </div>
