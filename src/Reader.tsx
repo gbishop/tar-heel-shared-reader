@@ -8,6 +8,69 @@ import Store from './Store';
 import SharedBook from './SharedBook';
 import './Reader.css';
 
+const Reader = observer(function Reader(props: {store: Store}) {
+  const { store } = props;
+  const book = store.book;
+  const commentHeight = 30;
+  const containerHeight = store.screen.height - commentHeight;
+  const sc = store.screen;
+  const rs = Math.hypot(sc.width, sc.height) * (0.04 + 0.1 * store.responseSize / 100);
+  var cbox: Box = {
+    width: sc.width,
+    height: containerHeight,
+    left: 0,
+    top: 0,
+    align: 'v'
+  };
+
+  var rboxes: Array<Box> = []; // boxes for responses
+  if (store.layout.left && rboxes.length < store.nresponses) {
+    cbox.width -= rs;
+    cbox.left = rs;
+    rboxes.push({ top: 0, left: 0, height: cbox.height, width: rs, align: 'v' });
+  }
+  if (store.layout.right && rboxes.length < store.nresponses) {
+    cbox.width -= rs;
+    rboxes.push({ top: 0, left: sc.width - rs, height: cbox.height, width: rs, align: 'v'});
+  }
+  if (store.layout.top && rboxes.length < store.nresponses) {
+    cbox.height -= rs;
+    cbox.top = rs;
+    rboxes.push({ top: 0, left: cbox.left, height: rs, width: cbox.width, align: 'h'});
+  }
+  if (store.layout.bottom && rboxes.length < store.nresponses) {
+    cbox.height -= rs;
+    rboxes.push({ top: containerHeight - rs, left: cbox.left, height: rs, width: cbox.width,
+                  align: 'h'});
+  }
+
+  const containerStyle = {
+    width: store.screen.width,
+    height: store.screen.height - 30,
+    position: 'absolute' as 'absolute',
+    overflow: 'hidden' as 'hidden',
+    left: 0,
+    top: commentHeight
+  };
+
+  function sayWord() {
+    var msg = new SpeechSynthesisUtterance(store.word);
+    msg.lang = 'en-US';
+    speechSynthesis.speak(msg);
+  }
+
+  return (
+    <div>
+      <div className="comment" >{store.comment}</div>
+      <div style={containerStyle}>
+        <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store} />
+        <Responses boxes={rboxes} responses={store.responses} store={store} doResponse={sayWord} />
+        <Controls store={store} doResponse={sayWord}/>
+      </div>
+    </div>
+  );
+});
+
 // Reader component
 interface Box {
   top: number;
@@ -23,26 +86,6 @@ interface ReaderContentProps {
   pageno: number;
   store: Store;
 }
-
-const PageNavButtons = observer(function PageNavButtons(props: {store: Store}) {
-  if (props.store.pageTurnVisible) {
-    return (
-      <div>
-        <button className="next-link" onClick={props.store.nextPage}>
-          <img src={NextArrow} alt="next"/>Next
-        </button>
-        <button className="back-link" onClick={props.store.backPage}>
-          <img src={BackArrow} alt="back"/>Back
-        </button>
-      </div>
-    );
-  } else {
-    // This strange return value is keeping typescript happy 
-    // https://github.com/Microsoft/TypeScript/wiki/What%27s-new-in-TypeScript#non-null-assertion-operator
-    // We're asking it to ignore the possibility of returning null
-    return null!;
-  }
-});
 
 const ReaderContent = observer(function ReaderContent(props: ReaderContentProps) {
   const {book, box, pageno, store} = props;
@@ -121,44 +164,24 @@ const ReaderContent = observer(function ReaderContent(props: ReaderContentProps)
   }
 });
 
-interface ResponseButtonProps {
-  word: string;
-  index: number;
-  style: React.CSSProperties;
-  store: Store;
-  doResponse: () => void;
-}
-
-const ResponseButton = observer(function ResponseButton(props: ResponseButtonProps) {
-  const { word, index, style, store, doResponse } = props;
-  const maxSize = Math.min(style.width, style.height);
-  const fontSize = maxSize / 5;
-  const iconSize = maxSize - fontSize - 10;
-  const iStyle = {
-    width: iconSize
-  };
-  const cStyle = {
-    fontSize,
-    marginTop: -fontSize / 4
-  };
-  const isFocused = store.responseIndex === index;
-  return (
-    <button
-      className={`${isFocused ? 'selected' : ''}`}
-      onClick={() => doResponse()}
-      style={style}
-      onFocus={(e) => store.setResponseIndex(index)}
-    >
-      <figure>
-        <img
-          src={process.env.PUBLIC_URL + '/symbols/' + word + '.png'}
-          alt={word}
-          style={iStyle}
-        />
-        <figcaption style={cStyle}>{word}</figcaption>
-      </figure>
-    </button>
-  );
+const PageNavButtons = observer(function PageNavButtons(props: {store: Store}) {
+  if (props.store.pageTurnVisible) {
+    return (
+      <div>
+        <button className="next-link" onClick={props.store.nextPage}>
+          <img src={NextArrow} alt="next"/>Next
+        </button>
+        <button className="back-link" onClick={props.store.backPage}>
+          <img src={BackArrow} alt="back"/>Back
+        </button>
+      </div>
+    );
+  } else {
+    // This strange return value is keeping typescript happy 
+    // https://github.com/Microsoft/TypeScript/wiki/What%27s-new-in-TypeScript#non-null-assertion-operator
+    // We're asking it to ignore the possibility of returning null
+    return null!;
+  }
 });
 
 interface ResponsesProps {
@@ -201,88 +224,46 @@ const Responses = observer(function Responses(props: ResponsesProps) {
   return <div>{responseGroups}</div>;
 });
 
-interface NRKeyHandlerProps {
-  keyValue: string;
-  onKeyHandle: (e: Event) => void;
+interface ResponseButtonProps {
+  word: string;
+  index: number;
+  style: React.CSSProperties;
+  store: Store;
+  doResponse: () => void;
 }
 
-@observer
-class NRKeyHandler extends React.Component<NRKeyHandlerProps, void> {
-  isDown = false;
-  keyDown = (e: Event) => {
-    e.preventDefault();
-    if (!this.isDown) {
-      this.isDown = true;
-      this.props.onKeyHandle(e);
-    }
-  }
-  keyUp = (e: Event) => {
-    this.isDown = false;
-  }
-  render() {
-    const keyValue = this.props.keyValue;
-    return (
-      <div>
-        <KeyHandler
-          keyEventName={'keydown'}
-          keyValue={keyValue}
-          onKeyHandle={this.keyDown}
-        />
-        <KeyHandler
-          keyEventName={'keyup'}
-          keyValue={keyValue}
-          onKeyHandle={this.keyUp}
-        />
-      </div>
-    );
-  }
-}
-
-function capitalize(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
-const Layout = observer(function Layout(props: {store: Store}) {
-  const store = props.store;
-  const sides = ['left', 'right', 'top', 'bottom'];
-  const onCheck = (e: React.FormEvent<HTMLInputElement>) =>
-    store.setLayout(e.currentTarget.name, e.currentTarget.checked);
+const ResponseButton = observer(function ResponseButton(props: ResponseButtonProps) {
+  const { word, index, style, store, doResponse } = props;
+  const maxSize = Math.min(style.width, style.height);
+  const fontSize = maxSize / 5;
+  const iconSize = maxSize - fontSize - 10;
+  const iStyle = {
+    width: iconSize
+  };
+  const cStyle = {
+    fontSize,
+    marginTop: -fontSize / 4
+  };
+  const isFocused = store.responseIndex === index;
   return (
-    <fieldset>
-      <legend>Layout</legend>
-      {
-        sides.map(side => (
-          <label key={side}>{capitalize(side)}:
-            <input
-              name={side}
-              type="checkbox"
-              checked={store.layout[side]}
-              onChange={onCheck}
-            />
-          </label>))
-      }
-    </fieldset>);
-});
-
-interface ReadingSelectProps {
-  value: number;
-  max: number;
-  set: (value: number) => void;
-}
-
-const ReadingSelector = observer(function ReadingSelector(props: ReadingSelectProps) {
-  const { value, max, set } = props;
-  const spelled = [ 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth',
-                    'eleventh', 'twelth' ];
-  const options = spelled.slice(0, max).map((option, i) => (
-    <option key={option} value={i} >{option}</option>));
-  return (
-    <select value={value} onChange={(e) => set(+e.target.value)}>
-      {options}
-    </select>
+    <button
+      className={`${isFocused ? 'selected' : ''}`}
+      onClick={() => doResponse()}
+      style={style}
+      onFocus={(e) => store.setResponseIndex(index)}
+    >
+      <figure>
+        <img
+          src={process.env.PUBLIC_URL + '/symbols/' + word + '.png'}
+          alt={word}
+          style={iStyle}
+        />
+        <figcaption style={cStyle}>{word}</figcaption>
+      </figure>
+    </button>
   );
 });
-  
+
 interface ControlsProps {
   store: Store;
   doResponse: () => void;
@@ -367,67 +348,86 @@ const Controls = observer(function Controls(props: ControlsProps) {
   );
 });
 
-const Reader = observer(function Reader(props: {store: Store}) {
-  const { store } = props;
-  const book = store.book;
-  const commentHeight = 30;
-  const containerHeight = store.screen.height - commentHeight;
-  const sc = store.screen;
-  const rs = Math.hypot(sc.width, sc.height) * (0.04 + 0.1 * store.responseSize / 100);
-  var cbox: Box = {
-    width: sc.width,
-    height: containerHeight,
-    left: 0,
-    top: 0,
-    align: 'v'
-  };
+interface NRKeyHandlerProps {
+  keyValue: string;
+  onKeyHandle: (e: Event) => void;
+}
 
-  var rboxes: Array<Box> = []; // boxes for responses
-  if (store.layout.left && rboxes.length < store.nresponses) {
-    cbox.width -= rs;
-    cbox.left = rs;
-    rboxes.push({ top: 0, left: 0, height: cbox.height, width: rs, align: 'v' });
+@observer
+class NRKeyHandler extends React.Component<NRKeyHandlerProps, void> {
+  isDown = false;
+  keyDown = (e: Event) => {
+    e.preventDefault();
+    if (!this.isDown) {
+      this.isDown = true;
+      this.props.onKeyHandle(e);
+    }
   }
-  if (store.layout.right && rboxes.length < store.nresponses) {
-    cbox.width -= rs;
-    rboxes.push({ top: 0, left: sc.width - rs, height: cbox.height, width: rs, align: 'v'});
+  keyUp = (e: Event) => {
+    this.isDown = false;
   }
-  if (store.layout.top && rboxes.length < store.nresponses) {
-    cbox.height -= rs;
-    cbox.top = rs;
-    rboxes.push({ top: 0, left: cbox.left, height: rs, width: cbox.width, align: 'h'});
-  }
-  if (store.layout.bottom && rboxes.length < store.nresponses) {
-    cbox.height -= rs;
-    rboxes.push({ top: containerHeight - rs, left: cbox.left, height: rs, width: cbox.width,
-                  align: 'h'});
-  }
-
-  const containerStyle = {
-    width: store.screen.width,
-    height: store.screen.height - 30,
-    position: 'absolute' as 'absolute',
-    overflow: 'hidden' as 'hidden',
-    left: 0,
-    top: commentHeight
-  };
-
-  function sayWord() {
-    var msg = new SpeechSynthesisUtterance(store.word);
-    msg.lang = 'en-US';
-    speechSynthesis.speak(msg);
-  }
-
-  return (
-    <div>
-      <div className="comment" >{store.comment}</div>
-      <div style={containerStyle}>
-        <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store} />
-        <Responses boxes={rboxes} responses={store.responses} store={store} doResponse={sayWord} />
-        <Controls store={store} doResponse={sayWord}/>
+  render() {
+    const keyValue = this.props.keyValue;
+    return (
+      <div>
+        <KeyHandler
+          keyEventName={'keydown'}
+          keyValue={keyValue}
+          onKeyHandle={this.keyDown}
+        />
+        <KeyHandler
+          keyEventName={'keyup'}
+          keyValue={keyValue}
+          onKeyHandle={this.keyUp}
+        />
       </div>
-    </div>
+    );
+  }
+}
+
+interface ReadingSelectProps {
+  value: number;
+  max: number;
+  set: (value: number) => void;
+}
+
+const ReadingSelector = observer(function ReadingSelector(props: ReadingSelectProps) {
+  const { value, max, set } = props;
+  const spelled = [ 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth',
+                    'eleventh', 'twelth' ];
+  const options = spelled.slice(0, max).map((option, i) => (
+    <option key={option} value={i} >{option}</option>));
+  return (
+    <select value={value} onChange={(e) => set(+e.target.value)}>
+      {options}
+    </select>
   );
+});
+  
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+const Layout = observer(function Layout(props: {store: Store}) {
+  const store = props.store;
+  const sides = ['left', 'right', 'top', 'bottom'];
+  const onCheck = (e: React.FormEvent<HTMLInputElement>) =>
+    store.setLayout(e.currentTarget.name, e.currentTarget.checked);
+  return (
+    <fieldset>
+      <legend>Layout</legend>
+      {
+        sides.map(side => (
+          <label key={side}>{capitalize(side)}:
+            <input
+              name={side}
+              type="checkbox"
+              checked={store.layout[side]}
+              onChange={onCheck}
+            />
+          </label>))
+      }
+    </fieldset>);
 });
 
 export default Reader;
