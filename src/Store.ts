@@ -50,6 +50,7 @@ class Store {
   @observable reading: number = 0;
   @action.bound setReading(n: number) {
     this.reading = n;
+    this.responseIndex = 0;
   }
   @computed get nreadings() { return this.book.readings.length; }
   // get comment for page and reading
