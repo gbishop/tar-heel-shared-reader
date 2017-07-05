@@ -33,6 +33,7 @@ class Store {
     if (this.pageno <= this.npages) {
       this.pageno += 1;
     }
+    console.log('nextPage', this.pageno);
   }
   // step back to previous page
   @action.bound backPage() {
@@ -41,6 +42,7 @@ class Store {
     } else {
       this.pageno = this.npages + 1;
     }
+    console.log('backPage', this.pageno);
   }
   // set the page number
   @action.bound setPage(i: number) {
@@ -95,7 +97,7 @@ class Store {
     this.controlsVisible = !this.controlsVisible;
   }
   // visibility of page turn buttons on book page
-  @observable pageTurnVisible: boolean = false;
+  @observable pageTurnVisible: boolean = true;
   @action.bound togglePageTurnVisible() {
     this.pageTurnVisible = !this.pageTurnVisible;
   }
