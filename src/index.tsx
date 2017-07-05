@@ -38,7 +38,7 @@ function startRouter(store: Store) {
 }
 
 function startPersist(store: Store) {
-  var persist = window.localStorage.getItem('settings');
+  var persist = window.localStorage.getItem('THSR-settings');
   if (persist) {
     store.setPersist(persist);
   }
