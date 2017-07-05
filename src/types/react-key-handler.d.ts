@@ -5,7 +5,7 @@ type KeyHandlerProps = {
 };
 
 declare module 'react-key-handler' {
-  class KeyHandler extends React.Component<KeyHandlerProps, void> {
+  class KeyHandler extends React.Component<KeyHandlerProps, {}> {
   }
 
   export default KeyHandler;
