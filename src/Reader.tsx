@@ -47,9 +47,6 @@ const Reader = observer(function Reader(props: {store: Store}) {
   const containerStyle = {
     width: store.screen.width,
     height: store.screen.height - 30,
-    position: 'absolute' as 'absolute',
-    overflow: 'hidden' as 'hidden',
-    left: 0,
     top: commentHeight
   };
 
@@ -62,7 +59,7 @@ const Reader = observer(function Reader(props: {store: Store}) {
   return (
     <div>
       <div className="comment" >{store.comment}</div>
-      <div style={containerStyle}>
+      <div className="reading-container" style={containerStyle}>
         <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store} />
         <Responses boxes={rboxes} responses={store.responses} store={store} doResponse={sayWord} />
         <Controls store={store} doResponse={sayWord}/>
