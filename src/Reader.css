@@ -11,7 +11,7 @@
   width: 100%;
   overflow: hidden;
   position: absolute;
-  background-color: #ddd;
+  background-color: #fff;
 }
 
 .caption-box {
@@ -44,9 +44,9 @@
 .response-container button {
   display: inline-block;
   background: solid;
+  background-color: #ddd;
   text-align: center;
   padding: 0;
-  -webkit-appearance: none;
 }
 
 .response-container button.selected {

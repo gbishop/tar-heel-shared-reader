@@ -6,7 +6,7 @@ import Store from './Store';
 import Reader from './Reader';
 
 @observer
-class App extends React.Component<{store: Store}, void> {
+class App extends React.Component<{store: Store}, {}> {
   render() {
     const {store} = this.props;
     if (store.bookid.length === 0) {
