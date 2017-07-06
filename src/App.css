@@ -31,12 +31,18 @@
     color: cornflowerblue;
 }
 
+button {
+  outline: none;
+}
+
 .student-table {
   border-collapse: separate;
   border-spacing: 0 5px;
   width: 100%;
   padding: 10px;
   font-size: 14px;
+  position: absolute;
+  top: 8%;
 }
 
 .student-table th {
@@ -54,7 +60,6 @@
 .student-table tr:hover {
   background-color: white;
   cursor: pointer;
-  box-shadow: 3px 3px #b2b2a7;
 }
 
 .student-table tr:first-child:hover {
@@ -63,3 +68,28 @@
   box-shadow: none;
 }
 
+.student-button {
+  position: absolute;
+  width: 100px;
+  height: 30px;
+  border-radius: 5px;
+  background-color: inherit;
+  border: 1px solid gray;
+}
+
+.register-button {
+  border-collapse: collapse;
+  width: 110%;
+  padding: 10px;
+  font-size: 14px;
+  position: absolute;
+  left: 5%;
+}
+
+.register-button td {
+  border-bottom: 1px solid transparent;
+}
+
+.register-button button:active {
+  background: linear-gradient(#985E6D, #985E6D);
+}
