@@ -13,13 +13,14 @@ interface LandingState {
     inputStyle: any;
     email: string;
     register: string;
+    mode: number;
 }
 
 class Landing extends React.Component <LandingProps, LandingState> {
     constructor () {
         super();
         this.state = {
-            message: 'Please enter your email address to continue. Then, login using your Google account.',
+            message: 'Welcome to Tar Heel Shared Reader! Please enter your email address to continue. Then, login using your Google account.',
             outerDivStyle: {
                 position: 'absolute',
                 display: 'inline-flex',
@@ -42,13 +43,15 @@ class Landing extends React.Component <LandingProps, LandingState> {
                 backgroundColor: 'white',
                 padding: '10px',
                 background: 'linear-gradient(white, #e0dede)',
-                color: '#192231'
+                color: '#192231',
+                fontSize: "12px"
             },
             inputStyle: {
                 width: '200px'
             },
             email: '',
-            register: ''
+            register: '',
+            mode: 1 /* Default 0 */
         };
 
         this.handleInput = this.handleInput.bind(this);
@@ -97,7 +100,7 @@ class Landing extends React.Component <LandingProps, LandingState> {
             console.log(error.message);
         }).then(function() {
             if (tempBool === false) {
-                self.setState({message: "Email does not exist in database. Please contact web master for assistance."});
+                self.setState({message: "Email does not exist in database. Please contact the web master for assistance."});
             }
         });
     }
@@ -106,7 +109,10 @@ class Landing extends React.Component <LandingProps, LandingState> {
         const self = this;
         var provider = new firebase.auth.GoogleAuthProvider();
         firebase.auth().signInWithPopup(provider).then(function(result: any) {
-            self.setState({message: 'Welcome, ' + result.user.email});
+            self.setState({message: 'Welcome, ' + result.user.email + ". Please wait while we redirect you..."});
+            setTimeout(function() {
+                self.setState({mode: 1});
+            }, 5000);
         }).catch(function(error: any) {
             self.setState({message: error.message});
         });
@@ -123,22 +129,78 @@ class Landing extends React.Component <LandingProps, LandingState> {
     }
 
     render () {
+        if (this.state.mode === 0) {
+            return (
+                <div style={this.state.outerDivStyle}>
+                    <div style={this.state.innerDivStyle}>
+                        <h3 style={{color: '#242d3d', fontSize: '30px'}}>Tar Heel Shared Reader</h3>
+                        <div style={this.state.innermostDivStyle}>
+                            {this.state.message}
+                        </div>
+                        <br/>
+                        &nbsp;
+                        <input style={{position: 'relative', width: '200px', left: '1px'}} type="text" name="register" placeholder="register" value={this.state.register} onChange={this.handleInput}/>
+                        &nbsp;
+                        <button type="button" onClick={this.addEmail}>Register</button> <br/>
+                        <input style={this.state.inputStyle} type="text" name="email" placeholder="email" value={this.state.email} onChange={this.handleInput}/>
+                        &nbsp;
+                        <button type="button" onClick={this.validate}>Validate</button>
+                    </div>
+                </div>
+            );
+        }
+        return <ClassRoll/>;
+    }
+}
+
+interface ClassRollProps {
+
+}
+
+interface ClassRollState {
+    outerDivStyle: any;
+}
+
+class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
+    constructor() {
+        super();
+
+        this.state = {
+            outerDivStyle: {
+                position: "absolute",
+                width: "750px",
+                height: "600px",
+                background: "linear-gradient(white, #8e8e8e)",
+                display: "inline-flex",
+                left: '50%',
+                top: '50%',
+                marginLeft: '-375px',
+                marginTop: '-300px',
+                borderRadius: "25px"
+            }
+        };
+    }
+
+    render() {
         return (
             <div style={this.state.outerDivStyle}>
-                <div style={this.state.innerDivStyle}>
-                    <h3 style={{color: '#242d3d', fontSize: '30px'}}>Tar Heel Shared Reader</h3>
-                    <div style={this.state.innermostDivStyle}>
-                        {this.state.message}
-                    </div>
-                    <br/>
-                    &nbsp;
-                    <input style={{position: 'relative', width: '200px', left: '1px'}} type="text" name="register" placeholder="register" value={this.state.register} onChange={this.handleInput}/>
-                    &nbsp;
-                    <button type="button" onClick={this.addEmail}>Register</button> <br/>
-                    <input style={this.state.inputStyle} type="text" name="email" placeholder="email" value={this.state.email} onChange={this.handleInput}/>
-                    &nbsp;
-                    <button type="button" onClick={this.validate}>Validate</button>
-                </div>
+                <table className="student-table">
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Student First Name</th>
+                        <th>Student Last Name</th>
+                    </tr>
+                    <tr>
+                        <td>Apple</td>
+                        <td>banana</td>
+                        <td>Cheese</td>
+                    </tr>
+                    <tr>
+                        <td>Cheese</td>
+                        <td>Watermelon</td>
+                        <td>Cheese</td>
+                    </tr>
+                </table>
             </div>
         );
     }

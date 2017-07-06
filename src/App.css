@@ -30,3 +30,36 @@
 .Counter-odd {
     color: cornflowerblue;
 }
+
+.student-table {
+  border-collapse: separate;
+  border-spacing: 0 5px;
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+}
+
+.student-table th {
+  text-align: left;
+  color: #a35167;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.student-table th, td {
+  padding: 10px;
+  border-bottom: 1px solid #b2b2a7;
+}
+
+.student-table tr:hover {
+  background-color: white;
+  cursor: pointer;
+  box-shadow: 3px 3px #b2b2a7;
+}
+
+.student-table tr:first-child:hover {
+  background-color: transparent;
+  cursor: default;
+  box-shadow: none;
+}
+
