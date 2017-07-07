@@ -79,15 +79,15 @@ button {
 
 .register-button {
   border-collapse: collapse;
-  width: 110%;
-  padding: 10px;
+  width: 100%;
   font-size: 14px;
   position: absolute;
-  left: 5%;
+  left: 3%;
 }
 
 .register-button td {
   border-bottom: 1px solid transparent;
+  padding: 15px;
 }
 
 .register-button button:active {
