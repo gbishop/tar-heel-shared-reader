@@ -52,7 +52,7 @@ class Landing extends React.Component <LandingProps, LandingState> {
             },
             email: '',
             register: '',
-            mode: 1 /* Default 0 */
+            mode: 2 /* Default 0 */
         };
 
         this.handleInput = this.handleInput.bind(this);
@@ -144,8 +144,11 @@ class Landing extends React.Component <LandingProps, LandingState> {
                     </div>
                 </div>
             );
+        } else if (this.state.mode === 1) {
+            return <ClassRoll/>;
+        } else {
+            return <BookSelection/>;
         }
-        return <ClassRoll/>;
     }
 }
 
@@ -183,7 +186,9 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                 marginLeft: '-375px',
                 marginTop: '-300px',
                 borderRadius: '25px',
-                userSelect: 'none'
+                userSelect: 'none',
+                overflowY: 'auto',
+                overflowX: 'hidden'
             },
             registerStudentStyle: {
                 fontFamily: 'Didot',
@@ -243,7 +248,7 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                 self.setState({tableCellsArray: tempArray});
             });
 
-            // Listeners
+            // child_added listener
             var studentsRef = firebase.database().ref('/users/' + uid + '/students');
             studentsRef.on('child_added', function (data: any | null | undefined) {
                 let student =
@@ -256,7 +261,40 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                 newArr.push(student);
                 self.setState({tableCellsArray: newArr});
             });
+
+            // child_changed listener
+            firebase.database().ref('/users/' + uid + '/students').on('child_changed', function(data: any | null | undefined) {
+                let tempArr = self.state.tableCellsArray.slice();
+                let ind: number = self.getRowIndex(data.key);
+                let student =
+                    <tr key={data.key}>
+                        <td>{data.key}</td>
+                        <td>{data.child('firstName').val()}</td>
+                        <td>{data.child('lastName').val()}</td>
+                    </tr>;
+                tempArr.splice(ind, 1, student);
+                self.setState({tableCellsArray: tempArr});
+            });
+
+            // child_removed listener
+            firebase.database().ref('/users/' + uid + '/students').on('child_removed', function(data: any | null | undefined) {
+                let tempArr = self.state.tableCellsArray.slice();
+                let ind: number = self.getRowIndex(data.key);
+                tempArr.splice(ind, 1);
+                self.setState({tableCellsArray: tempArr});
+            });
         }, 500);
+    }
+
+    getRowIndex(key: any) {
+        let ind: number = 0;
+        for (let i = 0; i < this.state.tableCellsArray.length; i++) {
+            if (this.state.tableCellsArray[i].key === key) {
+                ind = i;
+                break;
+            }
+        }
+        return ind;
     }
 
     getUserID() {
@@ -279,6 +317,10 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
         if (e.target.innerHTML === 'Add Student') {
             this.setState({isRegisterHidden: !this.state.isRegisterHidden});
         } else if (e.target.innerHTML === 'Remove Student') {
+            if (this.state.checkedSelection === '') {
+                alert('Please select a student first.');
+                return;
+            }
             this.setState({isRemoveHidden: !this.state.isRemoveHidden});
         } else if (e.target.innerHTML === 'Update Student') {
             if (this.state.checkedSelection === '') {
@@ -304,7 +346,9 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                 marginTop: '-300px',
                 borderRadius: '25px',
                 userSelect: 'none',
-                filter: (this.state.outerDivStyle.filter === 'blur(10px)') ? 'blur(0px)' : 'blur(10px)'
+                filter: (this.state.outerDivStyle.filter === 'blur(10px)') ? 'blur(0px)' : 'blur(10px)',
+                overflowY: 'auto',
+                overflowX: 'hidden'
             }
         });
     }
@@ -330,7 +374,9 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                 marginTop: '-300px',
                 borderRadius: '25px',
                 userSelect: 'none',
-                filter: (this.state.outerDivStyle.filter === 'blur(10px)') ? 'blur(0px)' : 'blur(10px)'
+                filter: (this.state.outerDivStyle.filter === 'blur(10px)') ? 'blur(0px)' : 'blur(10px)',
+                overflowY: 'auto',
+                overflowX: 'hidden'
             }
         });
     }
@@ -358,11 +404,38 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
     }
 
     removeStudent(e: any) {
+        const self = this;
         e.preventDefault();
+        if (e.target.innerHTML === 'Yes') {
+            let uid = this.getUserID();
+            let key = this.state.checkedSelection.childNodes[0].innerHTML;
+            firebase.database().ref('/users/' + uid + '/students/' + key).remove().then(function() {
+                self.setState({checkedSelection: ''});
+                self.closeWindow();
+            });
+        } else if (e.target.innerHTML === 'No') {
+            self.closeWindow();
+        }
     }
 
     updateStudent(e: any) {
+        const self = this;
         e.preventDefault();
+        let uid = this.getUserID();
+        let key = this.state.checkedSelection.childNodes[0].innerHTML;
+        let newData = {
+            uid: uid,
+            firstName: this.state.defaultFirstName,
+            lastName: this.state.defaultLastName
+        };
+        firebase.database().ref('/users/' + uid + '/students/' + key).update(
+            newData
+        ).catch(function(error: any) {
+            console.log(error.message);
+        }).then(function() {
+            self.setState({defaultFirstName: '', defaultLastName: ''});
+            self.closeWindow();
+        });
     }
 
     handleInput(e: any) {
@@ -372,11 +445,15 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
 
     activate(e: any) {
         console.log('activate');
+        if (this.state.checkedSelection === '') {
+            alert('Please select a student first.');
+        }
     }
 
     checkSelection(e: any) {
         e.preventDefault();
-        if (e.target.parentElement.childNodes[0].tagName === 'TH') {
+        if (e.target.parentElement.childNodes[0].tagName === 'TH' ||
+            e.target.parentElement.tagName === 'TABLE') {
             return;
         }
 
@@ -384,6 +461,7 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
         let newTarget = e.target.parentElement;
 
         if (originalTarget !== '' && newTarget !== originalTarget) {
+            alert('Please deselect previous student first.');
             return;
         }
 
@@ -432,15 +510,281 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                     <button type="button" onClick={this.closeWindow}>Close</button>
                 </div>
                 <div style={this.state.registerStudentStyle} hidden={this.state.isUpdateHidden}>
-                    First Name: <input type="text" name="firstName" value={this.state.defaultFirstName}
+                    First Name: <input type="text" name="defaultFirstName" value={this.state.defaultFirstName}
                                        onChange={this.handleInput}/>
                     &nbsp;
-                    Last Name: <input type="text" name="lastName" value={this.state.defaultLastName}
+                    Last Name: <input type="text" name="defaultLastName" value={this.state.defaultLastName}
                                       onChange={this.handleInput}/><br/>
                     <button type="button" onClick={this.updateStudent}>Update Student</button>
                     &nbsp;
                     <button type="button" onClick={this.closeWindow}>Close</button>
                 </div>
+                <div style={this.state.registerStudentStyle} hidden={this.state.isRemoveHidden}>
+                    Are you sure you would like to remove this student from the database?
+                    <br/>
+                    <button type="button" onClick={this.removeStudent}>Yes</button>
+                    &nbsp;
+                    <button type="button" onClick={this.removeStudent}>No</button>
+                </div>
+            </div>
+        );
+    }
+}
+
+interface BookSelectionProps {
+
+}
+
+interface BookSelectionState {
+    outerDivStyle: Object;
+    messageDivStyle: Object;
+    isMessageHidden: boolean;
+    bookArray: any[];
+    checkedSelection: any;
+    bookSelectionStyle: Object;
+    isBookSelectionHidden: boolean;
+}
+
+class BookSelection extends React.Component<BookSelectionProps, BookSelectionState> {
+    constructor() {
+        super();
+
+        this.state = {
+            outerDivStyle: {
+                fontFamily: 'Didot',
+                position: 'absolute',
+                width: '750px',
+                height: '600px',
+                background: 'linear-gradient(white, #8e8e8e)',
+                display: 'inline-flex',
+                left: '50%',
+                top: '50%',
+                marginLeft: '-375px',
+                marginTop: '-300px',
+                borderRadius: '25px',
+                userSelect: 'none',
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                filter: 'blur(10px)'
+            },
+            messageDivStyle: {
+                fontFamily: 'Didot',
+                position: 'fixed',
+                width: '500px',
+                height: '40px',
+                background: 'linear-gradient(transparent, transparent)',
+                marginLeft: '-250px',
+                marginTop: '-20px',
+                left: '50%',
+                top: '50%',
+                zIndex: '1',
+                borderRadius: '5px',
+                color: 'black',
+                textAlign: 'center',
+                border: '1px solid black',
+                padding: '10px'
+            },
+            bookSelectionStyle: {
+                fontFamily: 'Didot',
+                position: 'fixed',
+                width: '500px',
+                height: '40px',
+                background: 'linear-gradient(transparent, transparent)',
+                marginLeft: '-250px',
+                marginTop: '-20px',
+                left: '50%',
+                top: '50%',
+                zIndex: '1',
+                borderRadius: '5px',
+                color: 'black',
+                textAlign: 'center',
+                border: '1px solid black',
+                padding: '10px'
+            },
+            isBookSelectionHidden: true,
+            isMessageHidden: false,
+            bookArray: [],
+            checkedSelection: ''
+        };
+
+        this.removeMessage = this.removeMessage.bind(this);
+        this.chooseBook = this.chooseBook.bind(this);
+        this.openBookMenu = this.openBookMenu.bind(this);
+        this.confirmBook = this.confirmBook.bind(this);
+        this.closeBookMenu = this.closeBookMenu.bind(this);
+    }
+
+    removeMessage(e: any) {
+        e.preventDefault();
+
+        this.setState({
+            isMessageHidden: true,
+            outerDivStyle: {
+                fontFamily: 'Didot',
+                position: 'absolute',
+                width: '750px',
+                height: '600px',
+                background: 'linear-gradient(white, #8e8e8e)',
+                display: 'inline-flex',
+                left: '50%',
+                top: '50%',
+                marginLeft: '-375px',
+                marginTop: '-300px',
+                borderRadius: '25px',
+                userSelect: 'none',
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                filter: 'blur(0px)'
+            }
+        });
+    }
+
+    componentWillMount() {
+
+    }
+
+    chooseBook(e: any) {
+        e.preventDefault();
+        if (this.state.isBookSelectionHidden === false) {
+            return;
+        }
+        if (e.target.className === 'book-table') {
+            return;
+        }
+        if (this.state.checkedSelection !== '' && e.target !== this.state.checkedSelection) {
+            alert('Please deselect previous book first.');
+            return;
+        }
+        if (this.state.checkedSelection === '') {
+            this.setState({checkedSelection: e.target});
+        } else {
+            this.setState({checkedSelection: ''});
+        }
+        if (e.target.style.background === 'linear-gradient(to left, white, rgb(188, 184, 184))') {
+            e.target.style.background = 'linear-gradient(to left, transparent, transparent)';
+        } else {
+            e.target.style.background = 'linear-gradient(to left, white, rgb(188, 184, 184))';
+        }
+    }
+
+    openBookMenu(e: any) {
+        e.preventDefault();
+
+        if (this.state.checkedSelection === '') {
+            alert('Please select a book first.');
+            return;
+        }
+        this.setState({isBookSelectionHidden: false});
+        this.blur();
+    }
+
+    confirmBook(e: any) {
+        e.preventDefault();
+        this.closeBookMenu(null);
+        this.state.checkedSelection.style.background = 'linear-gradient(to left, transparent, transparent)';
+        this.setState({checkedSelection: ''});
+        // TODO whatever needs to be done after selecting the book
+    }
+
+    closeBookMenu(e: any) {
+        if (e !== null) {
+            e.preventDefault();
+        }
+        this.setState({isBookSelectionHidden: true});
+        this.unblur();
+    }
+
+    blur() {
+        this.setState({
+            outerDivStyle: {
+                fontFamily: 'Didot',
+                position: 'absolute',
+                width: '750px',
+                height: '600px',
+                background: 'linear-gradient(white, #8e8e8e)',
+                display: 'inline-flex',
+                left: '50%',
+                top: '50%',
+                marginLeft: '-375px',
+                marginTop: '-300px',
+                borderRadius: '25px',
+                userSelect: 'none',
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                filter: 'blur(10px)'
+            }
+        });
+    }
+
+    unblur() {
+        this.setState({
+            outerDivStyle: {
+                fontFamily: 'Didot',
+                position: 'absolute',
+                width: '750px',
+                height: '600px',
+                background: 'linear-gradient(white, #8e8e8e)',
+                display: 'inline-flex',
+                left: '50%',
+                top: '50%',
+                marginLeft: '-375px',
+                marginTop: '-300px',
+                borderRadius: '25px',
+                userSelect: 'none',
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                filter: 'blur(0px)'
+            }
+        });
+    }
+
+    render () {
+        return (
+            <div>
+                <div style={this.state.messageDivStyle} hidden={this.state.isMessageHidden}>
+                    Please select a book to continue. <br/>
+                    <button type="button" onClick={this.removeMessage}>
+                        Ok
+                    </button>
+                </div>
+                <div style={this.state.outerDivStyle}>
+                    <button className="book-selection" onClick={this.openBookMenu}>Choose</button>
+                    <div className="book-table" onClick={this.chooseBook}>
+                        <Book title="I Like Bugs"/>
+                        <Book title="I Like Cheese"/>
+                        <Book title="I Like Cheese"/>
+                        <Book title="I Like Cheese"/>
+                    </div>
+                </div>
+                <div style={this.state.bookSelectionStyle} hidden={this.state.isBookSelectionHidden}>
+                    You haven chosen {"'" + this.state.checkedSelection.innerHTML + ".'"}
+                    <br/>
+                    <button type="button" onClick={this.confirmBook}>Confirm</button>
+                    &nbsp;
+                    <button type="button" onClick={this.closeBookMenu}>Cancel</button>
+                </div>
+            </div>
+        );
+    }
+}
+
+interface BookProps {
+    title: string;
+}
+
+interface BookState {
+
+}
+
+class Book extends React.Component<BookProps, BookState> {
+    constructor () {
+        super();
+    }
+
+    render() {
+        return (
+            <div className="book">
+                {this.props.title}
             </div>
         );
     }
