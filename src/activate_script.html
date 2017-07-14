@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Title</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/4.1.3/firebase.js"></script>
+    </head>
+    <body>
+        <script>
+            $(document).ready(function() {
+                var config = {
+                    apiKey: "AIzaSyCRHcXYbVB_eJn9Dd0BQ7whxyS2at6rkGc",
+                    authDomain: "tarheelsharedreader-9f793.firebaseapp.com",
+                    databaseURL: "https://tarheelsharedreader-9f793.firebaseio.com",
+                    projectId: "tarheelsharedreader-9f793",
+                    storageBucket: "tarheelsharedreader-9f793.appspot.com",
+                    messagingSenderId: "686575466062"
+                };
+                firebase.initializeApp(config);
+                
+                var provider = new firebase.auth.GoogleAuthProvider();
+                firebase.auth().signInWithPopup(provider).then(function(result) {
+                    var token = result.credential.accessToken;
+                    var user = result.user;
+                    activateEmails();
+                }).catch(function(error) {
+                    var errorCode = error.code;
+                    var errorMessage = error.message;
+                    var email = error.email;
+                    var credential = error.credential;
+                });
+                
+                function activateEmails() {
+                    var emailsArray = [];
+                    firebase.database().ref('/users/admin_data').once('value', function(snapshot) {
+                        snapshot.forEach(function(childSnapshot) {
+                            emailsArray.push({
+                                uid: childSnapshot.child('uid').val(),
+                                email: childSnapshot.child('email').val()
+                            });
+                        });
+                    }).then(function() {
+                        var $json_emails = [];
+                        var matched_array = [];
+                        $.getJSON("emails.json", function(json) {
+                            $json_emails = json.emails;
+                        }).done(function() {
+                            for (var i = 0; i < emailsArray.length; i++) {
+                                for (var j = 0; j < $json_emails.length; j++) {
+                                    if ($json_emails[j] == emailsArray[i].email) {
+                                        matched_array.push(emailsArray[i]);
+                                    }
+                                }
+                            }
+                        }).done(function() {
+                            for (var i = 0; i < matched_array.length; i++) {
+                                var uid = matched_array[i].uid;
+                                console.log(uid);
+                                firebase.database().ref('/users/admin/' + uid).set({
+                                    active: true
+                                });
+                            }
+                        });
+                    });
+                }
+                
+                // obtain emails from JSON
+    
+                function getUserID() {
+                    return firebase.auth().currentUser.uid;
+                }
+            });
+        </script>
+    </body>
+</html>

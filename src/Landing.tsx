@@ -10,29 +10,31 @@ interface LandingState {
     innermostDivStyle: any;
     innerDivStyle: any;
     outerDivStyle: any;
-    inputStyle: any;
     email: string;
-    register: string;
     mode: number;
+    register: string;
 }
 
 class Landing extends React.Component <LandingProps, LandingState> {
     constructor () {
         super();
         this.state = {
-            message: 'Welcome to Tar Heel Shared Reader! Please enter your email address to continue. ' +
-            'Then, login using your Google account.',
+            message: 'Welcome to Tar Heel Shared Reader! Please sign in to your Google email address to continue.',
             outerDivStyle: {
+                fontFamily: 'Didot',
                 position: 'absolute',
-                display: 'inline-flex',
-                height: '500px',
                 width: '500px',
-                borderRadius: '25px',
+                height: '500px',
+                background: 'linear-gradient(white, #8e8e8e)',
+                display: 'inline-flex',
                 left: '50%',
                 top: '50%',
                 marginLeft: '-250px',
                 marginTop: '-250px',
-                background: 'linear-gradient(#a35167, #91455a)'
+                borderRadius: '25px',
+                userSelect: 'none',
+                overflowY: 'auto',
+                overflowX: 'hidden'
             },
             innerDivStyle: {
                 position: 'relative',
@@ -45,22 +47,26 @@ class Landing extends React.Component <LandingProps, LandingState> {
                 padding: '10px',
                 background: 'linear-gradient(white, #e0dede)',
                 color: '#192231',
-                fontSize: '12px'
-            },
-            inputStyle: {
-                width: '200px'
+                fontSize: '12px',
+                marginLeft: '10px',
+                marginRight: '10px',
+                borderRadius: '10px'
             },
             email: '',
-            register: '',
-            mode: 2 /* Default 0 */
+            mode: 0, /* Default 0 */
+            register: ''
         };
 
         this.handleInput = this.handleInput.bind(this);
         this.validate = this.validate.bind(this);
-        this.addEmail = this.addEmail.bind(this);
+        this.changeMode = this.changeMode.bind(this);
+        this.googleSignOut = this.googleSignOut.bind(this);
+        this.registerEmail =  this.registerEmail.bind(this);
+        this.addBook = this.addBook.bind(this);
     }
 
     componentWillMount() {
+        const self = this;
         var config = {
             apiKey: 'AIzaSyCRHcXYbVB_eJn9Dd0BQ7whxyS2at6rkGc',
             authDomain: 'tarheelsharedreader-9f793.firebaseapp.com',
@@ -70,6 +76,15 @@ class Landing extends React.Component <LandingProps, LandingState> {
             messagingSenderId: '686575466062'
         };
         firebase.initializeApp(config);
+
+        firebase.auth().onAuthStateChanged(function(user: any) {
+            if (user) {
+                console.log('user signed in');
+                self.setState({email: user.email});
+            } else {
+                console.log('user not signed in');
+            }
+        });
     }
 
     handleInput(e: any) {
@@ -77,49 +92,78 @@ class Landing extends React.Component <LandingProps, LandingState> {
         this.setState({[e.target.name]: e.target.value});
     }
 
-    validate(e: any) {
-        const self = this;
+    getUserID() {
+        let auth: any | null | undefined;
+        auth = firebase.auth();
+        let currentUser: any | null | undefined;
+        currentUser = auth.currentUser;
+        let uid: any | null | undefined;
+        uid = currentUser.uid;
+        return uid;
+    }
+
+    getUserEmail() {
+        let auth: any | null | undefined;
+        auth = firebase.auth();
+        let currentUser: any | null | undefined;
+        currentUser = auth.currentUser;
+        let userEmail: any | null | undefined;
+        userEmail = currentUser.email;
+        return userEmail;
+    }
+
+    registerEmail(e: any) {
         e.preventDefault();
-        var tempBool = false;
-        firebase.database().ref('/registeredEmails').once('value', function(snapshot: any) {
-            snapshot.forEach(function(childSnapshot: any) {
-                if (self.state.email === childSnapshot.child('email').val()) {
-                    self.googleSignIn();
-                    tempBool = true;
-                }
-                return false;
-            });
-        }).catch(function(error: any) {
+        const self = this;
+        let firstRef = firebase.database().ref('/users/admin_data/').push();
+        firstRef.set({
+            uid: self.getUserID(),
+            email: self.state.register
+        }).catch(function(error) {
             console.log(error.message);
         }).then(function() {
-            if (tempBool === false) {
-                self.setState({message: 'Email does not exist in database. ' +
-                'Please contact the web master for assistance.'});
-            }
+            let key = firstRef.key;
+            firebase.database().ref('/users/private_user/' + self.getUserID()).set({
+                uid: self.getUserID(),
+                email: self.state.register,
+                admin_data_key: key
+            }).catch(function(error) {
+                console.log(error.message);
+            });
+        });
+
+
+    }
+
+    addBook(e: any) {
+        e.preventDefault();
+        firebase.database().ref('/users/books').set({
+            title: 'I Like Bugs'
         });
     }
 
-    googleSignIn() {
-        const self = this;
+    validate(e: any) {
+        e.preventDefault();
+        // const self = this;
         var provider = new firebase.auth.GoogleAuthProvider();
         firebase.auth().signInWithPopup(provider).then(function(result: any) {
-            self.setState({message: 'Welcome, ' + result.user.email + '. Please wait while we redirect you...'});
-            setTimeout(function() {
-                self.setState({mode: 1});
-            }, 3000);
+
         }).catch(function(error: any) {
-            self.setState({message: error.message});
+            console.log(error.message);
         });
     }
 
-    addEmail(e: any) {
-        const self = this;
+    googleSignOut(e: any) {
         e.preventDefault();
-        var newRef = firebase.database().ref('/registeredEmails').push();
-        newRef.set({
-            email: self.state.register
+        firebase.auth().signOut().then(function() {
+            console.log('Sign out successful');
+        }).catch(function(error) {
+            console.log(error.message);
         });
+    }
 
+    changeMode(mode: number, student: Object) {
+        this.setState({mode: mode});
     }
 
     render () {
@@ -127,47 +171,44 @@ class Landing extends React.Component <LandingProps, LandingState> {
             return (
                 <div style={this.state.outerDivStyle}>
                     <div style={this.state.innerDivStyle}>
-                        <h3 style={{color: 'snow', fontSize: '30px'}}>Tar Heel Shared Reader</h3>
+                        <h1 style={{color: '#a35167', fontSize: '30px'}}>Tar Heel Shared Reader</h1>
                         <div style={this.state.innermostDivStyle}>
                             {this.state.message}
                         </div>
                         <br/>
+                        <input type="text" value={this.state.register} name="register" onChange={this.handleInput} placeholder="register"/>
                         &nbsp;
-                        <input style={{position: 'relative', width: '200px', left: '1px'}} type="text" name="register"
-                               placeholder="register" value={this.state.register} onChange={this.handleInput}/>
+                        <button type="button" onClick={this.registerEmail}>Register</button>
                         &nbsp;
-                        <button type="button" onClick={this.addEmail}>Register</button> <br/>
-                        <input style={this.state.inputStyle} type="text" name="email" placeholder="email"
-                               value={this.state.email} onChange={this.handleInput}/>
-                        &nbsp;
-                        <button type="button" onClick={this.validate}>Validate</button>
+                        <button type="button" onClick={this.addBook}>Add Book</button><br/>
+                        <button type="button" onClick={this.validate}>Sign In</button><br/>
+                        <button hidden={false} type="button" onClick={this.googleSignOut}>Sign Out</button><br/>
                     </div>
                 </div>
             );
         } else if (this.state.mode === 1) {
-            return <ClassRoll/>;
+            return <ClassRoll mode={this.changeMode}/>;
         } else {
-            return <BookSelection/>;
+            return <BookSelection mode={this.changeMode}/>;
         }
     }
 }
 
 interface ClassRollProps {
-
+    mode: any;
 }
 
 interface ClassRollState {
     outerDivStyle: any;
-    firstName: string;
-    lastName: string;
+    studentInitials: string;
     registerStudentStyle: any;
     isRegisterHidden: boolean;
     isUpdateHidden: boolean;
     isRemoveHidden: boolean;
+    isActivateHidden: boolean;
     tableCellsArray: any[];
     checkedSelection: any;
-    defaultFirstName: string;
-    defaultLastName: string;
+    defaultStudentInitials: string;
 }
 
 class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
@@ -207,15 +248,14 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                 border: '1px solid black',
                 padding: '10px'
             },
-            firstName: '',
-            lastName: '',
             isRegisterHidden: true,
             isUpdateHidden: true,
             isRemoveHidden: true,
+            isActivateHidden: true,
             tableCellsArray: [],
             checkedSelection: '',
-            defaultFirstName: '',
-            defaultLastName: ''
+            studentInitials: '',
+            defaultStudentInitials: ''
         };
 
         this.handleBlur = this.handleBlur.bind(this);
@@ -225,6 +265,7 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
         this.updateStudent = this.updateStudent.bind(this);
         this.checkSelection = this.checkSelection.bind(this);
         this.closeWindow = this.closeWindow.bind(this);
+        this.activate = this.activate.bind(this);
     }
 
     componentWillMount() {
@@ -237,9 +278,8 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                 snapshot.forEach(function(childSnapshot: any) {
                     let student =
                         <tr key={childSnapshot.key}>
-                            <td>{childSnapshot.key}</td>
-                            <td>{childSnapshot.child('firstName').val()}</td>
-                            <td>{childSnapshot.child('lastName').val()}</td>
+                            <td>{childSnapshot.child('studentInitials').val()}</td>
+                            <td hidden={true}>{childSnapshot.key}</td>
                         </tr>;
                     tempArray.push(student);
                     return false;
@@ -253,9 +293,8 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
             studentsRef.on('child_added', function (data: any | null | undefined) {
                 let student =
                     <tr key={data.key}>
-                        <td>{data.key}</td>
-                        <td>{data.child('firstName').val()}</td>
-                        <td>{data.child('lastName').val()}</td>
+                        <td>{data.child('studentInitials').val()}</td>
+                        <td hidden={true}>{data.key}</td>
                     </tr>;
                 var newArr = self.state.tableCellsArray.slice();
                 newArr.push(student);
@@ -268,9 +307,8 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                 let ind: number = self.getRowIndex(data.key);
                 let student =
                     <tr key={data.key}>
-                        <td>{data.key}</td>
-                        <td>{data.child('firstName').val()}</td>
-                        <td>{data.child('lastName').val()}</td>
+                        <td>{data.child('studentInitials').val()}</td>
+                        <td hidden={true}>{data.key}</td>
                     </tr>;
                 tempArr.splice(ind, 1, student);
                 self.setState({tableCellsArray: tempArr});
@@ -329,8 +367,16 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
             }
             this.setState({
                 isUpdateHidden: !this.state.isUpdateHidden,
-                defaultFirstName: this.state.checkedSelection.childNodes[1].innerHTML,
-                defaultLastName: this.state.checkedSelection.childNodes[2].innerHTML
+                defaultStudentInitials: this.state.checkedSelection.childNodes[0].innerHTML
+            });
+        } else if (e.target.innerHTML === 'Activate Student') {
+            if (this.state.checkedSelection === '') {
+                alert('Please select a student first.');
+                return;
+            }
+            this.setState({
+                isActivateHidden: !this.state.isActivateHidden,
+                defaultStudentInitials: this.state.checkedSelection.childNodes[0].innerHTML
             });
         }
         this.setState({
@@ -360,6 +406,8 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
             this.setState({isUpdateHidden: !this.state.isUpdateHidden});
         } else if (this.state.isRemoveHidden === false) {
             this.setState({isRemoveHidden: !this.state.isRemoveHidden});
+        } else if (this.state.isActivateHidden === false) {
+            this.setState({isActivateHidden: !this.state.isActivateHidden});
         }
         this.setState({
             outerDivStyle: {
@@ -393,12 +441,10 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
         var oldRef = firebase.database().ref('/users/' + uid + '/students');
         var newRef = oldRef.push();
         newRef.set({
-            firstName: self.state.firstName,
-            lastName: self.state.lastName
+            studentInitials: self.state.studentInitials
         }).catch(function(error: any) {
             console.log(error.message);
         }).then(function() {
-            self.setState({firstName: '', lastName: ''});
             self.closeWindow();
         });
     }
@@ -408,7 +454,7 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
         e.preventDefault();
         if (e.target.innerHTML === 'Yes') {
             let uid = this.getUserID();
-            let key = this.state.checkedSelection.childNodes[0].innerHTML;
+            let key = this.state.checkedSelection.childNodes[1].innerHTML;
             firebase.database().ref('/users/' + uid + '/students/' + key).remove().then(function() {
                 self.setState({checkedSelection: ''});
                 self.closeWindow();
@@ -419,41 +465,34 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
     }
 
     updateStudent(e: any) {
-        const self = this;
         e.preventDefault();
+        const self = this;
         let uid = this.getUserID();
-        let key = this.state.checkedSelection.childNodes[0].innerHTML;
-        let newData = {
-            uid: uid,
-            firstName: this.state.defaultFirstName,
-            lastName: this.state.defaultLastName
-        };
-        firebase.database().ref('/users/' + uid + '/students/' + key).update(
-            newData
-        ).catch(function(error: any) {
+        let key = this.state.checkedSelection.childNodes[1].innerHTML;
+        firebase.database().ref('/users/' + uid + '/students/' + key).update({
+            studentInitials: self.state.defaultStudentInitials
+        }).catch(function(error: any) {
             console.log(error.message);
-        }).then(function() {
-            self.setState({defaultFirstName: '', defaultLastName: ''});
-            self.closeWindow();
         });
     }
 
     handleInput(e: any) {
         e.preventDefault();
-        this.setState({[e.target.name]: e.target.value});
+        this.setState({
+            [e.target.name]: e.target.value
+        });
     }
 
     activate(e: any) {
-        console.log('activate');
-        if (this.state.checkedSelection === '') {
-            alert('Please select a student first.');
-        }
+        // TODO
+        this.props.mode(2, {
+        });
     }
 
     checkSelection(e: any) {
         e.preventDefault();
         if (e.target.parentElement.childNodes[0].tagName === 'TH' ||
-            e.target.parentElement.tagName === 'TABLE') {
+            e.target.parentElement.tagName === 'TABLE' || e.target.parentElement.tagName === 'DIV') {
             return;
         }
 
@@ -487,34 +526,28 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                             <td><button className="student-button update-student" type="text"
                                         onClick={this.handleBlur}>Update Student</button></td>
                             <td><button className="student-button update-student" type="text"
-                                        onClick={this.activate}>Activate Student</button></td>
+                                        onClick={this.handleBlur}>Activate Student</button></td>
                         </tr>
                     </table>
                     <table className="student-table" onClick={this.checkSelection}>
                         <tr>
-                            <th>Student ID</th>
-                            <th>Student First Name</th>
-                            <th>Student Last Name</th>
+                            <th>Student Initials</th>
                         </tr>
                         {this.state.tableCellsArray}
                     </table>
                 </div>
                 <div style={this.state.registerStudentStyle} hidden={this.state.isRegisterHidden}>
-                    First Name: <input type="text" name="firstName" value={this.state.firstName}
-                                       onChange={this.handleInput} placeholder="First Name"/>
+                    Student Initials: <input type="text" name="studentInitials" value={this.state.studentInitials}
+                                       onChange={this.handleInput} placeholder="Student Initials"/>
                     &nbsp;
-                    Last Name: <input type="text" name="lastName" value={this.state.lastName}
-                                      onChange={this.handleInput} placeholder="Last Name"/><br/><br/>
                     <button type="button" onClick={this.addStudent}>Add Student</button>
                     &nbsp;
                     <button type="button" onClick={this.closeWindow}>Close</button>
                 </div>
                 <div style={this.state.registerStudentStyle} hidden={this.state.isUpdateHidden}>
-                    First Name: <input type="text" name="defaultFirstName" value={this.state.defaultFirstName}
+                    Student Initials: <input type="text" name="defaultStudentInitials" value={this.state.defaultStudentInitials}
                                        onChange={this.handleInput}/>
                     &nbsp;
-                    Last Name: <input type="text" name="defaultLastName" value={this.state.defaultLastName}
-                                      onChange={this.handleInput}/><br/>
                     <button type="button" onClick={this.updateStudent}>Update Student</button>
                     &nbsp;
                     <button type="button" onClick={this.closeWindow}>Close</button>
@@ -526,13 +559,20 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                     &nbsp;
                     <button type="button" onClick={this.removeStudent}>No</button>
                 </div>
+                <div style={this.state.registerStudentStyle} hidden={this.state.isActivateHidden}>
+                     Are you sure you would like to choose {this.state.defaultStudentInitials} ?
+                    <br/>
+                    <button type="button" onClick={this.activate}>Yes</button>
+                    &nbsp;
+                    <button type="button" onClick={this.closeWindow}> No </button>
+                </div>
             </div>
         );
     }
 }
 
 interface BookSelectionProps {
-
+    mode: any;
 }
 
 interface BookSelectionState {
@@ -640,7 +680,8 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
     }
 
     componentWillMount() {
-
+        // Populate the books
+        // TODO
     }
 
     chooseBook(e: any) {
