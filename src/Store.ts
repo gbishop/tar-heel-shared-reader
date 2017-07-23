@@ -8,6 +8,13 @@ type Layout = {
 };
 
 class Store {
+  // TODO
+  // the student's id
+  @observable studentid: string = '';
+  // set student's id
+  @action.bound setstudentid(id: string) {
+    this.studentid = id;
+  }
   // the id of the book to read or '' for the landing page
   @observable bookid: string = '';
   // an observable promise for the book associated with bookid

@@ -31,6 +31,64 @@
     color: cornflowerblue;
 }
 
+.landing-outer-div {
+  font-family: Didot;
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: linear-gradient(white, #8e8e8e);
+  display: inline-flex;
+  left: 50%;
+  top: 50%;
+  margin-left: -250px;
+  margin-top: -250px;
+  border-radius: 25px;
+  user-select: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.landing-inner-div {
+  position: relative;
+  margin: auto 0;
+  width: 500px;
+  text-align: center;
+}
+
+.landing-innermost-div {
+  padding: 10px;
+  color: #192231;
+  font-size: 12px;
+  margin-left: -210px;
+  left: 50%;
+  top: 50%;
+  border-radius: 10px;
+  background-color: transparent;
+  border: 1px solid gray;
+  width: 400px;
+  height: 40px;
+  position: relative;
+}
+
+.generic-register-div {
+  font-family: Didot;
+  position: fixed;
+  width: 500px;
+  height: 115px;
+  background: linear-gradient(transparent, transparent);
+  margin-left: -250px;
+  margin-top: -50px;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  border-radius: 5px;
+  color: black;
+  text-align: center;
+  border: 1px solid black;
+  padding: 10px;
+  user-select: none;
+}
+
 button {
   outline: none;
 }
@@ -59,7 +117,6 @@ button {
 }
 
 .student-table tr:hover {
-  background-color: white;
   cursor: pointer;
 }
 
@@ -67,13 +124,14 @@ button {
   background-color: transparent;
   cursor: default;
   box-shadow: none;
+  outline: 1px solid transparent;
 }
 
 .student-button {
   position: absolute;
   width: 100px;
   height: 30px;
-  border-radius: 5px;
+  border-radius: 10px;
   background-color: inherit;
   border: 1px solid gray;
 }
@@ -109,8 +167,6 @@ button {
 
 .book-table {
   display: flex;
-  justify-content: space-between;
-  width: 95%;
   position: absolute;
   padding: 20px;
   flex-basis: auto;
@@ -122,10 +178,35 @@ button {
   position: absolute;
   width: 100px;
   height: 30px;
-  border-radius: 5px;
+  border-radius: 10px;
   background-color: inherit;
   border: 1px solid gray;
   left: 50%;
   margin-left: -50px;
   margin-top: 1%;
+}
+
+.book-selection:active {
+  background: linear-gradient(#985E6D, #985E6D);
+}
+
+.nested-register-span {
+  position: absolute;
+  width: 500px;
+  left: 50%;
+  margin-left: -250px;
+  margin-top: 5%;
+}
+
+.nested-register-button {
+  position: relative;
+  width: 100px;
+  height: 30px;
+  background-color: transparent;
+  border-radius: 10px;
+  border: 1px solid gray;
+}
+
+.nested-register-button:active {
+  background: linear-gradient(#985E6D, #985E6D);
 }

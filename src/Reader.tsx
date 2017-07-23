@@ -7,6 +7,17 @@ const BackArrow = require('./BackArrow.png');
 import Store from './Store';
 import SharedBook from './SharedBook';
 import './Reader.css';
+import * as firebase from 'firebase';
+
+function getUserID() {
+  let auth: any | null | undefined;
+  auth = firebase.auth();
+  let currentUser: any | null | undefined;
+  currentUser = auth.currentUser;
+  let uid: any | null | undefined;
+  uid = currentUser.uid;
+  return uid;
+}
 
 const Reader = observer(function Reader(props: {store: Store}) {
   const { store } = props;
@@ -93,6 +104,14 @@ const ReaderContent = observer(function ReaderContent(props: ReaderContentProps)
   };
   if (pageno > store.npages) {
     // past the end
+    // finishReading event
+    let ref = firebase.database().ref('/events/finishReading').push();
+    ref.set({
+      teacherID: getUserID(),
+      studentID: store.studentid,
+      book: store.book.title,
+      date: new Date(new Date().getTime()).toLocaleString()
+    });
     return (
       <div className="book-page" style={pageStyle}>
         <h1 className="title">What would you like to do now?</h1>

@@ -1,0 +1,89 @@
+{
+    "slug": "i-like-bugs",
+    "author": "aplahuta",
+    "readings": [{
+        "responses": ["like", "want"],
+        "comments": ["", "Look!", "I like.", "It here.", "It can go!", "On.", "Different!", "Look here.", "It different.", "It go.", "What!", "Up on.", "I not like!", "Where?", "It can go.", "I can go!", "Not like!", "More!", "Not!"]
+    }, {
+        "responses": ["good", "more", "not", "go"],
+        "comments": ["", "Look, it is pretty.", "I like to look.", "It is on that.", "It can fly.", "It is on that.", "It is here.", "Here it is!", "Look it here.", "It can go.", "What is that?", "It is on top.", "It is ugly!", "Where is it?", "It is not flying.", "It has some legs.", "Yuck, it is gross.", "These are the same.", "Yum, want some?"]
+    }, {
+        "responses": ["look", "turn", "help", "different"],
+        "comments": ["", "It on.", "Not want!", "I look!", "It good.", "You want?", "Not same.", "Same!", "Look, some.", "Up on.", "More!", "I like.", "Not more!", "Look here.", "Make go.", "You go?", "It go. ", "All!", "You want?"]
+    }, {
+        "responses": ["I", "he", "open", "do"],
+        "comments": ["", "It is on here.", "I do not want it!", "Do you see it?", "Not all have wings.", "It look small.", "It not the same.", "Same color.", "It has some spots.", "It is up on that.", "More bugs.", "It is on that.", "Do you want more?", "Can you look for it?", "Wings help it fly.", "It can not fly.", "It look like it can turn.", "All are on the tree.", "Do you want to eat it?"]
+    }, {
+        "responses": ["put", "same", "you", "she"],
+        "comments": ["", "Different!", "Look, legs.", "Where?", "On it.", "It can go.", "It look different.", "Not different.", "It here.", "Look here.", "Same.", "It not go.", "Go!", "Help look.", "Want go.", "It on that.", "Different!", "Same.", "Not want!"]
+    }, {
+        "responses": ["that", "up", "all", "some"],
+        "comments": ["", "This bug is different.", "It has some legs.", "Where is it?", "I want wings to fly.", "It has some legs.", "It is different.", "Look! It red.", "It is on that.", "What do you see?", "Some are the same.", "It stop here.", "Yuck, it can go!", "It is on here.", "Do you want to fly?", "It is on that.", "It look different.", "Look the same.", "Gross, I do not want that!"]
+    }, {
+        "responses": ["it", "here", "in", "on "],
+        "comments": ["", "That's red!", "Look!", "Black and purple!", "Two wings", "Orange!", "It's shiny!", "Where is it? ", "So cute!", "Zig Zags", "Two bugs", "Cool", "Ew!", "It's hiding", "Oh!  Pretty!", "That is big", "What?", "Wow!", "Gross!!!!! "]
+    }, {
+        "responses": ["can", "finished", "where", "what"],
+        "comments": ["", "Its tail!", "Under", "Like a gem!", "Big wings", "two spots", "Very green!", "On the leaf!", "Lady bug!", "Black and orange!", "Red and brown!", "White wings", "So many legs!", "Where is it?", "Shiny wings!", "Its gold!", "Its curled up!", "So many!", "Ew!"]
+    }, {
+        "responses": ["why", "who", "when", "stop"],
+        "comments": ["", "Laying eggs!", "on the branch", "Like the flower", "Green eyes", "its upsidedown", "Cool!", "Red eyes!", "5 spots", "On the flower", "On the spikes!", "It's long!", "Big bug!", "On the flower!!", "Colorful!", "Shiny and hard!", "Sleeping?", "So red!", "In his TEETH!"]
+    }],
+    "title": "I Like Bugs",
+    "pages": [{
+        "text": "I Like Bugs",
+        "url": "/cache/images/25/273927725_c9f5ef5952.jpg",
+        "height": 481,
+        "width": 500
+    }, {
+        "text": "I like bugs.",
+        "url": "/cache/images/25/273927725_c9f5ef5952.jpg",
+        "height": 375,
+        "width": 500
+    }, {
+        "text": "I like little bugs.",
+        "url": "/cache/images/78/260003978_b61534303e.jpg",
+        "height": 481,
+        "width": 500
+    }, {
+        "text": "I like big bugs.",
+        "url": "/cache/images/97/1357988097_16c614a785.jpg",
+        "height": 500,
+        "width": 477
+    }, {
+        "text": "I like red bugs.",
+        "url": "/cache/images/19/2254164119_3a2eef6fb0.jpg",
+        "height": 468,
+        "width": 500
+    }, {
+        "text": "I like spotted bugs.",
+        "url": "/cache/images/92/2545066592_b963911b83.jpg",
+        "height": 500,
+        "width": 500
+    }, {
+        "text": "I like bugs with wings.",
+        "url": "/cache/images/73/2583880773_0af1307ed1.jpg",
+        "height": 369,
+        "width": 500
+    }, {
+        "text": "I like bugs with big eyes.",
+        "url": "/cache/images/59/42995759_a5a5f16a06.jpg",
+        "height": 500,
+        "width": 403
+    }, {
+        "text": "I like bugs with stripes.",
+        "url": "/cache/images/79/51665979_dfb9343199.jpg",
+        "height": 375,
+        "width": 500
+    }, {
+        "text": "Bugs are cool!",
+        "url": "/cache/images/03/123862803_ea1ef57e99.jpg",
+        "height": 333,
+        "width": 500
+    }, {
+        "text": "Do you like bugs?",
+        "url": "/cache/images/00/1336626300_514b097807.jpg",
+        "height": 375,
+        "width": 500
+    }]
+}

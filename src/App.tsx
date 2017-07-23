@@ -5,13 +5,25 @@ import './App.css';
 import Store from './Store';
 import Reader from './Reader';
 import Landing from './Landing';
+import * as firebase from 'firebase';
+
+// firebase initialization
+var config = {
+  apiKey: 'AIzaSyCRHcXYbVB_eJn9Dd0BQ7whxyS2at6rkGc',
+  authDomain: 'tarheelsharedreader-9f793.firebaseapp.com',
+  databaseURL: 'https://tarheelsharedreader-9f793.firebaseio.com',
+  projectId: 'tarheelsharedreader-9f793',
+  storageBucket: 'tarheelsharedreader-9f793.appspot.com',
+  messagingSenderId: '686575466062'
+};
+firebase.initializeApp(config);
 
 @observer
 class App extends React.Component<{store: Store}, {}> {
   render() {
     const {store} = this.props;
     if (store.bookid.length === 0) {
-      return <Landing/>;
+      return <Landing store={store}/>;
 
     } else if (store.bookP.state === 'pending') {
       return <h1>Loading</h1>;
@@ -26,6 +38,8 @@ class App extends React.Component<{store: Store}, {}> {
       );
 
     } else {
+      // Set background of body to white again
+      document.body.style.background = 'white';
       return (
         <div className="App">
           <Reader store={store} />
