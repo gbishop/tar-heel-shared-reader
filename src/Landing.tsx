@@ -697,9 +697,19 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
     confirmBook(e: any) {
         e.preventDefault();
         const self = this;
-        // startReading event
-        let ref = firebase.database().ref('/events/startReading').push();
+        // pageNumber event
+        let ref = firebase.database().ref('events/pageNumber').push();
         ref.set({
+            teacherID: self.getUserID(),
+            studentID: self.props.store.studentid,
+            book: self.state.checkedSelection.innerHTML,
+            date: new Date(new Date().getTime()).toLocaleString(),
+            page: 1
+        });
+
+        // startReading event
+        let anotherRef = firebase.database().ref('/events/startReading').push();
+        anotherRef.set({
             teacherID: self.getUserID(),
             studentID: self.props.store.studentid,
             date: new Date(new Date().getTime()).toLocaleString(),

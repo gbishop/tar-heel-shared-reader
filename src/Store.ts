@@ -1,6 +1,7 @@
 import { observable, computed, action, reaction } from 'mobx';
 import { fromPromise, IPromiseBasedObservable } from 'mobx-utils';
 import { SharedBook, fetchBook } from './SharedBook';
+import * as firebase from 'firebase';
 
 // sides of the display to include responses
 type Layout = {
@@ -8,7 +9,48 @@ type Layout = {
 };
 
 class Store {
-  // TODO
+  getUserID() {
+    let auth: any | null | undefined;
+    auth = firebase.auth();
+    let currentUser: any | null | undefined;
+    currentUser = auth.currentUser;
+    let uid: any | null | undefined;
+    uid = currentUser.uid;
+    return uid;
+  }
+
+  turnPageEvent() {
+    let ref = firebase.database().ref('events/turnPage').push();
+    ref.set({
+      teacherID: this.getUserID(),
+      studentID: this.studentid,
+      book: this.book.title,
+      date: new Date(new Date().getTime()).toLocaleString()
+    });
+  }
+
+  pageNumberEvent() {
+    let ref = firebase.database().ref('events/pageNumber').push();
+    ref.set({
+      teacherID: this.getUserID(),
+      studentID: this.studentid,
+      book: this.book.title,
+      date: new Date(new Date().getTime()).toLocaleString(),
+      page: this.pageno
+    });
+  }
+
+  readingNumberEvent() {
+    let ref = firebase.database().ref('events/readingNumber').push();
+    ref.set({
+      teacherID: this.getUserID(),
+      studentID: this.studentid,
+      book: this.book.title,
+      date: new Date(new Date().getTime()).toLocaleString(),
+      readingNumber: this.reading
+    });
+  }
+
   // the student's id
   @observable studentid: string = '';
   // set student's id
@@ -36,30 +78,39 @@ class Store {
     return `/${this.bookid}` + (this.pageno > 1 ? `/${this.pageno}` : '');
   }
   // step to the next page
+  // turnPage event
   @action.bound nextPage() {
     if (this.pageno <= this.npages) {
       this.pageno += 1;
+      this.pageNumberEvent();
     }
+    this.turnPageEvent();
     console.log('nextPage', this.pageno);
   }
   // step back to previous page
+  // turnPage event
   @action.bound backPage() {
     if (this.pageno > 1) {
       this.pageno -= 1;
+      this.pageNumberEvent();
     } else {
       this.pageno = this.npages + 1;
     }
+    this.turnPageEvent();
     console.log('backPage', this.pageno);
   }
   // set the page number
   @action.bound setPage(i: number) {
     this.pageno = i;
+    this.pageNumberEvent();
   }
   // index to the readings array
   @observable reading: number = 0;
   @action.bound setReading(n: number) {
+    // readingNumber event
     this.reading = n;
     this.responseIndex = 0;
+    this.readingNumberEvent();
   }
   @computed get nreadings() { return this.book.readings.length; }
   // get comment for page and reading

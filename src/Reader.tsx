@@ -61,7 +61,21 @@ const Reader = observer(function Reader(props: {store: Store}) {
     top: commentHeight
   };
 
+  function responseEvent() {
+    let ref = firebase.database().ref('events/response').push();
+    ref.set({
+      teacherID: getUserID(),
+      studentID: store.studentid,
+      book: store.book.title,
+      date: new Date(new Date().getTime()).toLocaleString(),
+      response: store.word
+    });
+  }
+
   function sayWord() {
+    // response event
+    console.log('response', store.word);
+    responseEvent();
     var msg = new SpeechSynthesisUtterance(store.word);
     msg.lang = 'en-US';
     speechSynthesis.speak(msg);
