@@ -34,24 +34,25 @@
 .landing-outer-div {
   font-family: Didot;
   position: absolute;
-  width: 500px;
-  height: 500px;
+  width: 750px;
+  height: 600px;
   background: linear-gradient(white, #8e8e8e);
   display: inline-flex;
   left: 50%;
   top: 50%;
-  margin-left: -250px;
-  margin-top: -250px;
+  margin-left: -375px;
+  margin-top: -300px;
   border-radius: 25px;
   user-select: none;
   overflow-y: auto;
   overflow-x: hidden;
+
 }
 
 .landing-inner-div {
   position: relative;
   margin: auto 0;
-  width: 500px;
+  width: 750px;
   text-align: center;
 }
 
@@ -59,13 +60,13 @@
   padding: 10px;
   color: #192231;
   font-size: 14px;
-  margin-left: -210px;
+  margin-left: -300px;
   left: 50%;
   top: 50%;
   border-radius: 10px;
   background-color: transparent;
   border: 1px solid gray;
-  width: 400px;
+  width: 600px;
   height: 40px;
   position: relative;
 }
@@ -167,10 +168,12 @@ button {
 
 .book-table {
   display: flex;
+  flex-wrap: wrap;
   position: absolute;
   padding: 20px;
   flex-basis: auto;
   flex-flow: row wrap;
+  justify-content: center;
   top: 5%;
 }
 

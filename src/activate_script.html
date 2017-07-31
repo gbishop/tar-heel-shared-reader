@@ -56,7 +56,9 @@
                         }).done(function() {
                             for (var i = 0; i < matched_array.length; i++) {
                                 var uid = matched_array[i].uid;
+                                var email = matched_array[i].email;
                                 firebase.database().ref('/users/admin/' + uid).set({
+                                    email: email,
                                     active: true
                                 });
                             }

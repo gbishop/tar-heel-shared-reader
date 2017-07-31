@@ -632,21 +632,16 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
     componentWillMount() {
         const self = this;
         let url = window.location.protocol + '//' + window.location.host + '/api/sharedbooks/';
-        let i = 1;
         let bookArray: any[] = [];
-        let id = setInterval(function() {
-            let currentBook = i.toString() + '.json';
-            let fullURL = url + currentBook;
-            $.get(fullURL, function(result) {
-                if (result.title !== undefined) {
-                    bookArray.push(<Book key={i} title={result.title}/>);
-                }
-                i++;
-            }).fail(function() {
-                self.setState({bookArray: bookArray});
-                clearInterval(id);
-            })
-        }, 100);
+        let currentBook = 'index.json';
+        let fullURL = url + currentBook;
+        $.get(fullURL, function(result) {
+            for (let i = 0; i < Object.keys(result).length; i++) {
+                bookArray.push(<Book key={i} title={result[i].title}/>);
+            }
+        }).done(function() {
+            self.setState({bookArray: bookArray});
+        })
     }
 
     chooseBook(e: any) {
@@ -718,7 +713,7 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
             self.closeBookMenu(null);
             self.state.checkedSelection.style.background = 'linear-gradient(to left, transparent, transparent)';
             self.setState({checkedSelection: ''});
-            self.props.store.setIdPage('1', 1);
+            self.props.store.setIdPage('i-like-bugs-4', 1);
         });
     }
 
