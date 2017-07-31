@@ -24,10 +24,8 @@ const SharedBookValidator = Record({
 function validateLengths(sb: SharedBook) {
   var npages = sb.pages.length;
   var nreadings = sb.readings.length;
-  console.log('a', npages, nreadings);
   for (var i = 0; i < nreadings; i++) {
-    if (sb.readings[i].comments.length !== npages) {
-      console.log(i, sb.readings[i].comments.length, npages);
+    if (sb.readings[i].comments.length === npages) {
       return 'Array lengths do not match';
     }
   }
@@ -37,9 +35,7 @@ function validateLengths(sb: SharedBook) {
 // construct the typescript type
 export type SharedBook = Static<typeof SharedBookValidator>;
 
-console.log('here');
 export function fetchBook(url: string): Promise<SharedBook> {
-  console.log('fetch', url);
   return new Promise((resolve, reject) => {
     window.fetch(url)
       .then(res => {

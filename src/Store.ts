@@ -1,4 +1,4 @@
-import { observable, computed, action } from 'mobx';
+import { observable, computed, action, reaction } from 'mobx';
 import { fromPromise, IPromiseBasedObservable } from 'mobx-utils';
 import { SharedBook, fetchBook } from './SharedBook';
 import * as firebase from 'firebase';
@@ -60,9 +60,7 @@ class Store {
   // the id of the book to read or '' for the landing page
   @observable bookid: string = '';
   // an observable promise for the book associated with bookid
-  @computed get bookP() {
-    return fromPromise(fetchBook(`/api/sharedbooks/${this.bookid}.json`)) as
-      IPromiseBasedObservable<SharedBook>; }
+  @observable bookP: IPromiseBasedObservable<SharedBook>;
   // get the book without having to say bookP.value all the time
   // these computed are cached so this function only runs once after a change
   @computed get book() { return this.bookP.value; }
@@ -184,6 +182,21 @@ class Store {
     this.layout = v.layout;
     this.responseSize = v.responseSize;
     this.pageTurnVisible = v.pageTurnVisible;
+  }
+  // handle updating the book when the id changes
+  fetchHandler: {};
+
+  constructor() {
+    // fetch the book when the id changes
+    // figure out when to dispose of this
+    this.fetchHandler = reaction(
+      () => this.bookid,
+      (bookid) => {
+        if (this.bookid.length > 0) {
+          this.bookP = fromPromise(fetchBook(`/api/sharedbooks/${this.bookid}.json`)) as
+            IPromiseBasedObservable<SharedBook>;
+        }
+      });
   }
 }
 

@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import App from './App';
 import Store from './Store';
-// import registerServiceWorker from './registerServiceWorker';
+import registerServiceWorker from './registerServiceWorker';
 import './index.css';
 
 // https://github.com/flatiron/director/issues/349 explains
@@ -27,7 +27,6 @@ function startRouter(store: Store) {
   router.init();
 
   // update url on state changes
-  /*
   autorun(() => {
     const path = baseUrl + store.currentPath;
     if (path !== window.location.pathname) {
@@ -35,7 +34,6 @@ function startRouter(store: Store) {
       window.history.pushState(null, '', path);
     }
   });
-   */
 
 }
 
@@ -58,4 +56,4 @@ ReactDOM.render(
   <App store={store} />,
   document.getElementById('root') as HTMLElement
 );
-// registerServiceWorker();
+registerServiceWorker();
