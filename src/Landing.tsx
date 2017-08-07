@@ -19,7 +19,7 @@ class Landing extends React.Component <LandingProps, LandingState> {
     constructor () {
         super();
         this.state = {
-            message: 'Welcome to Tar Heel Shared Reader! Please sign in to Google to continue.',
+            message: 'Welcome! Please sign in to Google to continue.',
             email: '',
             mode: 0, /* Default 0 */
             register: '',
@@ -110,10 +110,7 @@ class Landing extends React.Component <LandingProps, LandingState> {
                     }).then(function() {
                         firebase.database().ref('/users/admin/' + self.getUserID() + '/active').once('value', function(data) {
                             if (data.val() === true) {
-                                self.setState({message: 'Welcome, ' + self.getUserEmail() + '. Please wait...', isSignedIn: true});
-                                setTimeout(function() {
-                                    self.setState({mode: 1});
-                                }, 3000);
+                                self.setState({isSignedIn: true, mode: 1});
                             } else {
                                 self.setState({message: 'Email is not verified. Please contact the web master for assistance.'});
                             }
@@ -176,7 +173,6 @@ interface ClassRollState {
     isRegisterHidden: boolean;
     isUpdateHidden: boolean;
     isRemoveHidden: boolean;
-    isActivateHidden: boolean;
     tableCellsArray: any[];
     checkedSelection: any;
     defaultStudentInitials: string;
@@ -207,7 +203,6 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
             isRegisterHidden: true,
             isUpdateHidden: true,
             isRemoveHidden: true,
-            isActivateHidden: true,
             tableCellsArray: [],
             checkedSelection: '',
             studentInitials: '',
@@ -336,9 +331,10 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                 return;
             }
             this.setState({
-                isActivateHidden: !this.state.isActivateHidden,
                 defaultStudentInitials: this.state.checkedSelection.childNodes[0].innerHTML
             });
+
+            this.activate(null);
         }
         this.setState({
             outerDivStyle: {
@@ -371,9 +367,8 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
             this.setState({isUpdateHidden: !this.state.isUpdateHidden});
         } else if (this.state.isRemoveHidden === false) {
             this.setState({isRemoveHidden: !this.state.isRemoveHidden});
-        } else if (this.state.isActivateHidden === false) {
-            this.setState({isActivateHidden: !this.state.isActivateHidden});
         }
+
         this.setState({
             outerDivStyle: {
                 position: 'absolute',
@@ -456,7 +451,6 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
     }
 
     activate(e: any) {
-        // TODO: once student has been selected from database
         this.props.mode(2);
         this.props.store.setstudentid(this.state.checkedSelection.childNodes[1].innerHTML);
         this.state.checkedSelection.style.backgroundColor = 'transparent';
@@ -542,15 +536,15 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                         <button className="nested-register-button" type="button" onClick={this.removeStudent}>No</button>
                     </span>
                 </div>
-                <div className="generic-register-div" hidden={this.state.isActivateHidden}>
-                    <span className="nested-register-span">
-                        {'Are you sure you would like to select ' + this.state.defaultStudentInitials + '?'}
-                        <br/><br/>
-                        <button className="nested-register-button" type="button" onClick={this.activate}>Yes</button>
-                        &nbsp;
-                        <button className="nested-register-button" type="button" onClick={this.closeWindow}> No </button>
-                    </span>
-                </div>
+                {/*<div className="generic-register-div" hidden={this.state.isActivateHidden}>*/}
+                    {/*<span className="nested-register-span">*/}
+                        {/*{'Are you sure you would like to select ' + this.state.defaultStudentInitials + '?'}*/}
+                        {/*<br/><br/>*/}
+                        {/*<button className="nested-register-button" type="button" onClick={this.activate}>Yes</button>*/}
+                        {/*&nbsp;*/}
+                        {/*<button className="nested-register-button" type="button" onClick={this.closeWindow}> No </button>*/}
+                    {/*</span>*/}
+                {/*</div>*/}
             </div>
         );
     }
@@ -566,7 +560,6 @@ interface BookSelectionState {
     isMessageHidden: boolean;
     bookArray: any[];
     checkedSelection: any;
-    isBookSelectionHidden: boolean;
 }
 
 class BookSelection extends React.Component<BookSelectionProps, BookSelectionState> {
@@ -591,7 +584,6 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
                 overflowX: 'hidden',
                 filter: 'blur(10px)'
             },
-            isBookSelectionHidden: true,
             isMessageHidden: false,
             bookArray: [],
             checkedSelection: ''
@@ -599,9 +591,6 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
 
         this.removeMessage = this.removeMessage.bind(this);
         this.chooseBook = this.chooseBook.bind(this);
-        this.openBookMenu = this.openBookMenu.bind(this);
-        this.confirmBook = this.confirmBook.bind(this);
-        this.closeBookMenu = this.closeBookMenu.bind(this);
     }
 
     removeMessage(e: any) {
@@ -637,7 +626,7 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
         let fullURL = url + currentBook;
         $.get(fullURL, function(result) {
             for (let i = 0; i < Object.keys(result).length; i++) {
-                bookArray.push(<Book key={i} title={result[i].title}/>);
+                bookArray.push(<Book key={i} title={result[i].title} author={result[i].author} slug={result[i].slug}/>);
             }
         }).done(function() {
             self.setState({bookArray: bookArray});
@@ -646,37 +635,43 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
 
     chooseBook(e: any) {
         e.preventDefault();
-        if (this.state.isBookSelectionHidden === false) {
-            return;
-        }
+        const self = this;
         if (e.target.className === 'book-table') {
             return;
         }
-        if (this.state.checkedSelection !== '' && e.target !== this.state.checkedSelection) {
-            alert('Please deselect previous book first.');
-            return;
-        }
-        if (this.state.checkedSelection === '') {
-            this.setState({checkedSelection: e.target});
-        } else {
-            this.setState({checkedSelection: ''});
-        }
-        if (e.target.style.background === 'linear-gradient(to left, white, rgb(188, 184, 184))') {
-            e.target.style.background = 'linear-gradient(to left, transparent, transparent)';
-        } else {
-            e.target.style.background = 'linear-gradient(to left, white, rgb(188, 184, 184))';
-        }
-    }
 
-    openBookMenu(e: any) {
-        e.preventDefault();
-
-        if (this.state.checkedSelection === '') {
-            alert('Please select a book first.');
-            return;
+        let selection = '';
+        if (e.target.className === 'book') {
+            selection = e.target;
+        } else {
+            selection = e.target.parentElement;
         }
-        this.setState({isBookSelectionHidden: false});
-        this.blur();
+
+        this.setState({checkedSelection: selection}, confirmBook);
+        function confirmBook() {
+            let ref = firebase.database().ref('events/pageNumber').push();
+            ref.set({
+                teacherID: self.getUserID(),
+                studentID: self.props.store.studentid,
+                book: self.state.checkedSelection.childNodes[0].innerHTML,
+                date: new Date(new Date().getTime()).toLocaleString(),
+                page: 1
+            });
+
+            // startReading event
+            let anotherRef = firebase.database().ref('/events/startReading').push();
+            anotherRef.set({
+                teacherID: self.getUserID(),
+
+                studentID: self.props.store.studentid,
+                date: new Date(new Date().getTime()).toLocaleString(),
+                book: self.state.checkedSelection.childNodes[0].innerHTML
+            }).then(function() {
+                let temp = self.state.checkedSelection;
+                self.setState({checkedSelection: ''});
+                self.props.store.setIdPage(temp.childNodes[2].innerHTML, 1);
+            });
+        }
     }
 
     getUserID() {
@@ -687,86 +682,6 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
         let uid: any | null | undefined;
         uid = currentUser.uid;
         return uid;
-    }
-
-    confirmBook(e: any) {
-        e.preventDefault();
-        const self = this;
-        // pageNumber event
-        let ref = firebase.database().ref('events/pageNumber').push();
-        ref.set({
-            teacherID: self.getUserID(),
-            studentID: self.props.store.studentid,
-            book: self.state.checkedSelection.innerHTML,
-            date: new Date(new Date().getTime()).toLocaleString(),
-            page: 1
-        });
-
-        // startReading event
-        let anotherRef = firebase.database().ref('/events/startReading').push();
-        anotherRef.set({
-            teacherID: self.getUserID(),
-            studentID: self.props.store.studentid,
-            date: new Date(new Date().getTime()).toLocaleString(),
-            book: self.state.checkedSelection.innerHTML
-        }).then(function() {
-            self.closeBookMenu(null);
-            self.state.checkedSelection.style.background = 'linear-gradient(to left, transparent, transparent)';
-            self.setState({checkedSelection: ''});
-            self.props.store.setIdPage('i-like-bugs-4', 1);
-        });
-    }
-
-    closeBookMenu(e: any) {
-        if (e !== null) {
-            e.preventDefault();
-        }
-        this.setState({isBookSelectionHidden: true});
-        this.unblur();
-    }
-
-    blur() {
-        this.setState({
-            outerDivStyle: {
-                fontFamily: 'Didot',
-                position: 'absolute',
-                width: '750px',
-                height: '600px',
-                background: 'linear-gradient(white, #8e8e8e)',
-                display: 'inline-flex',
-                left: '50%',
-                top: '50%',
-                marginLeft: '-375px',
-                marginTop: '-300px',
-                borderRadius: '25px',
-                userSelect: 'none',
-                overflowY: 'auto',
-                overflowX: 'hidden',
-                filter: 'blur(10px)'
-            }
-        });
-    }
-
-    unblur() {
-        this.setState({
-            outerDivStyle: {
-                fontFamily: 'Didot',
-                position: 'absolute',
-                width: '750px',
-                height: '600px',
-                background: 'linear-gradient(white, #8e8e8e)',
-                display: 'inline-flex',
-                left: '50%',
-                top: '50%',
-                marginLeft: '-375px',
-                marginTop: '-300px',
-                borderRadius: '25px',
-                userSelect: 'none',
-                overflowY: 'auto',
-                overflowX: 'hidden',
-                filter: 'blur(0px)'
-            }
-        });
     }
 
     render () {
@@ -782,20 +697,19 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
                     </span>
                 </div>
                 <div style={this.state.outerDivStyle}>
-                    <button className="book-selection" onClick={this.openBookMenu}>Choose</button>
                     <div className="book-table" onClick={this.chooseBook}>
                         {this.state.bookArray}
                     </div>
                 </div>
-                <div className="generic-register-div" hidden={this.state.isBookSelectionHidden}>
-                    <span className="nested-register-span">
-                        You have chosen {"'" + this.state.checkedSelection.innerHTML + ".'"}
-                        <br/><br/>
-                        <button className="nested-register-button" type="button" onClick={this.confirmBook}>Confirm</button>
-                        &nbsp;
-                        <button className="nested-register-button" type="button" onClick={this.closeBookMenu}>Cancel</button>
-                    </span>
-                </div>
+                {/*<div className="generic-register-div" hidden={this.state.isBookSelectionHidden}>*/}
+                    {/*<span className="nested-register-span">*/}
+                        {/*You have chosen {"'" + this.state.checkedSelection.innerHTML + ".'"}*/}
+                        {/*<br/><br/>*/}
+                        {/*<button className="nested-register-button" type="button" onClick={this.confirmBook}>Confirm</button>*/}
+                        {/*&nbsp;*/}
+                        {/*<button className="nested-register-button" type="button" onClick={this.closeBookMenu}>Cancel</button>*/}
+                    {/*</span>*/}
+                {/*</div>*/}
             </div>
         );
     }
@@ -803,6 +717,8 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
 
 interface BookProps {
     title: string;
+    author: string;
+    slug: string;
 }
 
 interface BookState {
@@ -817,7 +733,9 @@ class Book extends React.Component<BookProps, BookState> {
     render() {
         return (
             <div className="book">
-                {this.props.title}
+                <p className='book-title'>{this.props.title}</p>
+                <p className='book-author'>{this.props.author}</p>
+                <p className='book-slug' hidden={true}>{this.props.slug}</p>
             </div>
         );
     }
