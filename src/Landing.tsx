@@ -19,7 +19,7 @@ class Landing extends React.Component <LandingProps, LandingState> {
     constructor () {
         super();
         this.state = {
-            message: 'Welcome! Please sign in to Google to continue.',
+            message: 'Please sign in to Google to continue.',
             email: '',
             mode: 0, /* Default 0 */
             register: '',
@@ -35,15 +35,6 @@ class Landing extends React.Component <LandingProps, LandingState> {
 
     componentWillMount() {
         const self = this;
-        // var config = {
-        //     apiKey: 'AIzaSyCRHcXYbVB_eJn9Dd0BQ7whxyS2at6rkGc',
-        //     authDomain: 'tarheelsharedreader-9f793.firebaseapp.com',
-        //     databaseURL: 'https://tarheelsharedreader-9f793.firebaseio.com',
-        //     projectId: 'tarheelsharedreader-9f793',
-        //     storageBucket: 'tarheelsharedreader-9f793.appspot.com',
-        //     messagingSenderId: '686575466062'
-        // };
-        // firebase.initializeApp(config);
 
         firebase.auth().onAuthStateChanged(function(user: any) {
             if (user) {
@@ -582,40 +573,14 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
                 userSelect: 'none',
                 overflowY: 'auto',
                 overflowX: 'hidden',
-                filter: 'blur(10px)'
+                filter: 'blur(0px)'
             },
             isMessageHidden: false,
             bookArray: [],
             checkedSelection: ''
         };
 
-        this.removeMessage = this.removeMessage.bind(this);
         this.chooseBook = this.chooseBook.bind(this);
-    }
-
-    removeMessage(e: any) {
-        e.preventDefault();
-
-        this.setState({
-            isMessageHidden: true,
-            outerDivStyle: {
-                fontFamily: 'Didot',
-                position: 'absolute',
-                width: '750px',
-                height: '600px',
-                background: 'linear-gradient(white, #8e8e8e)',
-                display: 'inline-flex',
-                left: '50%',
-                top: '50%',
-                marginLeft: '-375px',
-                marginTop: '-300px',
-                borderRadius: '25px',
-                userSelect: 'none',
-                overflowY: 'auto',
-                overflowX: 'hidden',
-                filter: 'blur(0px)'
-            }
-        });
     }
 
     componentWillMount() {
@@ -649,23 +614,24 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
 
         this.setState({checkedSelection: selection}, confirmBook);
         function confirmBook() {
-            let ref = firebase.database().ref('events/pageNumber').push();
+            // pageNumber event
+            let ref = firebase.database().ref('events').push();
             ref.set({
                 teacherID: self.getUserID(),
                 studentID: self.props.store.studentid,
                 book: self.state.checkedSelection.childNodes[0].innerHTML,
                 date: new Date(new Date().getTime()).toLocaleString(),
-                page: 1
+                event: 'PAGE NUMBER 1'
             });
 
             // startReading event
-            let anotherRef = firebase.database().ref('/events/startReading').push();
+            let anotherRef = firebase.database().ref('events').push();
             anotherRef.set({
                 teacherID: self.getUserID(),
-
                 studentID: self.props.store.studentid,
                 date: new Date(new Date().getTime()).toLocaleString(),
-                book: self.state.checkedSelection.childNodes[0].innerHTML
+                book: self.state.checkedSelection.childNodes[0].innerHTML,
+                event: 'START READING'
             }).then(function() {
                 let temp = self.state.checkedSelection;
                 self.setState({checkedSelection: ''});
@@ -687,29 +653,11 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
     render () {
         return (
             <div>
-                <div className="generic-register-div" hidden={this.state.isMessageHidden}>
-                    <span className="nested-register-span">
-                        Please select a book to continue.
-                        <br/><br/>
-                        <button className="nested-register-button" type="button" onClick={this.removeMessage}>
-                            Ok
-                        </button>
-                    </span>
-                </div>
                 <div style={this.state.outerDivStyle}>
                     <div className="book-table" onClick={this.chooseBook}>
                         {this.state.bookArray}
                     </div>
                 </div>
-                {/*<div className="generic-register-div" hidden={this.state.isBookSelectionHidden}>*/}
-                    {/*<span className="nested-register-span">*/}
-                        {/*You have chosen {"'" + this.state.checkedSelection.innerHTML + ".'"}*/}
-                        {/*<br/><br/>*/}
-                        {/*<button className="nested-register-button" type="button" onClick={this.confirmBook}>Confirm</button>*/}
-                        {/*&nbsp;*/}
-                        {/*<button className="nested-register-button" type="button" onClick={this.closeBookMenu}>Cancel</button>*/}
-                    {/*</span>*/}
-                {/*</div>*/}
             </div>
         );
     }

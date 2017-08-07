@@ -1,4 +1,4 @@
-import { observable, computed, action, reaction } from 'mobx';
+import { observable, computed, action } from 'mobx';
 import { fromPromise, IPromiseBasedObservable } from 'mobx-utils';
 import { SharedBook, fetchBook } from './SharedBook';
 import * as firebase from 'firebase';
@@ -20,34 +20,35 @@ class Store {
   }
 
   turnPageEvent() {
-    let ref = firebase.database().ref('events/turnPage').push();
+    let ref = firebase.database().ref('events').push();
     ref.set({
       teacherID: this.getUserID(),
       studentID: this.studentid,
       book: this.book.title,
-      date: new Date(new Date().getTime()).toLocaleString()
+      date: new Date(new Date().getTime()).toLocaleString(),
+      event: 'TURN PAGE'
     });
   }
 
   pageNumberEvent() {
-    let ref = firebase.database().ref('events/pageNumber').push();
+    let ref = firebase.database().ref('events').push();
     ref.set({
       teacherID: this.getUserID(),
       studentID: this.studentid,
       book: this.book.title,
       date: new Date(new Date().getTime()).toLocaleString(),
-      page: this.pageno
+      event: 'PAGE NUMBER ' + this.pageno
     });
   }
 
   readingNumberEvent() {
-    let ref = firebase.database().ref('events/readingNumber').push();
+    let ref = firebase.database().ref('events').push();
     ref.set({
       teacherID: this.getUserID(),
       studentID: this.studentid,
       book: this.book.title,
       date: new Date(new Date().getTime()).toLocaleString(),
-      readingNumber: this.reading
+      event: 'READING NUMBER ' + this.reading
     });
   }
 
@@ -60,7 +61,9 @@ class Store {
   // the id of the book to read or '' for the landing page
   @observable bookid: string = '';
   // an observable promise for the book associated with bookid
-  @observable bookP: IPromiseBasedObservable<SharedBook>;
+  @computed get bookP() {
+    return fromPromise(fetchBook(`/api/sharedbooks/${this.bookid}.json`)) as
+        IPromiseBasedObservable<SharedBook>; }
   // get the book without having to say bookP.value all the time
   // these computed are cached so this function only runs once after a change
   @computed get book() { return this.bookP.value; }
@@ -182,21 +185,6 @@ class Store {
     this.layout = v.layout;
     this.responseSize = v.responseSize;
     this.pageTurnVisible = v.pageTurnVisible;
-  }
-  // handle updating the book when the id changes
-  fetchHandler: {};
-
-  constructor() {
-    // fetch the book when the id changes
-    // figure out when to dispose of this
-    this.fetchHandler = reaction(
-      () => this.bookid,
-      (bookid) => {
-        if (this.bookid.length > 0) {
-          this.bookP = fromPromise(fetchBook(`/api/sharedbooks/${this.bookid}.json`)) as
-            IPromiseBasedObservable<SharedBook>;
-        }
-      });
   }
 }
 

@@ -62,13 +62,13 @@ const Reader = observer(function Reader(props: {store: Store}) {
   };
 
   function responseEvent() {
-    let ref = firebase.database().ref('events/response').push();
+    let ref = firebase.database().ref('events').push();
     ref.set({
       teacherID: getUserID(),
       studentID: store.studentid,
       book: store.book.title,
       date: new Date(new Date().getTime()).toLocaleString(),
-      response: store.word
+      event: 'RESPONSE ' + store.word
     });
   }
 
