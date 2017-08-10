@@ -101,7 +101,7 @@ button {
   padding: 10px;
   font-size: 14px;
   position: absolute;
-  top: 8%;
+  top: 17%;
   font-family: Didot;
 }
 
@@ -109,7 +109,7 @@ button {
   text-align: left;
   color: #a35167;
   font-size: 16px;
-  font-weight: bold;
+  cursor: default;
 }
 
 .student-table th, td {
@@ -137,12 +137,22 @@ button {
   border: 1px solid gray;
 }
 
+.student-button:hover{
+  cursor: pointer;
+}
+
+.activate-student {
+  top: 50%;
+  right: 13%;
+}
+
 .register-button {
   border-collapse: collapse;
   width: 100%;
   font-size: 14px;
   position: absolute;
-  left: 3%;
+  left: 5%;
+  top: 1%;
 }
 
 .register-button td {
@@ -156,6 +166,7 @@ button {
 
 .book:hover {
   cursor: pointer;
+  background: linear-gradient(gray, darkgray);
 }
 
 .book {
@@ -181,12 +192,7 @@ button {
 .book-table {
   display: flex;
   flex-wrap: wrap;
-  position: absolute;
-  padding: 20px;
-  flex-basis: auto;
-  flex-flow: row wrap;
   justify-content: center;
-  top: 5%;
 }
 
 .book-selection {
@@ -224,4 +230,32 @@ button {
 
 .nested-register-button:active {
   background: linear-gradient(#985E6D, #985E6D);
+}
+
+.Collapsible__contentInner {
+  border-radius: 5px;
+  width: 680px;
+  padding: 10px;
+}
+
+.Collapsible__contentOuter {
+  padding: 5px;
+}
+
+.Collapsible__trigger {
+  display: block;
+  padding: 5px;
+  font-size: 14px;
+  border-radius: 5px;
+  border: 1px solid gray;
+}
+
+.Collapsible__trigger:hover {
+  background: linear-gradient(#985E6D, #985E6D);
+  cursor: pointer;
+}
+
+.Collapsible {
+  margin-left: 15px;
+  margin-top: 15px;
 }

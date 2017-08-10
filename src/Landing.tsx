@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as firebase from 'firebase';
 import * as $ from 'jquery';
+import Accordion from 'react-responsive-accordion'
 
 interface LandingProps {
     store: any;
@@ -19,7 +20,7 @@ class Landing extends React.Component <LandingProps, LandingState> {
     constructor () {
         super();
         this.state = {
-            message: 'Please sign in to Google to continue.',
+            message: 'Please sign in to Google to continue',
             email: '',
             mode: 0, /* Default 0 */
             register: '',
@@ -169,6 +170,13 @@ interface ClassRollState {
     defaultStudentInitials: string;
     registerMessage: string;
     updateMessage: string;
+    checkedGroup: any;
+    isAddGroupHidden: boolean;
+    isRemoveGroupHidden: boolean;
+    groupName: string;
+    addGroupMessage: string;
+    groupCellsArray: any;
+    isUpdateGroupHidden: boolean;
 }
 
 class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
@@ -199,7 +207,14 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
             studentInitials: '',
             defaultStudentInitials: '',
             registerMessage: 'Please enter student initials.',
-            updateMessage: 'Please enter new student initials.'
+            updateMessage: 'Please enter new student initials.',
+            checkedGroup: '',
+            isAddGroupHidden: true,
+            isRemoveGroupHidden: true,
+            groupName: '',
+            addGroupMessage: '',
+            groupCellsArray: [],
+            isUpdateGroupHidden: true
         };
 
         this.handleBlur = this.handleBlur.bind(this);
@@ -209,7 +224,9 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
         this.updateStudent = this.updateStudent.bind(this);
         this.checkSelection = this.checkSelection.bind(this);
         this.closeWindow = this.closeWindow.bind(this);
-        this.activate = this.activate.bind(this);
+        this.addGroup = this.addGroup.bind(this);
+        this.removeGroup = this.removeGroup.bind(this);
+        this.updateGroup = this.updateGroup.bind(this);
     }
 
     componentWillMount() {
@@ -232,6 +249,21 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                 self.setState({tableCellsArray: tempArray});
             });
 
+            let groupArray: any[] = [];
+            firebase.database().ref('/users/private_groups/' + self.getUserID()).once('value', function(snapshot: any) {
+                snapshot.forEach(function(childSnapshot: any) {
+                    let group =
+                        <tr key={childSnapshot.key} className="group-table-tr">
+                            <td>{childSnapshot.child('groupName').val()}</td>
+                            <td hidden={true}>{childSnapshot.key}</td>
+                        </tr>;
+                    groupArray.push(group);
+                    return false;
+                });
+            }).then(function() {
+                self.setState({groupCellsArray: groupArray});
+            });
+
             // child_added listener
             var studentsRef = firebase.database().ref('/users/private_students/' + uid);
             studentsRef.on('child_added', function (data: any | null | undefined) {
@@ -243,6 +275,17 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                 var newArr = self.state.tableCellsArray.slice();
                 newArr.push(student);
                 self.setState({tableCellsArray: newArr});
+            });
+
+            firebase.database().ref('users/private_groups/' + uid).on('child_added', function(data: any | null | undefined) {
+                let group =
+                    <tr key={data.key} className="group-table-tr">
+                        <td>{data.child('groupName').val()}</td>
+                        <td hidden={true}>{data.key}</td>
+                    </tr>;
+                let newArr = self.state.groupCellsArray.slice();
+                newArr.push(group);
+                self.setState({groupCellsArray: newArr});
             });
 
             // child_changed listener
@@ -258,12 +301,31 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                 self.setState({tableCellsArray: tempArr});
             });
 
+            firebase.database().ref('users/private_groups/' + uid).on('child_changed', function(data: any | null | undefined) {
+                let tempArr = self.state.groupCellsArray.slice();
+                let ind: number = self.getGroupRowIndex(data.key);
+                let group =
+                    <tr key={data.key} className="group-table-tr">
+                        <td>{data.child('groupName').val()}</td>
+                        <td hidden={true}>{data.key}</td>
+                    </tr>;
+                tempArr.splice(ind, 1, group);
+                self.setState({groupCellsArray: tempArr});
+            });
+
             // child_removed listener
             firebase.database().ref('/users/private_students/' + uid).on('child_removed', function(data: any | null | undefined) {
                 let tempArr = self.state.tableCellsArray.slice();
                 let ind: number = self.getRowIndex(data.key);
                 tempArr.splice(ind, 1);
                 self.setState({tableCellsArray: tempArr});
+            });
+
+            firebase.database().ref('users/private_groups/' + uid).on('child_removed', function(data: any | null | undefined) {
+                let tempArr = self.state.groupCellsArray.slice();
+                let ind: number = self.getGroupRowIndex(data.key);
+                tempArr.splice(ind, 1);
+                self.setState({groupCellsArray: tempArr});
             });
         }, 500);
     }
@@ -272,6 +334,17 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
         let ind: number = 0;
         for (let i = 0; i < this.state.tableCellsArray.length; i++) {
             if (this.state.tableCellsArray[i].key === key) {
+                ind = i;
+                break;
+            }
+        }
+        return ind;
+    }
+
+    getGroupRowIndex(key: any) {
+        let ind: number = 0;
+        for (let i = 0; i < this.state.groupCellsArray.length; i++) {
+            if (this.state.groupCellsArray[i].key === key) {
                 ind = i;
                 break;
             }
@@ -299,7 +372,7 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
         if (e.target.innerHTML === 'Add Student') {
             this.setState({isRegisterHidden: !this.state.isRegisterHidden});
         } else if (e.target.innerHTML === 'Remove Student') {
-            if (this.state.checkedSelection === '') {
+            if (this.state.checkedSelection === '' || this.state.checkedSelection.className === 'group-table-tr') {
                 alert('Please select a student first.');
                 return;
             }
@@ -308,7 +381,7 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                 defaultStudentInitials: this.state.checkedSelection.childNodes[0].innerHTML
             });
         } else if (e.target.innerHTML === 'Update Student') {
-            if (this.state.checkedSelection === '') {
+            if (this.state.checkedSelection === '' || this.state.checkedSelection.className === 'group-table-tr') {
                 alert('Please select a student first.');
                 return;
             }
@@ -317,16 +390,31 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                 defaultStudentInitials: this.state.checkedSelection.childNodes[0].innerHTML
             });
         } else if (e.target.innerHTML === 'Activate Student') {
-            if (this.state.checkedSelection === '') {
+            if (this.state.checkedSelection === '' || this.state.checkedSelection.className === 'group-table-tr') {
                 alert('Please select a student first.');
                 return;
             }
             this.setState({
                 defaultStudentInitials: this.state.checkedSelection.childNodes[0].innerHTML
             });
-
-            this.activate(null);
+            this.activate();
+        } else if (e.target.innerHTML === 'Add Group') {
+            this.setState({isAddGroupHidden: !this.state.isAddGroupHidden});
+        } else if (e.target.innerHTML === 'Remove Group') {
+            if (this.state.checkedGroup === '') {
+                alert('Please select a group first.');
+                return;
+            }
+            console.log(this.state.checkedSelection);
+            this.setState({isRemoveGroupHidden: !this.state.isRemoveGroupHidden})
+        } else if (e.target.innerHTML === 'Update Group') {
+            if (this.state.checkedGroup === '') {
+                alert('Please select a group first.');
+                return;
+            }
+            this.setState({isUpdateGroupHidden: false});
         }
+
         this.setState({
             outerDivStyle: {
                 position: 'absolute',
@@ -358,6 +446,12 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
             this.setState({isUpdateHidden: !this.state.isUpdateHidden});
         } else if (this.state.isRemoveHidden === false) {
             this.setState({isRemoveHidden: !this.state.isRemoveHidden});
+        } else if (this.state.isAddGroupHidden === false) {
+            this.setState({isAddGroupHidden: !this.state.isAddGroupHidden});
+        } else if (this.state.isRemoveGroupHidden === false) {
+            this.setState({isRemoveGroupHidden: !this.state.isRemoveGroupHidden});
+        } else if (this.state.isUpdateGroupHidden === false) {
+            this.setState({isUpdateGroupHidden: !this.state.isUpdateGroupHidden});
         }
 
         this.setState({
@@ -441,7 +535,7 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
         });
     }
 
-    activate(e: any) {
+    activate() {
         this.props.mode(2);
         this.props.store.setstudentid(this.state.checkedSelection.childNodes[1].innerHTML);
         this.state.checkedSelection.style.backgroundColor = 'transparent';
@@ -460,17 +554,60 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
         let newTarget = e.target.parentElement;
 
         if (originalTarget !== '' && newTarget !== originalTarget) {
-            alert('Please deselect previous student first.');
+            alert('Please deselect previous item first.');
             return;
         }
 
         if (e.target.parentElement.style.backgroundColor !== 'white') {
+            if (e.target.parentElement.className === 'group-table-tr') {
+                this.setState({checkedGroup: e.target.parentElement, groupName: e.target.innerHTML});
+            }
             e.target.parentElement.style.backgroundColor = 'white';
             this.setState({checkedSelection: e.target.parentElement});
         } else {
+            if (e.target.parentElement.className === 'group-table-tr') {
+                this.setState({checkedGroup: '', groupName: ''});
+            }
             e.target.parentElement.style.backgroundColor = 'transparent';
             this.setState({checkedSelection: ''});
         }
+    }
+
+    addGroup(e: any) {
+        e.preventDefault();
+        const self = this;
+        firebase.database().ref('users/private_groups/' + self.getUserID()).push().set({
+            groupName: this.state.groupName
+        }).then(function() {
+            self.closeWindow();
+        });
+    }
+
+    removeGroup(e: any) {
+        const self = this;
+        e.preventDefault();
+        if (e.target.innerHTML === 'Yes') {
+            let uid = self.getUserID();
+            let key = self.state.checkedGroup.childNodes[1].innerHTML;
+            firebase.database().ref('users/private_groups/' + uid + '/' + key).remove().then(function() {
+                self.setState({checkedGroup: '', groupName: ''});
+                self.closeWindow();
+            });
+        } else if (e.target.innerHTML === 'No') {
+            self.closeWindow();
+        }
+    }
+
+    updateGroup(e: any) {
+        e.preventDefault();
+        const self = this;
+        let uid = this.getUserID();
+        let key = this.state.checkedGroup.childNodes[1].innerHTML;
+        firebase.database().ref('/users/private_groups/' + uid + '/' + key).update({
+            groupName: self.state.groupName
+        }).then(function() {
+            self.closeWindow();
+        });
     }
 
     render() {
@@ -485,8 +622,17 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                                         onClick={this.handleBlur}>Remove Student</button></td>
                             <td><button className="student-button update-student" type="text"
                                         onClick={this.handleBlur}>Update Student</button></td>
-                            <td><button className="student-button update-student" type="text"
+                            <td><button className="student-button activate-student" type="text"
                                         onClick={this.handleBlur}>Activate Student</button></td>
+                        </tr>
+                        <br/>
+                        <tr>
+                            <td><button className="student-button add-group" type="text"
+                                        onClick={this.handleBlur}>Add Group</button></td>
+                            <td><button className="student-button remove-group" type="text"
+                                        onClick={this.handleBlur}>Remove Group</button></td>
+                            <td><button className="student-button update-group" type="text"
+                                        onClick={this.handleBlur}>Update Group</button></td>
                         </tr>
                     </table>
                     <table className="student-table" onClick={this.checkSelection}>
@@ -494,6 +640,10 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                             <th>Student Initials</th>
                         </tr>
                         {this.state.tableCellsArray}
+                        <tr className="group-table-tr">
+                            <th>Groups</th>
+                        </tr>
+                        {this.state.groupCellsArray}
                     </table>
                 </div>
                 <div className="generic-register-div" hidden={this.state.isRegisterHidden}>
@@ -527,15 +677,37 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                         <button className="nested-register-button" type="button" onClick={this.removeStudent}>No</button>
                     </span>
                 </div>
-                {/*<div className="generic-register-div" hidden={this.state.isActivateHidden}>*/}
-                    {/*<span className="nested-register-span">*/}
-                        {/*{'Are you sure you would like to select ' + this.state.defaultStudentInitials + '?'}*/}
-                        {/*<br/><br/>*/}
-                        {/*<button className="nested-register-button" type="button" onClick={this.activate}>Yes</button>*/}
-                        {/*&nbsp;*/}
-                        {/*<button className="nested-register-button" type="button" onClick={this.closeWindow}> No </button>*/}
-                    {/*</span>*/}
-                {/*</div>*/}
+                <div className="generic-register-div" hidden={this.state.isAddGroupHidden}>
+                    Group Name: <input type="text" name="groupName" value={this.state.groupName}
+                                             onChange={this.handleInput} placeholder="Group Name"/><br/>
+                    <span className="nested-register-span">
+                        {this.state.addGroupMessage}
+                        <br/>
+                        <button className="nested-register-button" type="button" onClick={this.addGroup}>Add Group</button>
+                        &nbsp;
+                        <button className="nested-register-button" type="button" onClick={this.closeWindow}>Close</button>
+                    </span>
+                </div>
+                <div className="generic-register-div" hidden={this.state.isRemoveGroupHidden}>
+                    <span className="nested-register-span">
+                        {'Are you sure you would like to remove ' + this.state.groupName + ' from the database?'}
+                        <br/>
+                        <button className="nested-register-button" type="button" onClick={this.removeGroup}>Yes</button>
+                        &nbsp;
+                        <button className="nested-register-button" type="button" onClick={this.closeWindow}>No</button>
+                    </span>
+                </div>
+                <div className="generic-register-div" hidden={this.state.isUpdateGroupHidden}>
+                    Group Name: <input type="text" name="groupName" value={this.state.groupName}
+                                             onChange={this.handleInput}/><br/>
+                    <span className="nested-register-span">
+                        {'Please enter new group name.'}
+                        <br/><br/>
+                        <button className="nested-register-button" type="button" onClick={this.updateGroup}>Update Group</button>
+                        &nbsp;
+                        <button className="nested-register-button" type="button" onClick={this.closeWindow}>Close</button>
+                    </span>
+                </div>
             </div>
         );
     }
@@ -551,6 +723,8 @@ interface BookSelectionState {
     isMessageHidden: boolean;
     bookArray: any[];
     checkedSelection: any;
+    accordion: any;
+    initialAccordion: any;
 }
 
 class BookSelection extends React.Component<BookSelectionProps, BookSelectionState> {
@@ -577,7 +751,9 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
             },
             isMessageHidden: false,
             bookArray: [],
-            checkedSelection: ''
+            checkedSelection: '',
+            accordion: '',
+            initialAccordion: ''
         };
 
         this.chooseBook = this.chooseBook.bind(this);
@@ -585,36 +761,125 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
 
     componentWillMount() {
         const self = this;
+
         let url = window.location.protocol + '//' + window.location.host + '/api/sharedbooks/';
-        let bookArray: any[] = [];
         let currentBook = 'index.json';
         let fullURL = url + currentBook;
+
+        let bookArray: any[] = [];
+        let arr: any[] = [];
+
+        // TODO - remove setTimeout()
+        setTimeout(function() {
+            // child_changed listener
+            firebase.database().ref('/users/private_variables/' + self.getUserID()).on('child_changed', function(data: any) {
+                console.log('child_changed');
+                renderRecentBooks();
+            })
+
+            firebase.database().ref('/users/private_variables/' + self.getUserID()).on('child_added', function (data: any) {
+                renderRecentBooks();
+            })
+
+            function renderRecentBooks() {
+                let bar: any[] = [];
+                firebase.database().ref('/users/private_variables/' + self.getUserID()).once('value', function (snapshot: any) {
+                    if (snapshot.child('first_slug').val() !== null) {
+                        bar.push(<Book key={0} title={snapshot.child('first_title').val()}
+                                       author={snapshot.child('first_author').val()}
+                                       slug={snapshot.child('first_slug').val()}/>);
+                        if (snapshot.child('second_slug').val() !== null) {
+                            bar.push(                            <Book key={1}
+                                                                       title={snapshot.child('second_title').val()}
+                                                                       author={snapshot.child('second_author').val()}
+                                                                       slug={snapshot.child('second_slug').val()}/>);
+                            if (snapshot.child('third_slug').val() !== null) {
+                                bar.push(                            <Book key={2}
+                                                                           title={snapshot.child('third_title').val()}
+                                                                           author={snapshot.child('third_author').val()}
+                                                                           slug={snapshot.child('third_slug').val()}/>);
+                            }
+                        }
+                        let initialDiv =
+                            <div data-trigger={"Recent Books"} className="book-table">
+                                {bar}
+                            </div>;
+                        let foo: any[] = [];
+                        foo.push(initialDiv);
+                        self.setState({
+                            initialAccordion:
+                                <Accordion startPosition={0} transitionTime={200}>
+                                    {foo}
+                                </Accordion>
+                        });
+                    }
+                });
+            }
+        }, 300);
+
         $.get(fullURL, function(result) {
+            let currentCategory = result[0].sheet;
             for (let i = 0; i < Object.keys(result).length; i++) {
-                bookArray.push(<Book key={i} title={result[i].title} author={result[i].author} slug={result[i].slug}/>);
+                let newCategory = result[i].sheet;
+                if (i === Object.keys(result).length - 1) {
+                    bookArray.push(<Book key={i} title={result[i].title} author={result[i].author} slug={result[i].slug}/>);
+                    let div =
+                        <div data-trigger={currentCategory} className="book-table">
+                            {bookArray}
+                        </div>;
+                    arr.push(div);
+                    currentCategory = newCategory;
+                    bookArray = [];
+                    break;
+                }
+
+                if (currentCategory === newCategory) {
+                    bookArray.push(<Book key={i} title={result[i].title} author={result[i].author} slug={result[i].slug}/>);
+                } else if (currentCategory !== newCategory) {
+                    let div =
+                        <div data-trigger={currentCategory} className="book-table">
+                            {bookArray}
+                        </div>;
+                    arr.push(div);
+                    currentCategory = newCategory;
+                    bookArray = [];
+                    bookArray.push(<Book key={i} title={result[i].title} author={result[i].author} slug={result[i].slug}/>);
+                }
             }
         }).done(function() {
-            self.setState({bookArray: bookArray});
-        })
+            self.setState({
+                accordion:
+                    <Accordion startPosition={-1} transitionTime={200}>
+                        {arr}
+                    </Accordion>
+            });
+        });
     }
 
     chooseBook(e: any) {
         e.preventDefault();
         const self = this;
-        if (e.target.className === 'book-table') {
-            return;
-        }
-
+        let className = e.target.className;
         let selection = '';
-        if (e.target.className === 'book') {
-            selection = e.target;
+
+        if (className === 'book' || className === 'book-title' || className === 'book-author') {
+            if (className === 'book') {
+                selection = e.target;
+            } else if (className === 'book-title') {
+                selection = e.target.parentNode;
+            } else if (className === 'book-author') {
+                selection = e.target.parentNode;
+            }
         } else {
-            selection = e.target.parentElement;
+            return;
         }
 
         this.setState({checkedSelection: selection}, confirmBook);
         function confirmBook() {
             // pageNumber event
+            let title = self.state.checkedSelection.childNodes[0].innerHTML;
+            let author = self.state.checkedSelection.childNodes[1].innerHTML;
+            let slug = self.state.checkedSelection.childNodes[2].innerHTML;
             let ref = firebase.database().ref('events').push();
             ref.set({
                 teacherID: self.getUserID(),
@@ -637,6 +902,98 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
                 self.setState({checkedSelection: ''});
                 self.props.store.setIdPage(temp.childNodes[2].innerHTML, 1);
             });
+
+            firebase.database().ref('users/private_variables/' + self.getUserID()).once('value', function (snapshot: any) {
+                let first_book = {
+                    slug: snapshot.child('first_slug').val(),
+                    title: snapshot.child('first_title').val(),
+                    author: snapshot.child('first_author').val()
+                };
+                let second_book = {
+                    slug: snapshot.child('second_slug').val(),
+                    title: snapshot.child('second_title').val(),
+                    author: snapshot.child('second_author').val()
+                };
+                let third_book = {
+                    slug: snapshot.child('third_slug').val(),
+                    title: snapshot.child('third_title').val(),
+                    author: snapshot.child('third_author').val()
+                };
+
+                // There are no books in the database
+                if (first_book.slug === null && second_book.slug === null && third_book.slug === null) {
+                    firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_slug').set(slug).then(function () {
+                        firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_title').set(title).then(function () {
+                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_author').set(author);
+                        });
+                    });
+                // There is one book in the database
+                } else if (first_book.slug !== null && second_book.slug === null && third_book.slug === null) {
+                    if (first_book.slug !== slug) {
+                        // Shift over all of book 1 --> book 2
+                        firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_slug').set(first_book.slug).then(function () {
+                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_title').set(first_book.title).then(function () {
+                                firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_author').set(first_book.author);
+                            });
+                        }).then(function() {
+                            // Insert new book properties in book 1
+                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_slug').set(slug).then(function () {
+                                firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_title').set(title).then(function () {
+                                    firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_author').set(author);
+                                });
+                            });
+                        });
+                    }
+                // There are two books in the database
+                } else if (first_book.slug !== null && second_book.slug !== null && third_book.slug === null) {
+                    if (first_book.slug !== slug && second_book.slug !== slug) {
+                        console.log('two different books');
+                        // Shift book 2 --> book 3, book 1 --> book 2)
+                        firebase.database().ref('/users/private_variables/' + self.getUserID() + '/third_slug').set(second_book.slug).then(function () {
+                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/third_title').set(second_book.title).then(function () {
+                                firebase.database().ref('/users/private_variables/' + self.getUserID() + '/third_author').set(second_book.author);
+                            });
+                        }).then(function() {
+                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_slug').set(first_book.slug).then(function () {
+                                firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_title').set(first_book.title).then(function () {
+                                    firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_author').set(first_book.author);
+                                });
+                            });
+                        }).then(function() {
+                            // Insert new book properties in book 1
+                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_slug').set(slug).then(function () {
+                                firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_title').set(title).then(function () {
+                                    firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_author').set(author);
+                                });
+                            });
+                        });
+                    }
+                // There are three books, but book 1 will be replaced
+                } else {
+                    if (slug !== first_book.slug && slug !== second_book.slug && slug !== third_book.slug) {
+                        // Move book 1 --> book 2
+                        firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_slug').set(first_book.slug).then(function () {
+                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_title').set(first_book.title).then(function () {
+                                firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_author').set(first_book.author);
+                            });
+                        }).then(function() {
+                            // Move book 2 --> book 3
+                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/third_slug').set(second_book.slug).then(function () {
+                                firebase.database().ref('/users/private_variables/' + self.getUserID() + '/third_title').set(second_book.title).then(function () {
+                                    firebase.database().ref('/users/private_variables/' + self.getUserID() + '/third_author').set(second_book.author);
+                                });
+                            })
+                        }).then(function() {
+                            // Insert new book properties in book 1
+                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_slug').set(slug).then(function () {
+                                firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_title').set(title).then(function () {
+                                    firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_author').set(author);
+                                });
+                            })
+                        });
+                    }
+                }
+            });
         }
     }
 
@@ -655,7 +1012,8 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
             <div>
                 <div style={this.state.outerDivStyle}>
                     <div className="book-table" onClick={this.chooseBook}>
-                        {this.state.bookArray}
+                        {this.state.initialAccordion}
+                        {this.state.accordion}
                     </div>
                 </div>
             </div>
