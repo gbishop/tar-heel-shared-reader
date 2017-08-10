@@ -22,8 +22,7 @@ yarn-error.log*
 
 src/emails.json
 
-src/credentials.json
-
 src/backup.json
 
 src/test.csv
+src/credentials.json
