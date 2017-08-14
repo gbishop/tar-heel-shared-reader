@@ -37,9 +37,7 @@ function validateLengths(sb: SharedBook) {
 // construct the typescript type
 export type SharedBook = Static<typeof SharedBookValidator>;
 
-console.log('here');
 export function fetchBook(url: string): Promise<SharedBook> {
-  console.log('fetch', url);
   return new Promise((resolve, reject) => {
     window.fetch(url)
       .then(res => {

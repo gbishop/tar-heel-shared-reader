@@ -1,6 +1,7 @@
 import { observable, computed, action } from 'mobx';
 import { fromPromise, IPromiseBasedObservable } from 'mobx-utils';
 import { SharedBook, fetchBook } from './SharedBook';
+import * as firebase from 'firebase';
 
 // sides of the display to include responses
 type Layout = {
@@ -8,12 +9,61 @@ type Layout = {
 };
 
 class Store {
+  getUserID() {
+    let auth: any | null | undefined;
+    auth = firebase.auth();
+    let currentUser: any | null | undefined;
+    currentUser = auth.currentUser;
+    let uid: any | null | undefined;
+    uid = currentUser.uid;
+    return uid;
+  }
+
+  turnPageEvent() {
+    let ref = firebase.database().ref('events').push();
+    ref.set({
+      teacherID: this.getUserID(),
+      studentID: this.studentid,
+      book: this.book.title,
+      date: new Date(new Date().getTime()).toLocaleString(),
+      event: 'TURN PAGE'
+    });
+  }
+
+  pageNumberEvent() {
+    let ref = firebase.database().ref('events').push();
+    ref.set({
+      teacherID: this.getUserID(),
+      studentID: this.studentid,
+      book: this.book.title,
+      date: new Date(new Date().getTime()).toLocaleString(),
+      event: 'PAGE NUMBER ' + this.pageno
+    });
+  }
+
+  readingNumberEvent() {
+    let ref = firebase.database().ref('events').push();
+    ref.set({
+      teacherID: this.getUserID(),
+      studentID: this.studentid,
+      book: this.book.title,
+      date: new Date(new Date().getTime()).toLocaleString(),
+      event: 'READING NUMBER ' + this.reading
+    });
+  }
+
+  // the student's id
+  @observable studentid: string = '';
+  // set student's id
+  @action.bound setstudentid(id: string) {
+    this.studentid = id;
+  }
   // the id of the book to read or '' for the landing page
   @observable bookid: string = '';
   // an observable promise for the book associated with bookid
   @computed get bookP() {
     return fromPromise(fetchBook(`/api/sharedbooks/${this.bookid}.json`)) as
-      IPromiseBasedObservable<SharedBook>; }
+        IPromiseBasedObservable<SharedBook>; }
   // get the book without having to say bookP.value all the time
   // these computed are cached so this function only runs once after a change
   @computed get book() { return this.bookP.value; }
@@ -31,30 +81,39 @@ class Store {
     return `/${this.bookid}` + (this.pageno > 1 ? `/${this.pageno}` : '');
   }
   // step to the next page
+  // turnPage event
   @action.bound nextPage() {
     if (this.pageno <= this.npages) {
       this.pageno += 1;
+      this.pageNumberEvent();
     }
+    this.turnPageEvent();
     console.log('nextPage', this.pageno);
   }
   // step back to previous page
+  // turnPage event
   @action.bound backPage() {
     if (this.pageno > 1) {
       this.pageno -= 1;
+      this.pageNumberEvent();
     } else {
       this.pageno = this.npages + 1;
     }
+    this.turnPageEvent();
     console.log('backPage', this.pageno);
   }
   // set the page number
   @action.bound setPage(i: number) {
     this.pageno = i;
+    this.pageNumberEvent();
   }
   // index to the readings array
   @observable reading: number = 0;
   @action.bound setReading(n: number) {
+    // readingNumber event
     this.reading = n;
     this.responseIndex = 0;
+    this.readingNumberEvent();
   }
   @computed get nreadings() { return this.book.readings.length; }
   // get comment for page and reading
