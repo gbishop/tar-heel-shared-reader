@@ -2,9 +2,10 @@ import * as React from 'react';
 import * as firebase from 'firebase';
 import * as $ from 'jquery';
 import Accordion from 'react-responsive-accordion'
+import Store from './Store';
 
 interface LandingProps {
-    store: any;
+    store: Store;
 }
 
 interface LandingState {
@@ -37,8 +38,8 @@ class Landing extends React.Component <LandingProps, LandingState> {
     componentWillMount() {
         const self = this;
 
-        firebase.auth().onAuthStateChanged(function(user: any) {
-            if (user) {
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user && user.email) {
                 self.setState({email: user.email});
             } else {
 
@@ -46,9 +47,9 @@ class Landing extends React.Component <LandingProps, LandingState> {
         });
     }
 
-    handleInput(e: any) {
+    handleInput(e: React.ChangeEvent<HTMLInputElement>) {
         e.preventDefault();
-        this.setState({[e.target.name]: e.target.value});
+        this.setState({[e.target.name as any]: e.target.value});
     }
 
     getUserID() {
@@ -71,7 +72,7 @@ class Landing extends React.Component <LandingProps, LandingState> {
         return userEmail;
     }
 
-    validate(e: any) {
+    validate(e: React.MouseEvent<HTMLButtonElement>) {
         e.preventDefault();
         const self = this;
 
@@ -82,7 +83,7 @@ class Landing extends React.Component <LandingProps, LandingState> {
         self.setState({isSigningIn: true}, signIn);
         function signIn() {
             var provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider).then(function(result: any) {
+            firebase.auth().signInWithPopup(provider).then(function() {
                 let firstRef = firebase.database().ref('/users/admin_data/').push();
                 firstRef.set({
                     uid: self.getUserID(),
@@ -141,7 +142,7 @@ class Landing extends React.Component <LandingProps, LandingState> {
                         </div>
                         <br/>
                         &nbsp;
-                        <button className="nested-register-button" type="button" onClick={this.validate}>Sign In</button><br/>
+                        <button className="nested-register-button" type="button" onClick={(e) => this.validate}>Sign In</button><br/>
                         <button hidden={true} type="button" onClick={this.googleSignOut}>Sign Out</button><br/>
                     </div>
                 </div>
@@ -155,8 +156,8 @@ class Landing extends React.Component <LandingProps, LandingState> {
 }
 
 interface ClassRollProps {
-    mode: any;
-    store: any;
+    mode: (number) => void;
+    store: Store;
 }
 
 interface ClassRollState {
@@ -362,7 +363,7 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
         return uid;
     }
 
-    handleBlur(e: any) {
+    handleBlur = (e) => {
         e.preventDefault();
         if (this.state.isRegisterHidden === false || this.state.isUpdateHidden === false ||
             this.state.isRemoveHidden === false) {
@@ -648,7 +649,7 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                 </div>
                 <div className="generic-register-div" hidden={this.state.isRegisterHidden}>
                     Student Initials: <input type="text" name="studentInitials" value={this.state.studentInitials}
-                                       onChange={this.handleInput} placeholder="Student Initials"/><br/>
+                                       onChange={(e) => this.handleInput} placeholder="Student Initials"/><br/>
                     <span className="nested-register-span">
                         {this.state.registerMessage}
                         <br/><br/>
