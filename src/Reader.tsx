@@ -9,16 +9,6 @@ import SharedBook from './SharedBook';
 import './Reader.css';
 import * as firebase from 'firebase';
 
-function getUserID() {
-  let auth: any | null | undefined;
-  auth = firebase.auth();
-  let currentUser: any | null | undefined;
-  currentUser = auth.currentUser;
-  let uid: any | null | undefined;
-  uid = currentUser.uid;
-  return uid;
-}
-
 const Reader = observer(function Reader(props: {store: Store}) {
   const { store } = props;
   const book = store.book;
@@ -64,7 +54,7 @@ const Reader = observer(function Reader(props: {store: Store}) {
   function responseEvent() {
     let ref = firebase.database().ref('events').push();
     ref.set({
-      teacherID: getUserID(),
+      teacherID: store.getUserID(),
       studentID: store.studentid,
       book: store.book.title,
       date: new Date(new Date().getTime()).toLocaleString(),
@@ -121,7 +111,7 @@ const ReaderContent = observer(function ReaderContent(props: ReaderContentProps)
     // finishReading event
     let ref = firebase.database().ref('/events/finishReading').push();
     ref.set({
-      teacherID: getUserID(),
+      teacherID: store.getUserID(),
       studentID: store.studentid,
       book: store.book.title,
       date: new Date(new Date().getTime()).toLocaleString()

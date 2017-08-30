@@ -10,13 +10,12 @@ type Layout = {
 
 class Store {
   getUserID() {
-    let auth: any | null | undefined;
-    auth = firebase.auth();
-    let currentUser: any | null | undefined;
-    currentUser = auth.currentUser;
-    let uid: any | null | undefined;
-    uid = currentUser.uid;
-    return uid;
+    const auth = firebase.auth();
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      return currentUser.uid;
+    }
+    return '';
   }
 
   turnPageEvent() {

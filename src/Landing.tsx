@@ -1,10 +1,11 @@
 import * as React from 'react';
 import * as firebase from 'firebase';
 import * as $ from 'jquery';
-import Accordion from 'react-responsive-accordion'
+import Accordion from 'react-responsive-accordion';
+import Store from './Store';
 
 interface LandingProps {
-    store: any;
+    store: Store;
 }
 
 interface LandingState {
@@ -37,41 +38,46 @@ class Landing extends React.Component <LandingProps, LandingState> {
     componentWillMount() {
         const self = this;
 
-        firebase.auth().onAuthStateChanged(function(user: any) {
-            if (user) {
+        firebase.auth().onAuthStateChanged(function(user: firebase.User | null) {
+            if (user && user.email) {
                 self.setState({email: user.email});
-            } else {
-
             }
         });
     }
 
-    handleInput(e: any) {
+    handleInput(e: React.ChangeEvent<HTMLInputElement>) {
         e.preventDefault();
-        this.setState({[e.target.name]: e.target.value});
+        this.setState({[e.target.name as any]: e.target.value});
     }
 
     getUserID() {
-        let auth: any | null | undefined;
-        auth = firebase.auth();
-        let currentUser: any | null | undefined;
-        currentUser = auth.currentUser;
-        let uid: any | null | undefined;
-        uid = currentUser.uid;
-        return uid;
+        if (firebase.auth() !== null && firebase.auth() !== undefined) {
+            let auth = firebase.auth();
+            if (auth.currentUser !== null && auth.currentUser !== undefined) {
+                let currentUser = auth.currentUser;
+                if (currentUser.uid !== null && currentUser.uid !== undefined) {
+                    return currentUser.uid;
+                }
+            }
+        }
+        return false;
+
     }
 
     getUserEmail() {
-        let auth: any | null | undefined;
-        auth = firebase.auth();
-        let currentUser: any | null | undefined;
-        currentUser = auth.currentUser;
-        let userEmail: any | null | undefined;
-        userEmail = currentUser.email;
-        return userEmail;
+        if (firebase.auth() !== null && firebase.auth() !== undefined) {
+            let auth = firebase.auth();
+            if (auth.currentUser !== null && auth.currentUser !== undefined) {
+                let currentUser = auth.currentUser;
+                if (currentUser.uid !== null && currentUser.uid !== undefined) {
+                    return currentUser.uid;
+                }
+            }
+        }
+        return false;
     }
 
-    validate(e: any) {
+    validate(e: React.MouseEvent<HTMLButtonElement>) {
         e.preventDefault();
         const self = this;
 
@@ -82,12 +88,12 @@ class Landing extends React.Component <LandingProps, LandingState> {
         self.setState({isSigningIn: true}, signIn);
         function signIn() {
             var provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider).then(function(result: any) {
+            firebase.auth().signInWithPopup(provider).then(function() {
                 let firstRef = firebase.database().ref('/users/admin_data/').push();
                 firstRef.set({
                     uid: self.getUserID(),
                     email: self.getUserEmail()
-                }).catch(function(error) {
+                }).catch(function(error: Error) {
                     // User is already registered at admin_data
                     // console.log(error.message);
                 }).then(function() {
@@ -96,20 +102,23 @@ class Landing extends React.Component <LandingProps, LandingState> {
                         uid: self.getUserID(),
                         email: self.getUserEmail(),
                         admin_data_key: key
-                    }).catch(function(error) {
+                    }).catch(function(error: Error) {
                         // User is already registered at private_user
                         // console.log(error.message);
                     }).then(function() {
-                        firebase.database().ref('/users/admin/' + self.getUserID() + '/active').once('value', function(data) {
+                        firebase.database().ref('/users/admin/' + self.getUserID() + '/active').
+                        once('value', function(data: firebase.database.DataSnapshot) {
                             if (data.val() === true) {
                                 self.setState({isSignedIn: true, mode: 1});
                             } else {
-                                self.setState({message: 'Email is not verified. Please contact the web master for assistance.'});
+                                self.setState({
+                                    message: 'Email is not verified. Please contact the web master for assistance.'
+                                });
                             }
                         });
                     });
                 });
-            }).catch(function(error: any) {
+            }).catch(function(error: Error) {
                 console.log(error.message);
             }).then(function() {
                 self.setState({isSigningIn: false});
@@ -117,11 +126,11 @@ class Landing extends React.Component <LandingProps, LandingState> {
         }
     }
 
-    googleSignOut(e: any) {
+    googleSignOut(e: React.MouseEvent<HTMLButtonElement>) {
         e.preventDefault();
         firebase.auth().signOut().then(function() {
             console.log('Sign out successful');
-        }).catch(function(error) {
+        }).catch(function(error: Error) {
             console.log(error.message);
         });
     }
@@ -141,7 +150,9 @@ class Landing extends React.Component <LandingProps, LandingState> {
                         </div>
                         <br/>
                         &nbsp;
-                        <button className="nested-register-button" type="button" onClick={this.validate}>Sign In</button><br/>
+                        <button className="nested-register-button" type="button" onClick={this.validate}>Sign In
+                        </button>
+                        <br/>
                         <button hidden={true} type="button" onClick={this.googleSignOut}>Sign Out</button><br/>
                     </div>
                 </div>
@@ -155,8 +166,8 @@ class Landing extends React.Component <LandingProps, LandingState> {
 }
 
 interface ClassRollProps {
-    mode: any;
-    store: any;
+    mode: (mode: number) => void;
+    store: Store;
 }
 
 interface ClassRollState {
@@ -165,7 +176,7 @@ interface ClassRollState {
     isRegisterHidden: boolean;
     isUpdateHidden: boolean;
     isRemoveHidden: boolean;
-    tableCellsArray: any[];
+    tableCellsArray: JSX.Element[];
     checkedSelection: any;
     defaultStudentInitials: string;
     registerMessage: string;
@@ -175,7 +186,7 @@ interface ClassRollState {
     isRemoveGroupHidden: boolean;
     groupName: string;
     addGroupMessage: string;
-    groupCellsArray: any;
+    groupCellsArray: JSX.Element[];
     isUpdateGroupHidden: boolean;
 }
 
@@ -231,33 +242,41 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
 
     componentWillMount() {
         const self = this;
-        var tempArray: any[] = [];
+        var tempArray: JSX.Element[] = [];
         setTimeout(function() {
             let uid = self.getUserID();
             let ref = firebase.database().ref('/users/private_students/' + uid);
-            ref.once('value', function(snapshot: any) {
-                snapshot.forEach(function(childSnapshot: any) {
-                    let student =
-                        <tr key={childSnapshot.key}>
-                            <td>{childSnapshot.child('studentInitials').val()}</td>
-                            <td hidden={true}>{childSnapshot.key}</td>
-                        </tr>;
-                    tempArray.push(student);
+            ref.once('value', function(snapshot: firebase.database.DataSnapshot) {
+                snapshot.forEach(function(childSnapshot: firebase.database.DataSnapshot) {
+                    if (childSnapshot.key !== null && childSnapshot.key !== undefined) {
+                        let student = (
+                            <tr key={childSnapshot.key}>
+                                <td>{childSnapshot.child('studentInitials').val()}</td>
+                                <td hidden={true}>{childSnapshot.key}</td>
+                            </tr>
+                        );
+                        tempArray.push(student);
+                    }
                     return false;
                 });
             }).then(function() {
                 self.setState({tableCellsArray: tempArray});
             });
 
-            let groupArray: any[] = [];
-            firebase.database().ref('/users/private_groups/' + self.getUserID()).once('value', function(snapshot: any) {
-                snapshot.forEach(function(childSnapshot: any) {
-                    let group =
-                        <tr key={childSnapshot.key} className="group-table-tr">
-                            <td>{childSnapshot.child('groupName').val()}</td>
-                            <td hidden={true}>{childSnapshot.key}</td>
-                        </tr>;
-                    groupArray.push(group);
+            let groupArray: JSX.Element[] = [];
+            firebase.database().ref('/users/private_groups/' + self.getUserID()).
+            once('value', function(snapshot: firebase.database.DataSnapshot) {
+                snapshot.forEach(function(childSnapshot: firebase.database.DataSnapshot) {
+                    let group: JSX.Element;
+                    if (childSnapshot.key !== null && childSnapshot.key !== undefined) {
+                        group = (
+                            <tr key={childSnapshot.key} className="group-table-tr">
+                                <td>{childSnapshot.child('groupName').val()}</td>
+                                <td hidden={true}>{childSnapshot.key}</td>
+                            </tr>
+                        );
+                        groupArray.push(group);
+                    }
                     return false;
                 });
             }).then(function() {
@@ -266,71 +285,92 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
 
             // child_added listener
             var studentsRef = firebase.database().ref('/users/private_students/' + uid);
-            studentsRef.on('child_added', function (data: any | null | undefined) {
-                let student =
-                    <tr key={data.key}>
-                        <td>{data.child('studentInitials').val()}</td>
-                        <td hidden={true}>{data.key}</td>
-                    </tr>;
-                var newArr = self.state.tableCellsArray.slice();
-                newArr.push(student);
-                self.setState({tableCellsArray: newArr});
+            studentsRef.on('child_added', function (data: firebase.database.DataSnapshot) {
+                if (data.key !== null && data.key !== undefined) {
+                    let student = (
+                        <tr key={data.key}>
+                            <td>{data.child('studentInitials').val()}</td>
+                            <td hidden={true}>{data.key}</td>
+                        </tr>
+                    );
+                    var newArr = self.state.tableCellsArray.slice();
+                    newArr.push(student);
+                    self.setState({tableCellsArray: newArr});
+                }
             });
 
-            firebase.database().ref('users/private_groups/' + uid).on('child_added', function(data: any | null | undefined) {
-                let group =
-                    <tr key={data.key} className="group-table-tr">
-                        <td>{data.child('groupName').val()}</td>
-                        <td hidden={true}>{data.key}</td>
-                    </tr>;
-                let newArr = self.state.groupCellsArray.slice();
-                newArr.push(group);
-                self.setState({groupCellsArray: newArr});
+            firebase.database().ref('users/private_groups/' + uid).
+            on('child_added', function(data: firebase.database.DataSnapshot) {
+                if (data.key !== null && data.key !== undefined) {
+                    let group = (
+                        <tr key={data.key} className="group-table-tr">
+                            <td>{data.child('groupName').val()}</td>
+                            <td hidden={true}>{data.key}</td>
+                        </tr>
+                    );
+                    let newArr = self.state.groupCellsArray.slice();
+                    newArr.push(group);
+                    self.setState({groupCellsArray: newArr});
+                }
             });
 
             // child_changed listener
-            firebase.database().ref('/users/private_students/' + uid).on('child_changed', function(data: any | null | undefined) {
-                let tempArr = self.state.tableCellsArray.slice();
-                let ind: number = self.getRowIndex(data.key);
-                let student =
-                    <tr key={data.key}>
-                        <td>{data.child('studentInitials').val()}</td>
-                        <td hidden={true}>{data.key}</td>
-                    </tr>;
-                tempArr.splice(ind, 1, student);
-                self.setState({tableCellsArray: tempArr});
+            firebase.database().ref('/users/private_students/' + uid).
+            on('child_changed', function(data: firebase.database.DataSnapshot) {
+                if (data.key !== null && data.key !== undefined) {
+                    let tempArr = self.state.tableCellsArray.slice();
+                    let ind: number = self.getRowIndex(data.key);
+                    let student = (
+                        <tr key={data.key}>
+                            <td>{data.child('studentInitials').val()}</td>
+                            <td hidden={true}>{data.key}</td>
+                        </tr>
+                    );
+                    tempArr.splice(ind, 1, student);
+                    self.setState({tableCellsArray: tempArr});
+                }
             });
 
-            firebase.database().ref('users/private_groups/' + uid).on('child_changed', function(data: any | null | undefined) {
-                let tempArr = self.state.groupCellsArray.slice();
-                let ind: number = self.getGroupRowIndex(data.key);
-                let group =
-                    <tr key={data.key} className="group-table-tr">
-                        <td>{data.child('groupName').val()}</td>
-                        <td hidden={true}>{data.key}</td>
-                    </tr>;
-                tempArr.splice(ind, 1, group);
-                self.setState({groupCellsArray: tempArr});
+            firebase.database().ref('users/private_groups/' + uid).
+            on('child_changed', function(data: firebase.database.DataSnapshot) {
+                if (data.key !== null && data.key !== undefined) {
+                    let tempArr = self.state.groupCellsArray.slice();
+                    let ind: number = self.getGroupRowIndex(data.key);
+                    let group = (
+                        <tr key={data.key} className="group-table-tr">
+                            <td>{data.child('groupName').val()}</td>
+                            <td hidden={true}>{data.key}</td>
+                        </tr>
+                    );
+                    tempArr.splice(ind, 1, group);
+                    self.setState({groupCellsArray: tempArr});
+                }
             });
 
             // child_removed listener
-            firebase.database().ref('/users/private_students/' + uid).on('child_removed', function(data: any | null | undefined) {
-                let tempArr = self.state.tableCellsArray.slice();
-                let ind: number = self.getRowIndex(data.key);
-                tempArr.splice(ind, 1);
-                self.setState({tableCellsArray: tempArr});
+            firebase.database().ref('/users/private_students/' + uid).
+            on('child_removed', function(data: firebase.database.DataSnapshot) {
+                if (data.key !== null && data.key !== undefined) {
+                    let tempArr = self.state.tableCellsArray.slice();
+                    let ind: number = self.getRowIndex(data.key);
+                    tempArr.splice(ind, 1);
+                    self.setState({tableCellsArray: tempArr});
+                }
             });
 
-            firebase.database().ref('users/private_groups/' + uid).on('child_removed', function(data: any | null | undefined) {
-                let tempArr = self.state.groupCellsArray.slice();
-                let ind: number = self.getGroupRowIndex(data.key);
-                tempArr.splice(ind, 1);
-                self.setState({groupCellsArray: tempArr});
+            firebase.database().ref('users/private_groups/' + uid).
+            on('child_removed', function(data: firebase.database.DataSnapshot) {
+                if (data.key !== null && data.key !== undefined) {
+                    let tempArr = self.state.groupCellsArray.slice();
+                    let ind: number = self.getGroupRowIndex(data.key);
+                    tempArr.splice(ind, 1);
+                    self.setState({groupCellsArray: tempArr});
+                }
             });
         }, 500);
     }
 
-    getRowIndex(key: any) {
+    getRowIndex(key: number | string) {
         let ind: number = 0;
         for (let i = 0; i < this.state.tableCellsArray.length; i++) {
             if (this.state.tableCellsArray[i].key === key) {
@@ -341,7 +381,7 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
         return ind;
     }
 
-    getGroupRowIndex(key: any) {
+    getGroupRowIndex(key: number | string) {
         let ind: number = 0;
         for (let i = 0; i < this.state.groupCellsArray.length; i++) {
             if (this.state.groupCellsArray[i].key === key) {
@@ -353,16 +393,19 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
     }
 
     getUserID() {
-        let auth: any | null | undefined;
-        auth = firebase.auth();
-        let currentUser: any | null | undefined;
-        currentUser = auth.currentUser;
-        let uid: any | null | undefined;
-        uid = currentUser.uid;
-        return uid;
+        if (firebase.auth() !== null && firebase.auth() !== undefined) {
+            let auth = firebase.auth();
+            if (auth.currentUser !== null && auth.currentUser !== undefined) {
+                let currentUser = auth.currentUser;
+                if (currentUser.uid !== null && currentUser.uid !== undefined) {
+                    return currentUser.uid;
+                }
+            }
+        }
+        return false;
     }
 
-    handleBlur(e: any) {
+    handleBlur = (e) => {
         e.preventDefault();
         if (this.state.isRegisterHidden === false || this.state.isUpdateHidden === false ||
             this.state.isRemoveHidden === false) {
@@ -406,7 +449,7 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                 return;
             }
             console.log(this.state.checkedSelection);
-            this.setState({isRemoveGroupHidden: !this.state.isRemoveGroupHidden})
+            this.setState({isRemoveGroupHidden: !this.state.isRemoveGroupHidden});
         } else if (e.target.innerHTML === 'Update Group') {
             if (this.state.checkedGroup === '') {
                 alert('Please select a group first.');
@@ -616,23 +659,60 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                 <div style={this.state.outerDivStyle}>
                     <table className="register-button">
                         <tr>
-                            <td><button className="student-button add-student" type="text"
-                                        onClick={this.handleBlur}>Add Student</button></td>
-                            <td><button className="student-button remove-student" type="text"
-                                        onClick={this.handleBlur}>Remove Student</button></td>
-                            <td><button className="student-button update-student" type="text"
-                                        onClick={this.handleBlur}>Update Student</button></td>
-                            <td><button className="student-button activate-student" type="text"
-                                        onClick={this.handleBlur}>Activate Student</button></td>
+                            <td>
+                                <button className="student-button add-student" type="text" onClick={this.handleBlur}> 
+                                    Add Student
+                                </button>
+                            </td>
+                            <td>
+                                <button className="student-button remove-student" type="text" onClick={this.handleBlur}>
+                                    Remove Student
+                                </button>
+                            </td>
+                            <td>
+                                <button className="student-button update-student" type="text" onClick={this.handleBlur}>
+                                    Update Student
+                                </button>
+                            </td>
+                            <td>
+                                <button 
+                                        className="student-button activate-student" 
+                                        type="text" 
+                                        onClick={this.handleBlur}
+                                >
+                                    Activate Student
+                                </button>
+                            </td>
                         </tr>
                         <br/>
                         <tr>
-                            <td><button className="student-button add-group" type="text"
-                                        onClick={this.handleBlur}>Add Group</button></td>
-                            <td><button className="student-button remove-group" type="text"
-                                        onClick={this.handleBlur}>Remove Group</button></td>
-                            <td><button className="student-button update-group" type="text"
-                                        onClick={this.handleBlur}>Update Group</button></td>
+                            <td>
+                                <button 
+                                    className="student-button add-group" 
+                                    type="text"
+                                    onClick={this.handleBlur}
+                                >
+                                        Add Group
+                                </button>
+                            </td>
+                            <td>
+                                <button 
+                                    className="student-button remove-group" 
+                                    type="text"
+                                    onClick={this.handleBlur}
+                                >
+                                    Remove Group
+                                </button>
+                            </td>
+                            <td>
+                                <button 
+                                    className="student-button update-group" 
+                                    type="text"
+                                    onClick={this.handleBlur}
+                                >
+                                    Update Group
+                                </button>
+                            </td>
                         </tr>
                     </table>
                     <table className="student-table" onClick={this.checkSelection}>
@@ -647,45 +727,82 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                     </table>
                 </div>
                 <div className="generic-register-div" hidden={this.state.isRegisterHidden}>
-                    Student Initials: <input type="text" name="studentInitials" value={this.state.studentInitials}
-                                       onChange={this.handleInput} placeholder="Student Initials"/><br/>
+                    Student Initials: 
+                    <input 
+                        type="text" 
+                        name="studentInitials" 
+                        value={this.state.studentInitials}
+                        onChange={this.handleInput} 
+                        placeholder="Student Initials" 
+                    />
+                    <br/>
                     <span className="nested-register-span">
                         {this.state.registerMessage}
                         <br/><br/>
-                        <button className="nested-register-button" type="button" onClick={this.addStudent}>Add Student</button>
+                        <button className="nested-register-button" type="button" onClick={this.addStudent}>
+                            Add Student
+                        </button>
                         &nbsp;
-                        <button className="nested-register-button" type="button" onClick={this.closeWindow}>Close</button>
+                        <button className="nested-register-button" type="button" onClick={this.closeWindow}>
+                            Close
+                        </button>
                     </span>
                 </div>
                 <div className="generic-register-div" hidden={this.state.isUpdateHidden}>
-                    Student Initials: <input type="text" name="defaultStudentInitials" value={this.state.defaultStudentInitials}
-                                       onChange={this.handleInput}/><br/>
+                    Student Initials: 
+                    <input 
+                        type="text" 
+                        name="defaultStudentInitials" 
+                        value={this.state.defaultStudentInitials} 
+                        onChange={this.handleInput}
+                    />
+                    <br/>
                     <span className="nested-register-span">
                         {this.state.updateMessage}
                         <br/><br/>
-                        <button className="nested-register-button" type="button" onClick={this.updateStudent}>Update Student</button>
+                        <button className="nested-register-button" type="button" onClick={this.updateStudent}>
+                            Update Student
+                        </button>
                         &nbsp;
-                        <button className="nested-register-button" type="button" onClick={this.closeWindow}>Close</button>
+                        <button className="nested-register-button" type="button" onClick={this.closeWindow}>
+                            Close
+                        </button>
                     </span>
                 </div>
                 <div className="generic-register-div" hidden={this.state.isRemoveHidden}>
                     <span className="nested-register-span">
-                        {'Are you sure you would like to remove ' + this.state.defaultStudentInitials + ' from the database?'}
+                        {'Are you sure you would like to remove ' + 
+                        this.state.defaultStudentInitials + ' from the database?'}
                         <br/><br/>
-                        <button className="nested-register-button" type="button" onClick={this.removeStudent}>Yes</button>
+                        <button className="nested-register-button" type="button" onClick={this.removeStudent}>
+                            Yes
+                        </button>
                         &nbsp;
-                        <button className="nested-register-button" type="button" onClick={this.removeStudent}>No</button>
+                        <button className="nested-register-button" type="button" onClick={this.removeStudent}>
+                            No
+                        </button>
                     </span>
                 </div>
                 <div className="generic-register-div" hidden={this.state.isAddGroupHidden}>
-                    Group Name: <input type="text" name="groupName" value={this.state.groupName}
-                                             onChange={this.handleInput} placeholder="Group Name"/><br/>
+                    Group Name: 
+                    <input 
+                        type="text" 
+                        name="groupName" 
+                        value={this.state.groupName}
+                        onChange={this.handleInput} 
+                        placeholder="Group Name"
+                    />
+                    <br/>
                     <span className="nested-register-span">
                         {this.state.addGroupMessage}
                         <br/>
-                        <button className="nested-register-button" type="button" onClick={this.addGroup}>Add Group</button>
+                        <button className="nested-register-button" type="button" onClick={this.addGroup}>
+                            Add Group
+                        </button>
                         &nbsp;
-                        <button className="nested-register-button" type="button" onClick={this.closeWindow}>Close</button>
+                        <button className="nested-register-button" type="button" onClick={this.closeWindow}>
+                            Close
+                        </button>
                     </span>
                 </div>
                 <div className="generic-register-div" hidden={this.state.isRemoveGroupHidden}>
@@ -698,14 +815,24 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                     </span>
                 </div>
                 <div className="generic-register-div" hidden={this.state.isUpdateGroupHidden}>
-                    Group Name: <input type="text" name="groupName" value={this.state.groupName}
-                                             onChange={this.handleInput}/><br/>
+                    Group Name: 
+                    <input 
+                        type="text" 
+                        name="groupName" 
+                        value={this.state.groupName}
+                        onChange={this.handleInput}
+                    />
+                    <br/>
                     <span className="nested-register-span">
                         {'Please enter new group name.'}
                         <br/><br/>
-                        <button className="nested-register-button" type="button" onClick={this.updateGroup}>Update Group</button>
+                        <button className="nested-register-button" type="button" onClick={this.updateGroup}>
+                            Update Group
+                        </button>
                         &nbsp;
-                        <button className="nested-register-button" type="button" onClick={this.closeWindow}>Close</button>
+                        <button className="nested-register-button" type="button" onClick={this.closeWindow}>
+                            Close
+                        </button>
                     </span>
                 </div>
             </div>
@@ -772,45 +899,72 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
         // TODO - remove setTimeout()
         setTimeout(function() {
             // child_changed listener
-            firebase.database().ref('/users/private_variables/' + self.getUserID()).on('child_changed', function(data: any) {
+            firebase.database().ref('/users/private_variables/' + self.getUserID()).
+            on('child_changed', function(data: any) {
                 console.log('child_changed');
                 renderRecentBooks();
-            })
+            });
 
-            firebase.database().ref('/users/private_variables/' + self.getUserID()).on('child_added', function (data: any) {
+            firebase.database().ref('/users/private_variables/' + self.getUserID()).
+            on('child_added', function (data: any) {
                 renderRecentBooks();
-            })
+            });
 
             function renderRecentBooks() {
                 let bar: any[] = [];
-                firebase.database().ref('/users/private_variables/' + self.getUserID()).once('value', function (snapshot: any) {
+                firebase.database().ref('/users/private_variables/' + self.getUserID()).
+                once('value', function (snapshot: any) {
                     if (snapshot.child('first_slug').val() !== null) {
-                        bar.push(<Book key={0} title={snapshot.child('first_title').val()}
-                                       author={snapshot.child('first_author').val()}
-                                       slug={snapshot.child('first_slug').val()}/>);
+                        bar.push(
+                            (
+                                <Book 
+                                    key={0} 
+                                    title={snapshot.child('first_title').val()}
+                                    author={snapshot.child('first_author').val()}
+                                    slug={snapshot.child('first_slug').val()}
+                                />
+                            )
+                        );
                         if (snapshot.child('second_slug').val() !== null) {
-                            bar.push(                            <Book key={1}
-                                                                       title={snapshot.child('second_title').val()}
-                                                                       author={snapshot.child('second_author').val()}
-                                                                       slug={snapshot.child('second_slug').val()}/>);
+                            bar.push(                            
+                                (
+                                    <Book 
+                                        key={1}
+                                        title={snapshot.child('second_title').val()}
+                                        author={snapshot.child('second_author').val()}
+                                        slug={snapshot.child('second_slug').val()}
+                                    />
+                                )
+                            );
                             if (snapshot.child('third_slug').val() !== null) {
-                                bar.push(                            <Book key={2}
-                                                                           title={snapshot.child('third_title').val()}
-                                                                           author={snapshot.child('third_author').val()}
-                                                                           slug={snapshot.child('third_slug').val()}/>);
+                                bar.push(
+                                    (
+                                        <Book 
+                                            key={2}
+                                            title={snapshot.child('third_title').val()}
+                                            author={snapshot.child('third_author').val()}
+                                            slug={snapshot.child('third_slug').val()}
+                                        />
+                                    )
+                                );
+
                             }
                         }
                         let initialDiv =
-                            <div data-trigger={"Recent Books"} className="book-table">
-                                {bar}
-                            </div>;
+                            (
+                                <div data-trigger={'Recent Books'} className="book-table">
+                                    {bar}
+                                </div>
+                            );
                         let foo: any[] = [];
                         foo.push(initialDiv);
                         self.setState({
                             initialAccordion:
-                                <Accordion startPosition={0} transitionTime={200}>
-                                    {foo}
-                                </Accordion>
+                                (
+                                    <Accordion startPosition={0} transitionTime={200}>
+                                        {foo}
+                                    </Accordion>
+                                )
                         });
                     }
                 });
@@ -822,11 +976,20 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
             for (let i = 0; i < Object.keys(result).length; i++) {
                 let newCategory = result[i].sheet;
                 if (i === Object.keys(result).length - 1) {
-                    bookArray.push(<Book key={i} title={result[i].title} author={result[i].author} slug={result[i].slug}/>);
+                    bookArray.push(
+                        <Book 
+                              key={i} 
+                              title={result[i].title} 
+                              author={result[i].author} 
+                              slug={result[i].slug}
+                        />
+                    );
                     let div =
-                        <div data-trigger={currentCategory} className="book-table">
-                            {bookArray}
-                        </div>;
+                        (
+                            <div data-trigger={currentCategory} className="book-table">
+                                {bookArray}
+                            </div>
+                        );
                     arr.push(div);
                     currentCategory = newCategory;
                     bookArray = [];
@@ -834,28 +997,45 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
                 }
 
                 if (currentCategory === newCategory) {
-                    bookArray.push(<Book key={i} title={result[i].title} author={result[i].author} slug={result[i].slug}/>);
+                    bookArray.push(
+                        <Book 
+                            key={i} 
+                            title={result[i].title} 
+                            author={result[i].author} 
+                            slug={result[i].slug}
+                        />
+                    );
                 } else if (currentCategory !== newCategory) {
-                    let div =
+                    let div = (
                         <div data-trigger={currentCategory} className="book-table">
                             {bookArray}
-                        </div>;
+                        </div>
+                    );
                     arr.push(div);
                     currentCategory = newCategory;
                     bookArray = [];
-                    bookArray.push(<Book key={i} title={result[i].title} author={result[i].author} slug={result[i].slug}/>);
+                    bookArray.push(
+                        <Book 
+                            key={i} 
+                            title={result[i].title} 
+                            author={result[i].author} 
+                            slug={result[i].slug}
+                        />
+                    );
                 }
             }
         }).done(function() {
             self.setState({
-                accordion:
+                accordion: (
                     <Accordion startPosition={-1} transitionTime={200}>
                         {arr}
                     </Accordion>
+                )
             });
         });
     }
 
+    // TODO - could not figure out what to do with React.MouseEvent<HTMLElement>
     chooseBook(e: any) {
         e.preventDefault();
         const self = this;
@@ -903,93 +1083,122 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
                 self.props.store.setIdPage(temp.childNodes[2].innerHTML, 1);
             });
 
-            firebase.database().ref('users/private_variables/' + self.getUserID()).once('value', function (snapshot: any) {
-                let first_book = {
+            firebase.database().ref('users/private_variables/' + self.getUserID()).
+            once('value', function (snapshot: firebase.database.DataSnapshot) {
+                let firstBook = {
                     slug: snapshot.child('first_slug').val(),
                     title: snapshot.child('first_title').val(),
                     author: snapshot.child('first_author').val()
                 };
-                let second_book = {
+                let secondBook = {
                     slug: snapshot.child('second_slug').val(),
                     title: snapshot.child('second_title').val(),
                     author: snapshot.child('second_author').val()
                 };
-                let third_book = {
+                let thirdBook = {
                     slug: snapshot.child('third_slug').val(),
                     title: snapshot.child('third_title').val(),
                     author: snapshot.child('third_author').val()
                 };
 
                 // There are no books in the database
-                if (first_book.slug === null && second_book.slug === null && third_book.slug === null) {
-                    firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_slug').set(slug).then(function () {
-                        firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_title').set(title).then(function () {
-                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_author').set(author);
+                if (firstBook.slug === null && secondBook.slug === null && thirdBook.slug === null) {
+                    firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_slug').set(slug).
+                    then(function () {
+                        firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_title').
+                        set(title).then(function () {
+                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_author').
+                            set(author);
                         });
                     });
                 // There is one book in the database
-                } else if (first_book.slug !== null && second_book.slug === null && third_book.slug === null) {
-                    if (first_book.slug !== slug) {
+                } else if (firstBook.slug !== null && secondBook.slug === null && thirdBook.slug === null) {
+                    if (firstBook.slug !== slug) {
                         // Shift over all of book 1 --> book 2
-                        firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_slug').set(first_book.slug).then(function () {
-                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_title').set(first_book.title).then(function () {
-                                firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_author').set(first_book.author);
+                        firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_slug').
+                        set(firstBook.slug).then(function () {
+                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_title').
+                            set(firstBook.title).then(function () {
+                                firebase.database().ref('/users/private_variables/' + 
+                                self.getUserID() + '/second_author').
+                                set(firstBook.author);
                             });
                         }).then(function() {
                             // Insert new book properties in book 1
-                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_slug').set(slug).then(function () {
-                                firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_title').set(title).then(function () {
-                                    firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_author').set(author);
+                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_slug').
+                            set(slug).then(function () {
+                                firebase.database().ref('/users/private_variables/' + 
+                                self.getUserID() + '/first_title').set(title).then(function () {
+                                    firebase.database().ref('/users/private_variables/' + 
+                                    self.getUserID() + '/first_author').set(author);
                                 });
                             });
                         });
                     }
                 // There are two books in the database
-                } else if (first_book.slug !== null && second_book.slug !== null && third_book.slug === null) {
-                    if (first_book.slug !== slug && second_book.slug !== slug) {
+                } else if (firstBook.slug !== null && secondBook.slug !== null && thirdBook.slug === null) {
+                    if (firstBook.slug !== slug && secondBook.slug !== slug) {
                         console.log('two different books');
                         // Shift book 2 --> book 3, book 1 --> book 2)
-                        firebase.database().ref('/users/private_variables/' + self.getUserID() + '/third_slug').set(second_book.slug).then(function () {
-                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/third_title').set(second_book.title).then(function () {
-                                firebase.database().ref('/users/private_variables/' + self.getUserID() + '/third_author').set(second_book.author);
+                        firebase.database().ref('/users/private_variables/' + self.getUserID() + '/third_slug').
+                        set(secondBook.slug).then(function () {
+                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/third_title').
+                            set(secondBook.title).then(function () {
+                                firebase.database().ref('/users/private_variables/' + 
+                                self.getUserID() + '/third_author').set(secondBook.author);
                             });
                         }).then(function() {
-                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_slug').set(first_book.slug).then(function () {
-                                firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_title').set(first_book.title).then(function () {
-                                    firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_author').set(first_book.author);
+                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_slug').
+                            set(firstBook.slug).then(function () {
+                                firebase.database().ref('/users/private_variables/' + 
+                                self.getUserID() + '/second_title').set(firstBook.title).then(function () {
+                                    firebase.database().ref('/users/private_variables/' + 
+                                    self.getUserID() + '/second_author').set(firstBook.author);
                                 });
                             });
                         }).then(function() {
                             // Insert new book properties in book 1
-                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_slug').set(slug).then(function () {
-                                firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_title').set(title).then(function () {
-                                    firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_author').set(author);
+                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_slug').
+                            set(slug).then(function () {
+                                firebase.database().ref('/users/private_variables/' + 
+                                self.getUserID() + '/first_title').set(title).then(function () {
+                                    firebase.database().ref('/users/private_variables/' + 
+                                    self.getUserID() + '/first_author').set(author);
                                 });
                             });
                         });
                     }
                 // There are three books, but book 1 will be replaced
                 } else {
-                    if (slug !== first_book.slug && slug !== second_book.slug && slug !== third_book.slug) {
+                    if (slug !== firstBook.slug && slug !== secondBook.slug && slug !== thirdBook.slug) {
                         // Move book 1 --> book 2
-                        firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_slug').set(first_book.slug).then(function () {
-                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_title').set(first_book.title).then(function () {
-                                firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_author').set(first_book.author);
+                        firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_slug').
+                        set(firstBook.slug).then(function () {
+                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/second_title').
+                            set(firstBook.title).then(function () {
+                                firebase.database().ref('/users/private_variables/' + 
+                                self.getUserID() + '/second_author').set(firstBook.author);
                             });
                         }).then(function() {
                             // Move book 2 --> book 3
-                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/third_slug').set(second_book.slug).then(function () {
-                                firebase.database().ref('/users/private_variables/' + self.getUserID() + '/third_title').set(second_book.title).then(function () {
-                                    firebase.database().ref('/users/private_variables/' + self.getUserID() + '/third_author').set(second_book.author);
+                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/third_slug').
+                            set(secondBook.slug).then(function () {
+                                firebase.database().ref('/users/private_variables/' + 
+                                self.getUserID() + '/third_title').set(secondBook.title).then(function () {
+                                    firebase.database().ref('/users/private_variables/' + 
+                                    self.getUserID() + '/third_author').set(secondBook.author);
                                 });
-                            })
+                            });
                         }).then(function() {
                             // Insert new book properties in book 1
-                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_slug').set(slug).then(function () {
-                                firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_title').set(title).then(function () {
-                                    firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_author').set(author);
+                            firebase.database().ref('/users/private_variables/' + self.getUserID() + '/first_slug').
+                            set(slug).then(function () {
+                                firebase.database().ref('/users/private_variables/' + 
+                                self.getUserID() + '/first_title').set(title).then(function () {
+                                    firebase.database().ref('/users/private_variables/' + 
+                                    self.getUserID() + '/first_author').set(author);
                                 });
-                            })
+                            });
                         });
                     }
                 }
@@ -998,13 +1207,16 @@ class BookSelection extends React.Component<BookSelectionProps, BookSelectionSta
     }
 
     getUserID() {
-        let auth: any | null | undefined;
-        auth = firebase.auth();
-        let currentUser: any | null | undefined;
-        currentUser = auth.currentUser;
-        let uid: any | null | undefined;
-        uid = currentUser.uid;
-        return uid;
+        if (firebase.auth() !== null && firebase.auth() !== undefined) {
+            let auth = firebase.auth();
+            if (auth.currentUser !== null && auth.currentUser !== undefined) {
+                let currentUser = auth.currentUser;
+                if (currentUser.uid !== null && currentUser.uid !== undefined) {
+                    return currentUser.uid;
+                }
+            }
+        }
+        return false;
     }
 
     render () {
@@ -1039,9 +1251,9 @@ class Book extends React.Component<BookProps, BookState> {
     render() {
         return (
             <div className="book">
-                <p className='book-title'>{this.props.title}</p>
-                <p className='book-author'>{this.props.author}</p>
-                <p className='book-slug' hidden={true}>{this.props.slug}</p>
+                <p className="book-title">{this.props.title}</p>
+                <p className="book-author">{this.props.author}</p>
+                <p className="book-slug" hidden={true}>{this.props.slug}</p>
             </div>
         );
     }
