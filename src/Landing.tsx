@@ -171,7 +171,7 @@ interface ClassRollProps {
 }
 
 interface ClassRollState {
-    outerDivStyle: any;
+    outerDivStyle: React.CSSProperties;
     studentInitials: string;
     isRegisterHidden: boolean;
     isUpdateHidden: boolean;
