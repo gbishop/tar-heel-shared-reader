@@ -35,13 +35,13 @@
   font-family: Didot;
   position: absolute;
   width: 750px;
-  height: 600px;
+  height: 700px;
   background: linear-gradient(white, #8e8e8e);
   display: inline-flex;
   left: 50%;
   top: 50%;
   margin-left: -375px;
-  margin-top: -300px;
+  margin-top: -350px;
   border-radius: 25px;
   user-select: none;
   overflow-y: auto;
@@ -131,7 +131,7 @@ button {
 .student-button {
   position: absolute;
   width: 100px;
-  height: 30px;
+  height: 35px;
   border-radius: 10px;
   background-color: inherit;
   border: 1px solid gray;
@@ -139,11 +139,9 @@ button {
 
 .student-button:hover{
   cursor: pointer;
-}
-
-.activate-student {
-  top: 50%;
-  right: 13%;
+  background: linear-gradient(to right, gray, gray);
+  color: white;
+  font-weight: bold;
 }
 
 .register-button {
@@ -151,13 +149,13 @@ button {
   width: 100%;
   font-size: 14px;
   position: absolute;
-  left: 5%;
   top: 1%;
+  left: 2.5%;
 }
 
 .register-button td {
   border-bottom: 1px solid transparent;
-  padding: 15px;
+  padding: 25px;
 }
 
 .register-button button:active {

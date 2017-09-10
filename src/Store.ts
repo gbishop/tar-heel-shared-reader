@@ -18,7 +18,7 @@ class Store {
     return '';
   }
 
-  turnPageEvent() {
+  turnPageEvent(): void {
     let ref = firebase.database().ref('events').push();
     ref.set({
       teacherID: this.getUserID(),
@@ -29,7 +29,7 @@ class Store {
     });
   }
 
-  pageNumberEvent() {
+  pageNumberEvent(): void {
     let ref = firebase.database().ref('events').push();
     ref.set({
       teacherID: this.getUserID(),
@@ -40,7 +40,18 @@ class Store {
     });
   }
 
-  readingNumberEvent() {
+  startReadingEvent(teacherID: string, studentID: string, date: string, book: string, event: string): void {
+    let ref = firebase.database().ref('events').push();
+    ref.set({
+        teacherID: this.getUserID(),
+        studentID: this.studentid,
+        date: new Date(new Date().getTime()).toLocaleString(),
+        book: this.book.title,
+        event: 'START READING'
+    });
+  }
+
+  readingNumberEvent(): void {
     let ref = firebase.database().ref('events').push();
     ref.set({
       teacherID: this.getUserID(),
@@ -51,6 +62,46 @@ class Store {
     });
   }
 
+  firebaseEvent(teacherID: string, studentID: string, book: string, event: string): void {
+    firebase.database().ref('events').push().set({
+      teacherID: teacherID,
+      studentID: studentID,
+      date: new Date(new Date().getTime()).toLocaleString(),
+      book: book,
+      event: event
+    });
+  }
+
+  // is the user signing in to firebase
+  @observable isSigningIn: boolean = false;
+  // change status of logging
+  @action.bound setIsSigningIn(isSigningIn: boolean) {
+    this.isSigningIn = isSigningIn;
+  }
+  // is the user signed in to firebase
+  @observable isSignedIn: boolean = false;
+  // change status of login
+  @action.bound setIsSignedIn(isSignedIn: boolean) {
+    this.isSignedIn = isSignedIn;
+  }
+  // the Landing page number
+  @observable mode: number = 0;
+  // set Landing page number
+  @action.bound setmode(mode: number) {
+    this.mode = mode;
+  }
+  // the firebase id (teacherID)
+  @observable teacherid: string = '';
+  // set the firebase id (teacherID)
+  @action.bound setteacherid(id: string) {
+    this.teacherid = id;
+  }
+  // the firebase email
+  @observable email: string = '';
+  // set the firebase email 
+  @action.bound setemail(email: string) {
+    this.email = email;
+  }
   // the student's id
   @observable studentid: string = '';
   // set student's id
@@ -109,10 +160,8 @@ class Store {
   // index to the readings array
   @observable reading: number = 0;
   @action.bound setReading(n: number) {
-    // readingNumber event
     this.reading = n;
     this.responseIndex = 0;
-    this.readingNumberEvent();
   }
   @computed get nreadings() { return this.book.readings.length; }
   // get comment for page and reading

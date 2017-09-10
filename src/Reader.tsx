@@ -109,19 +109,29 @@ const ReaderContent = observer(function ReaderContent(props: ReaderContentProps)
   if (pageno > store.npages) {
     // past the end
     // finishReading event
-    let ref = firebase.database().ref('/events/finishReading').push();
+    let ref = firebase.database().ref('/events').push();
     ref.set({
       teacherID: store.getUserID(),
       studentID: store.studentid,
       book: store.book.title,
-      date: new Date(new Date().getTime()).toLocaleString()
+      date: new Date(new Date().getTime()).toLocaleString(),
+      event: 'FINISH READING'
     });
     return (
       <div className="book-page" style={pageStyle}>
         <h1 className="title">What would you like to do now?</h1>
         <div className="choices">
           <button onClick={e => store.setPage(1)}>Read this book again</button>
-          <button>Read another book</button>
+          <button 
+            onClick={
+              e => { 
+                store.setIdPage('', 0); 
+                document.body.style.background = 'linear-gradient(#967f8a, #404663) fixed'; 
+              }
+            }
+          >
+            Read another book
+          </button>
           <button>Go to Tar Heel Reader</button>
         </div>
       </div>
