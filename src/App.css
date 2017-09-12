@@ -35,13 +35,13 @@
   font-family: Didot;
   position: absolute;
   width: 750px;
-  height: 700px;
+  height: 600px;
   background: linear-gradient(white, #8e8e8e);
   display: inline-flex;
   left: 50%;
   top: 50%;
   margin-left: -375px;
-  margin-top: -350px;
+  margin-top: -300px;
   border-radius: 25px;
   user-select: none;
   overflow-y: auto;
@@ -59,7 +59,7 @@
 .landing-innermost-div {
   padding: 10px;
   color: #192231;
-  font-size: 14px;
+  font-size: 16px;
   margin-left: -300px;
   left: 50%;
   top: 50%;
@@ -101,7 +101,7 @@ button {
   padding: 10px;
   font-size: 14px;
   position: absolute;
-  top: 17%;
+  top: 20%;
   font-family: Didot;
 }
 
@@ -139,9 +139,8 @@ button {
 
 .student-button:hover{
   cursor: pointer;
-  background: linear-gradient(to right, gray, gray);
+  background: linear-gradient(to right, #985E6D, #985E6D);
   color: white;
-  font-weight: bold;
 }
 
 .register-button {
@@ -226,8 +225,14 @@ button {
   border: 1px solid gray;
 }
 
+.nested-register-button:hover {
+  background: linear-gradient(#985E6D, #985E6D);
+  color: white;
+}
+
 .nested-register-button:active {
   background: linear-gradient(#985E6D, #985E6D);
+  color: white;
 }
 
 .Collapsible__contentInner {
@@ -256,4 +261,8 @@ button {
 .Collapsible {
   margin-left: 15px;
   margin-top: 15px;
+}
+
+.group-table-tr th, .student-table-tr th {
+  font-size: 18px;
 }

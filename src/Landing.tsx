@@ -31,7 +31,7 @@ class Landing extends React.Component <LandingProps, LandingState> {
 
         firebase.auth().onAuthStateChanged(function(user: firebase.User) {
             if (user) {
-                if (self.props.store.mode !== 2 && self.props.store.isSignedIn) {
+                if (self.props.store.mode !== 2) {
                     // Set the firebase teacherid in store
                     self.props.store.setteacherid(user.uid);
                     // If the user is already logged on, 
@@ -174,13 +174,13 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                 fontFamily: 'Didot',
                 position: 'absolute',
                 width: '750px',
-                height: '700px',
+                height: '600px',
                 background: 'linear-gradient(white, #8e8e8e)',
                 display: 'inline-flex',
                 left: '50%',
                 top: '50%',
                 marginLeft: '-375px',
-                marginTop: '-350px',
+                marginTop: '-300px',
                 borderRadius: '25px',
                 userSelect: 'none',
                 overflowY: 'auto',
@@ -444,13 +444,13 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
             outerDivStyle: {
                 position: 'absolute',
                 width: '750px',
-                height: '700px',
+                height: '600px',
                 background: 'linear-gradient(white, #8e8e8e)',
                 display: 'inline-flex',
                 left: '50%',
                 top: '50%',
                 marginLeft: '-375px',
-                marginTop: '-350px',
+                marginTop: '-300px',
                 borderRadius: '25px',
                 userSelect: 'none',
                 filter: (this.state.outerDivStyle.filter === 'blur(10px)') ? 'blur(0px)' : 'blur(10px)',
@@ -483,13 +483,13 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
             outerDivStyle: {
                 position: 'absolute',
                 width: '750px',
-                height: '700px',
+                height: '600px',
                 background: 'linear-gradient(white, #8e8e8e)',
                 display: 'inline-flex',
                 left: '50%',
                 top: '50%',
                 marginLeft: '-375px',
-                marginTop: '-350px',
+                marginTop: '-300px',
                 borderRadius: '25px',
                 userSelect: 'none',
                 filter: (this.state.outerDivStyle.filter === 'blur(10px)') ? 'blur(0px)' : 'blur(10px)',
@@ -525,7 +525,7 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
         if (e.nativeEvent.srcElement !== null) {
             targetHTML = e.nativeEvent.srcElement.innerHTML;
         }
-        let key = ((this.state.checkedSelection as HTMLTableElement).childNodes[0] as HTMLTableElement).innerHTML;
+        let key = ((this.state.checkedSelection as HTMLTableElement).childNodes[1] as HTMLTableElement).innerHTML;
         if (targetHTML === 'Yes') {
             let uid = self.props.store.teacherid;
             firebase.database().ref('/users/private_students/' + uid + '/' + key).remove().then(function() {
@@ -742,7 +742,7 @@ class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
                     </table>
                     <table className="student-table" onClick={this.checkSelection}>
                         <tbody>
-                            <tr>
+                            <tr className="student-table-tr">
                                 <th>Students</th>
                             </tr>
                             {this.state.tableCellsArray}

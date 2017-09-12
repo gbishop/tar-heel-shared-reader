@@ -7,7 +7,6 @@ const BackArrow = require('./BackArrow.png');
 import Store from './Store';
 import SharedBook from './SharedBook';
 import './Reader.css';
-import * as firebase from 'firebase';
 
 const Reader = observer(function Reader(props: {store: Store}) {
   const { store } = props;
@@ -51,21 +50,15 @@ const Reader = observer(function Reader(props: {store: Store}) {
     top: commentHeight
   };
 
-  function responseEvent() {
-    let ref = firebase.database().ref('events').push();
-    ref.set({
-      teacherID: store.getUserID(),
-      studentID: store.studentid,
-      book: store.book.title,
-      date: new Date(new Date().getTime()).toLocaleString(),
-      event: 'RESPONSE ' + store.word
-    });
-  }
-
   function sayWord() {
     // response event
     console.log('response', store.word);
-    responseEvent();
+    store.firebaseEvent(
+      store.teacherid,
+      store.studentid,
+      store.book.title,
+      'RESPONSE ' + store.word
+    );
     var msg = new SpeechSynthesisUtterance(store.word);
     msg.lang = 'en-US';
     speechSynthesis.speak(msg);
@@ -109,14 +102,13 @@ const ReaderContent = observer(function ReaderContent(props: ReaderContentProps)
   if (pageno > store.npages) {
     // past the end
     // finishReading event
-    let ref = firebase.database().ref('/events').push();
-    ref.set({
-      teacherID: store.getUserID(),
-      studentID: store.studentid,
-      book: store.book.title,
-      date: new Date(new Date().getTime()).toLocaleString(),
-      event: 'FINISH READING'
-    });
+    store.firebaseEvent(
+      store.teacherid,
+      store.studentid,
+      store.book.title,
+      'FINISH READING'
+    );
+
     return (
       <div className="book-page" style={pageStyle}>
         <h1 className="title">What would you like to do now?</h1>

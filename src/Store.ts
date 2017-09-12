@@ -9,59 +9,7 @@ type Layout = {
 };
 
 class Store {
-  getUserID() {
-    const auth = firebase.auth();
-    const currentUser = auth.currentUser;
-    if (currentUser) {
-      return currentUser.uid;
-    }
-    return '';
-  }
-
-  turnPageEvent(): void {
-    let ref = firebase.database().ref('events').push();
-    ref.set({
-      teacherID: this.getUserID(),
-      studentID: this.studentid,
-      book: this.book.title,
-      date: new Date(new Date().getTime()).toLocaleString(),
-      event: 'TURN PAGE'
-    });
-  }
-
-  pageNumberEvent(): void {
-    let ref = firebase.database().ref('events').push();
-    ref.set({
-      teacherID: this.getUserID(),
-      studentID: this.studentid,
-      book: this.book.title,
-      date: new Date(new Date().getTime()).toLocaleString(),
-      event: 'PAGE NUMBER ' + this.pageno
-    });
-  }
-
-  startReadingEvent(teacherID: string, studentID: string, date: string, book: string, event: string): void {
-    let ref = firebase.database().ref('events').push();
-    ref.set({
-        teacherID: this.getUserID(),
-        studentID: this.studentid,
-        date: new Date(new Date().getTime()).toLocaleString(),
-        book: this.book.title,
-        event: 'START READING'
-    });
-  }
-
-  readingNumberEvent(): void {
-    let ref = firebase.database().ref('events').push();
-    ref.set({
-      teacherID: this.getUserID(),
-      studentID: this.studentid,
-      book: this.book.title,
-      date: new Date(new Date().getTime()).toLocaleString(),
-      event: 'READING NUMBER ' + this.reading
-    });
-  }
-
+  // versatile function used to push events to database 
   firebaseEvent(teacherID: string, studentID: string, book: string, event: string): void {
     firebase.database().ref('events').push().set({
       teacherID: teacherID,
@@ -135,9 +83,19 @@ class Store {
   @action.bound nextPage() {
     if (this.pageno <= this.npages) {
       this.pageno += 1;
-      this.pageNumberEvent();
+      this.firebaseEvent(
+        this.teacherid, 
+        this.studentid, 
+        this.book.title, 
+        'PAGE NUMBER ' + this.pageno
+      );
     }
-    this.turnPageEvent();
+    this.firebaseEvent(
+      this.teacherid,
+      this.studentid,
+      this.book.title,
+      'TURN PAGE'
+    );
     console.log('nextPage', this.pageno);
   }
   // step back to previous page
@@ -145,17 +103,32 @@ class Store {
   @action.bound backPage() {
     if (this.pageno > 1) {
       this.pageno -= 1;
-      this.pageNumberEvent();
+      this.firebaseEvent(
+        this.teacherid,
+        this.studentid,
+        this.book.title,
+        'PAGE NUMBER ' + this.pageno
+      );
     } else {
       this.pageno = this.npages + 1;
     }
-    this.turnPageEvent();
+    this.firebaseEvent(
+      this.teacherid,
+      this.studentid,
+      this.book.title,
+      'TURN PAGE'
+    );
     console.log('backPage', this.pageno);
   }
   // set the page number
   @action.bound setPage(i: number) {
     this.pageno = i;
-    this.pageNumberEvent();
+    this.firebaseEvent(
+      this.teacherid,
+      this.studentid,
+      this.book.title,
+      'PAGE NUMBER ' + this.pageno
+    );
   }
   // index to the readings array
   @observable reading: number = 0;
