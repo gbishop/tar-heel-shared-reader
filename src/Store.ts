@@ -9,48 +9,47 @@ type Layout = {
 };
 
 class Store {
-  getUserID() {
-    const auth = firebase.auth();
-    const currentUser = auth.currentUser;
-    if (currentUser) {
-      return currentUser.uid;
-    }
-    return '';
-  }
-
-  turnPageEvent() {
-    let ref = firebase.database().ref('events').push();
-    ref.set({
-      teacherID: this.getUserID(),
-      studentID: this.studentid,
-      book: this.book.title,
+  // versatile function used to push events to database 
+  firebaseEvent(teacherID: string, studentID: string, book: string, event: string): void {
+    firebase.database().ref('events').push().set({
+      teacherID: teacherID,
+      studentID: studentID,
       date: new Date(new Date().getTime()).toLocaleString(),
-      event: 'TURN PAGE'
+      book: book,
+      event: event
     });
   }
 
-  pageNumberEvent() {
-    let ref = firebase.database().ref('events').push();
-    ref.set({
-      teacherID: this.getUserID(),
-      studentID: this.studentid,
-      book: this.book.title,
-      date: new Date(new Date().getTime()).toLocaleString(),
-      event: 'PAGE NUMBER ' + this.pageno
-    });
+  // is the user signing in to firebase
+  @observable isSigningIn: boolean = false;
+  // change status of logging
+  @action.bound setIsSigningIn(isSigningIn: boolean) {
+    this.isSigningIn = isSigningIn;
   }
-
-  readingNumberEvent() {
-    let ref = firebase.database().ref('events').push();
-    ref.set({
-      teacherID: this.getUserID(),
-      studentID: this.studentid,
-      book: this.book.title,
-      date: new Date(new Date().getTime()).toLocaleString(),
-      event: 'READING NUMBER ' + this.reading
-    });
+  // is the user signed in to firebase
+  @observable isSignedIn: boolean = false;
+  // change status of login
+  @action.bound setIsSignedIn(isSignedIn: boolean) {
+    this.isSignedIn = isSignedIn;
   }
-
+  // the Landing page number
+  @observable mode: number = 0;
+  // set Landing page number
+  @action.bound setmode(mode: number) {
+    this.mode = mode;
+  }
+  // the firebase id (teacherID)
+  @observable teacherid: string = '';
+  // set the firebase id (teacherID)
+  @action.bound setteacherid(id: string) {
+    this.teacherid = id;
+  }
+  // the firebase email
+  @observable email: string = '';
+  // set the firebase email 
+  @action.bound setemail(email: string) {
+    this.email = email;
+  }
   // the student's id
   @observable studentid: string = '';
   // set student's id
@@ -84,9 +83,19 @@ class Store {
   @action.bound nextPage() {
     if (this.pageno <= this.npages) {
       this.pageno += 1;
-      this.pageNumberEvent();
+      this.firebaseEvent(
+        this.teacherid, 
+        this.studentid, 
+        this.book.title, 
+        'PAGE NUMBER ' + this.pageno
+      );
     }
-    this.turnPageEvent();
+    this.firebaseEvent(
+      this.teacherid,
+      this.studentid,
+      this.book.title,
+      'TURN PAGE'
+    );
     console.log('nextPage', this.pageno);
   }
   // step back to previous page
@@ -94,25 +103,38 @@ class Store {
   @action.bound backPage() {
     if (this.pageno > 1) {
       this.pageno -= 1;
-      this.pageNumberEvent();
+      this.firebaseEvent(
+        this.teacherid,
+        this.studentid,
+        this.book.title,
+        'PAGE NUMBER ' + this.pageno
+      );
     } else {
       this.pageno = this.npages + 1;
     }
-    this.turnPageEvent();
+    this.firebaseEvent(
+      this.teacherid,
+      this.studentid,
+      this.book.title,
+      'TURN PAGE'
+    );
     console.log('backPage', this.pageno);
   }
   // set the page number
   @action.bound setPage(i: number) {
     this.pageno = i;
-    this.pageNumberEvent();
+    this.firebaseEvent(
+      this.teacherid,
+      this.studentid,
+      this.book.title,
+      'PAGE NUMBER ' + this.pageno
+    );
   }
   // index to the readings array
   @observable reading: number = 0;
   @action.bound setReading(n: number) {
-    // readingNumber event
     this.reading = n;
     this.responseIndex = 0;
-    this.readingNumberEvent();
   }
   @computed get nreadings() { return this.book.readings.length; }
   // get comment for page and reading

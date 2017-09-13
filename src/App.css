@@ -59,7 +59,7 @@
 .landing-innermost-div {
   padding: 10px;
   color: #192231;
-  font-size: 14px;
+  font-size: 16px;
   margin-left: -300px;
   left: 50%;
   top: 50%;
@@ -101,7 +101,7 @@ button {
   padding: 10px;
   font-size: 14px;
   position: absolute;
-  top: 17%;
+  top: 20%;
   font-family: Didot;
 }
 
@@ -131,7 +131,7 @@ button {
 .student-button {
   position: absolute;
   width: 100px;
-  height: 30px;
+  height: 35px;
   border-radius: 10px;
   background-color: inherit;
   border: 1px solid gray;
@@ -139,11 +139,8 @@ button {
 
 .student-button:hover{
   cursor: pointer;
-}
-
-.activate-student {
-  top: 50%;
-  right: 13%;
+  background: linear-gradient(to right, #985E6D, #985E6D);
+  color: white;
 }
 
 .register-button {
@@ -151,13 +148,13 @@ button {
   width: 100%;
   font-size: 14px;
   position: absolute;
-  left: 5%;
   top: 1%;
+  left: 2.5%;
 }
 
 .register-button td {
   border-bottom: 1px solid transparent;
-  padding: 15px;
+  padding: 25px;
 }
 
 .register-button button:active {
@@ -228,8 +225,14 @@ button {
   border: 1px solid gray;
 }
 
+.nested-register-button:hover {
+  background: linear-gradient(#985E6D, #985E6D);
+  color: white;
+}
+
 .nested-register-button:active {
   background: linear-gradient(#985E6D, #985E6D);
+  color: white;
 }
 
 .Collapsible__contentInner {
@@ -258,4 +261,8 @@ button {
 .Collapsible {
   margin-left: 15px;
   margin-top: 15px;
+}
+
+.group-table-tr th, .student-table-tr th {
+  font-size: 18px;
 }
