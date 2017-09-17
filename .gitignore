@@ -26,3 +26,7 @@ src/backup.json
 
 src/test.csv
 src/credentials.json
+
+src/__pycache__
+
+.vscode 

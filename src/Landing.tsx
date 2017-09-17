@@ -76,6 +76,19 @@ class Landing extends React.Component <LandingProps, LandingState> {
                 }
             }
 
+            // TODO
+            fetch('http://localhost:8080/hello', {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            }).then((response) => response.json()).then((responseJson) => {
+                console.log(responseJson);
+            }).catch((error) => {
+                console.log(error);
+            });
+
             // Register user if not already registered
             let firstRef = firebase.database().ref('/users/admin_data/').push();
             firstRef.set({
