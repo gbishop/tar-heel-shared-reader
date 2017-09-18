@@ -36,7 +36,19 @@ class Landing extends React.Component <LandingProps, LandingState> {
                     self.props.store.setteacherid(user.uid);
                     // If the user is already logged on, 
                     // then go straight to ClassRoll
-                    self.props.store.setmode(1);
+                    firebase.database().ref('users/admin/' + user.uid + '/active').
+                    once('value', function (snapshot: firebase.database.DataSnapshot) {
+                        let active = snapshot.val();
+                        if (active) {
+                            self.props.store.setmode(1);
+                        } else {
+                            self.setState({
+                                message: 'Email is not verified. Please contact Dr. Erickson for assistance.'
+                            });
+                        }
+                    }).catch(function(error: Error) {
+                        console.log('An error occurred at line 49');
+                    });
                 }
             }
         });
@@ -76,50 +88,41 @@ class Landing extends React.Component <LandingProps, LandingState> {
                 }
             }
 
-            // TODO
-            fetch('http://localhost:8080/hello', {
-                method: 'GET',
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-            }).then((response) => response.json()).then((responseJson) => {
-                console.log(responseJson);
-            }).catch((error) => {
-                console.log(error);
+            // Check if user has active flag, grant access 
+            let active: boolean = false;
+            firebase.database().ref('users/admin/' + self.props.store.teacherid + '/active').
+            once('value', function(snapshot: firebase.database.DataSnapshot) {
+                active = snapshot.val();
             });
-
-            // Register user if not already registered
-            let firstRef = firebase.database().ref('/users/admin_data/').push();
-            firstRef.set({
-                uid: self.props.store.teacherid,
-                email: self.props.store.email
-            }).catch(function(error: Error) {
-                // User is already registered at admin_data
-            }).then(function() {
-                let key = firstRef.key;
-                firebase.database().ref('/users/private_user/' + self.props.store.teacherid).set({
-                    uid: self.props.store.teacherid,
-                    email: self.props.store.email,
-                    admin_data_key: key
-                }).catch(function(error: Error) {
-                    // User is already registered at private_user
-                }).then(function() {
-                    firebase.database().ref('/users/admin/' + self.props.store.teacherid + '/active').
-                    once('value', function(data: firebase.database.DataSnapshot) {
-                        // The user is registered. Grant access.
-                        if (data.val() === true) {
-                            self.props.store.setmode(1);
-                            self.props.store.setIsSignedIn(true);
-                        // The user is not registered. Do not grant access. 
-                        } else {
-                            self.setState({
-                                message: 'Email is not verified. Please contact Dr. Erickson for assistance.'
-                            });
-                        }
-                    });
+            // The user is active. Grant access. 
+            if (active) {
+                self.props.store.setmode(1);
+                self.props.store.setIsSignedIn(true);
+            } else {
+                // Run activation script
+                fetch('http://localhost:8080/activate', {
+                    method: 'POST',
+                    headers: {
+                      'Accept': 'application/json',
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      teacherID: self.props.store.teacherid,
+                      email: self.props.store.email,
+                    })
+                }).then((response) => response.json()).then((responseJson) => {
+                    // The user is now registered. Grant access.
+                    if (responseJson.active) {
+                        self.props.store.setmode(1);
+                        self.props.store.setIsSignedIn(true);
+                    // The user is not registered. Do not grant access. 
+                    } else {
+                        self.setState({message: 'Email is not verified. Please contact Dr. Erickson for assistance.'});
+                    }
+                }).catch((error) => {
+                    console.log(error);
                 });
-            });
+            }
         }).catch(function(error: Error) {
             console.log(error.message);
         }).then(function() {
