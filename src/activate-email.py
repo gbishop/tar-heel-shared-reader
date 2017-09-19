@@ -53,6 +53,7 @@ def activate():
         teacherID = request.json['teacherID']
         email = request.json['email']
         active = False
+        
         with open('emails.json') as data_file:
             data = json.load(data_file)
             verifiedEmails = data['emails']

@@ -20,6 +20,12 @@ class Store {
     });
   }
 
+  // login message 
+  @observable message: string = 'Please sign in to Google to continue';
+  // change login message 
+  @action.bound setMessage(message: string): void {
+    this.message = message;
+  }
   // is the user signing in to firebase
   @observable isSigningIn: boolean = false;
   // change status of logging

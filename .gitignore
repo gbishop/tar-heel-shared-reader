@@ -30,3 +30,4 @@ src/credentials.json
 src/__pycache__
 
 .vscode 
+.idea
