@@ -37,9 +37,6 @@ export default class Landing extends React.Component <LandingProps, LandingState
                         if (active) {
                             self.props.store.setIsSignedIn(true);
                             self.props.store.setmode(1);
-                        } else {
-                            self.props.store.
-                            setMessage('Email is not verified. Please contact Dr. Erickson for assistance.');
                         }
                     }).catch(function(error: Error) {
                         console.log(error);
@@ -107,7 +104,6 @@ export default class Landing extends React.Component <LandingProps, LandingState
                         })
                     }).then((response) => response.json()).then((responseJson) => {
                         // The user is now registered. Grant access.
-                        console.log('response', responseJson);
                         if (responseJson.active) {
                             self.props.store.setmode(1);
                             self.props.store.setIsSignedIn(true);
