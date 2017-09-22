@@ -268,6 +268,12 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
                         slugs: snapshot.child('slugs').val().split('#$#')
                     };
                     let length = books.titles.length;
+
+                    // Check for duplicate books
+                    if (snapshot.child('titles').val().includes(title)) {
+                        return;
+                    }
+
                     // One book in the database
                     if (length === 1) {
                         // Shift over book 1 -> book 2, store new book 1
