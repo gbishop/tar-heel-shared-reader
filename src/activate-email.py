@@ -61,7 +61,7 @@ def activate():
                 active = True
                 getFirebaseRef('/users/admin/' + teacherID).set({'email': email, 'active': True})
     
-        message
+        message = ''
         if active:
             message = 'The user was activated.'
         else:
