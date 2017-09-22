@@ -112,6 +112,7 @@ export default class Landing extends React.Component <LandingProps, LandingState
                             self.props.store.
                             setMessage('Email is not verified. Please contact Dr. Erickson for assistance.');
                         }
+                        console.log(responseJson);
                     }).catch((error) => {
                         console.log(error);
                     });

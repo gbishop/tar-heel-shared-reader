@@ -2,6 +2,8 @@ from bottle import Bottle, hook, route, response, run, request
 import pyrebase
 import json
 
+# Activates an email if the email is in emails.json
+
 # Initialize Firebase
 config = {
     'apiKey': 'AIzaSyCRHcXYbVB_eJn9Dd0BQ7whxyS2at6rkGc',
@@ -20,7 +22,6 @@ teacherID = ''
 email = ''
 verifiedEmails = []
 
-
 def getFirebaseRef(path):
     """Obtains reference to Firebase database path"""
     return firebase.database().child(path)
@@ -32,27 +33,26 @@ def enable_cors():
     response.headers['Access-Control-Allow-Origin'] = '*';
     response.headers['Access-Control-Allow-Methods'] = 'PUT, GET, POST, DELETE, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Authorization, Origin, Accept, Content-Type, X-Requested-With'
-
-@app.route('/hello', method=['OPTIONS', 'GET'])
-def hello():
-    """Send an example GET request """
-    if request.method == 'OPTIONS':
-        print('An options request was sent')
-        return {}
-    else: 
-        return {
-            'id': 410
-        }
         
 @app.route('/activate', method=['OPTIONS', 'POST'])
 def activate():
+    active = False
     """Send an activation request"""
     if request.method == 'OPTIONS':
         return {}
     else:
-        teacherID = request.json['teacherID']
-        email = request.json['email']
-        active = False
+        try:
+            teacherID = request.json['teacherID']
+            email = request.json['email']
+
+            if type(teacherID) is not str or type(email) is not str:
+                response.status = 400
+                response.content_type = 'application/json'
+                return json.dumps('One or more JSON values were not of type string.')
+        except KeyError:
+            response.status = 500
+            response.content_type = 'application/json'
+            return json.dumps('The requested key(s) does not exist in supplied json file.')
         
         with open('emails.json') as data_file:
             data = json.load(data_file)
@@ -61,6 +61,14 @@ def activate():
                 active = True
                 getFirebaseRef('/users/admin/' + teacherID).set({'email': email, 'active': True})
     
+        message
+        if active:
+            message = 'The user was activated.'
+        else:
+            message = 'The user was not activated.'
+    
+        response.status = 200
+        response.content_type = 'application/json'
         return {'active': active}
 
 run(app, host='localhost', port=8080)

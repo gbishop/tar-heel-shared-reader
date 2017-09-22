@@ -1,6 +1,9 @@
 import json
 import pyrebase 
 
+# Given a JSON file named 'deactivated-emails.json,'
+# deactivates the user(s) from the database 
+
 # Initialize Firebase
 config = {
     'apiKey': 'AIzaSyCRHcXYbVB_eJn9Dd0BQ7whxyS2at6rkGc',
@@ -11,6 +14,8 @@ config = {
 }
 firebase = pyrebase.initialize_app(config)
 
+# Open JSON file of deactivated emails, send
+# request to delete user from database 
 with open('deactivated-emails.json') as data_file:
     data = json.load(data_file)
     deactivated_emails = data['emails']
