@@ -92,7 +92,7 @@ export default class Landing extends React.Component <LandingProps, LandingState
                     self.props.store.setIsSignedIn(true);
                 } else {
                     // Run activation script
-                    fetch('http://localhost:8080/activate', {
+                    fetch('/api/activate/activate', {
                         method: 'POST',
                         headers: {
                         'Accept': 'application/json',
