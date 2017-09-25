@@ -124,7 +124,7 @@ const ReaderContent = observer(function ReaderContent(props: ReaderContentProps)
           >
             Read another book
           </button>
-          <button onClick={() => window.location.href = 'https://tarheelreader.org/'}> 
+          <button onClick={() => {window.location.href = 'https://tarheelreader.org/'; }}> 
             Go to Tar Heel Reader
           </button>
         </div>

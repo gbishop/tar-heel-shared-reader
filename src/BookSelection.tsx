@@ -3,6 +3,7 @@ import Store from './Store';
 import Accordion from 'react-responsive-accordion';
 import Book from './Book';
 import * as firebase from 'firebase';
+import { observer } from 'mobx-react';
 
 interface BookSelectionProps {
     store: Store;
@@ -12,10 +13,9 @@ interface BookSelectionState {
     outerDivStyle: Object;
     bookArray: JSX.Element[];
     checkedSelection: string | HTMLDivElement;
-    accordion: JSX.Element | string;
-    initialAccordion: JSX.Element | string;
 }
 
+@observer 
 export default class BookSelection extends React.Component<BookSelectionProps, BookSelectionState> {
     constructor() {
         super();
@@ -39,9 +39,7 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
                 filter: 'blur(0px)'
             },
             bookArray: [],
-            checkedSelection: '',
-            accordion: '',
-            initialAccordion: ''
+            checkedSelection: ''
         };
 
         this.chooseBook = this.chooseBook.bind(this);
@@ -71,24 +69,44 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
         function renderRecentBooks() {
             let bar: JSX.Element[] = [];
 
-            function pushBook(
-                b: {
-                    titles: string[], 
-                    authors: string[], 
-                    slugs: string[]
-                }, 
-                index: number
-            ) {
-                bar.push(
-                    (
-                        <Book 
-                            key={index} 
-                            title={b.titles[index]}
-                            author={b.authors[index]}
-                            slug={b.slugs[index]}
-                        />
-                    )
-                );
+            function pushBook(b: {titles: string[], authors: string[], slugs: string[]}, index: number) {
+                let foo: JSX.Element[] = [];
+                let ref = '';
+                fetch(fullURL).then(function(response: Response) {
+                    response.json().then(function(result: JSON) {
+                        for (let i = 0; i < Object.keys(result).length; i++) {
+                            if (result[i].slug === b.slugs[index]) {
+                                ref = result[i].cover.url;
+                                break;
+                            }
+                        }
+                    }).then(function() {
+                        bar.push(
+                            (
+                                <Book 
+                                    key={index} 
+                                    title={b.titles[index]}
+                                    author={b.authors[index]}
+                                    slug={b.slugs[index]}
+                                    url={ref}
+                                />
+                            )
+                        );
+    
+                        let initialDiv =
+                        (
+                            <div data-trigger={'Recent Books'} className="book-table">
+                                {bar}
+                            </div>
+                        );
+                        foo.push(initialDiv);
+                        self.props.store.setInitialAccordion(
+                            <Accordion startPosition={0} transitionTime={200}>
+                                {foo}
+                            </Accordion>
+                        );
+                    });
+                });
             }
 
             firebase.database().ref('/users/private_variables/' + self.props.store.teacherid).
@@ -110,23 +128,6 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
                             }
                         }
                     } 
-
-                    let initialDiv =
-                        (
-                            <div data-trigger={'Recent Books'} className="book-table">
-                                {bar}
-                            </div>
-                        );
-                    let foo: JSX.Element[] = [];
-                    foo.push(initialDiv);
-                    self.setState({
-                        initialAccordion:
-                            (
-                                <Accordion startPosition={0} transitionTime={200}>
-                                    {foo}
-                                </Accordion>
-                            )
-                    });
                 }
             });
         }
@@ -134,6 +135,7 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
         fetch(fullURL).then(function(response: Response) {
             response.json().then(function(result: JSON) {
                 let currentCategory = result[0].sheet;
+                // TODO
                 for (let i = 0; i < Object.keys(result).length; i++) {
                     let newCategory = result[i].sheet;
                     if (i === Object.keys(result).length - 1) {
@@ -143,6 +145,7 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
                                   title={result[i].title} 
                                   author={result[i].author} 
                                   slug={result[i].slug}
+                                  url={result[i].cover.url}
                             />
                         );
                         let div =
@@ -164,6 +167,7 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
                                 title={result[i].title} 
                                 author={result[i].author} 
                                 slug={result[i].slug}
+                                url={result[i].cover.url}
                             />
                         );
                     } else if (currentCategory !== newCategory) {
@@ -181,21 +185,20 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
                                 title={result[i].title} 
                                 author={result[i].author} 
                                 slug={result[i].slug}
+                                url={result[i].cover.url}
                             />
                         );
                     }
                 }
             }).then(function() {
-                self.setState({
-                    accordion: (
-                        <Accordion startPosition={-1} transitionTime={200}>
-                            {arr}
-                        </Accordion>
-                    )
-                });
+                self.props.store.setAccordion(
+                    <Accordion startPosition={-1} transitionTime={200}>
+                        {arr}
+                    </Accordion>
+                );
             });
         }).catch(function(err: Error) {
-            console.log('Fetch Error :-S', err);
+            console.log(err);
         });
     }
 
@@ -243,9 +246,6 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
                 title, 
                 'START READING'
             );
-
-            // open THR with selected book
-            self.props.store.setIdPage(slug, 1);
 
             firebase.database().ref('users/private_variables/' + self.props.store.teacherid).
             once('value', function(snapshot: firebase.database.DataSnapshot) {
@@ -305,6 +305,9 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
                 }
             }).catch(function(err: Error) {
                 console.log(err);
+            }).then(function() {
+                // open THR with selected book
+                self.props.store.setIdPage(slug, 1);
             });
         }
     }
@@ -314,8 +317,8 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
             <div>
                 <div style={this.state.outerDivStyle}>
                     <div className="book-table" onClick={this.chooseBook}>
-                        {this.state.initialAccordion}
-                        {this.state.accordion}
+                        {this.props.store.initialAccordion}
+                        {this.props.store.accordion}
                     </div>
                 </div>
             </div>

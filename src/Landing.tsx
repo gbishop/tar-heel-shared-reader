@@ -138,7 +138,7 @@ export default class Landing extends React.Component <LandingProps, LandingState
                     </div>
                     <br/>
                     &nbsp;
-                    <button className="nested-register-button" type="button" onClick={this.validate}>Sign In
+                    <button className="nested-register-button" type="button" onClick={this.validate}>Login
                     </button>
                 </div>
             </div>
