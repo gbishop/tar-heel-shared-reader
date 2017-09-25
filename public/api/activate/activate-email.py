@@ -1,5 +1,4 @@
 from bottle import Bottle, hook, route, response, run, request
-import pyrebase
 import json
 
 # Initialize Firebase
@@ -10,10 +9,9 @@ config = {
     'storageBucket': 'tarheelsharedreader-9f793.appspot.com',
     'serviceAccount': 'credentials.json'
 }
-firebase = pyrebase.initialize_app(config)
 
 # Initialize Bottle.py
-app = Bottle()
+app = application = Bottle()
 
 # Global variables
 teacherID = ''
@@ -23,6 +21,8 @@ verifiedEmails = []
 
 def getFirebaseRef(path):
     """Obtains reference to Firebase database path"""
+    import pyrebase
+    firebase = pyrebase.initialize_app(config)
     return firebase.database().child(path)
 
 
@@ -65,4 +65,4 @@ def activate():
 
     return {'active': active}
 
-run(app, host='localhost', port=8080)
+#run(app, host='localhost', port=8080)
