@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import App from './App';
 import Store from './Store';
-import registerServiceWorker from './registerServiceWorker';
+// import registerServiceWorker from './registerServiceWorker';
 import './index.css';
 
 // https://github.com/flatiron/director/issues/349 explains
@@ -10,6 +10,10 @@ import './index.css';
 import { Router } from 'director/build/director';
 import { autorun, useStrict } from 'mobx';
 useStrict(true);
+
+// unregister the service worker if we installed it.
+navigator.serviceWorker.getRegistrations().then(registrations => 
+  registrations.map(registration => registration.unregister()));
 
 function startRouter(store: Store) {
 
@@ -57,4 +61,4 @@ ReactDOM.render(
   <App store={store} />,
   document.getElementById('root') as HTMLElement
 );
-registerServiceWorker();
+// registerServiceWorker();
