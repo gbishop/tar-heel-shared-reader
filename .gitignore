@@ -32,3 +32,6 @@ src/__pycache__
 
 .vscode 
 .idea
+
+public/api/activate/credentials.json
+public/api/activate/emails.json
