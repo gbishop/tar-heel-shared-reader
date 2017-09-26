@@ -92,7 +92,7 @@ export default class Landing extends React.Component <LandingProps, LandingState
                     self.props.store.setIsSignedIn(true);
                 } else {
                     // Run activation script
-                    fetch('/api/activate/activate', {
+                    fetch('http://localhost:8080/activate', {
                         method: 'POST',
                         headers: {
                         'Accept': 'application/json',
@@ -113,8 +113,12 @@ export default class Landing extends React.Component <LandingProps, LandingState
                             setMessage('Email is not verified. Please contact Dr. Erickson for assistance.');
                         }
                         console.log(responseJson);
-                    }).catch((error) => {
-                        console.log(error);
+                    }).catch((error: Error) => {
+                        if (error.message === 'Failed to fetch') {
+                            self.props.store.
+                            setMessage('Activation script is currently offline. Please try again later.');
+                            console.log('Activation script is currently offline.');
+                        }
                     });
                 }
             });
