@@ -14,16 +14,20 @@ config = {
 }
 firebase = pyrebase.initialize_app(config)
 
-# Open JSON file of deactivated emails, send
-# request to delete user from database 
-with open('deactivated-emails.json') as data_file:
-    data = json.load(data_file)
-    deactivated_emails = data['emails']
+def deactivate():
+    """ Permanently deactivate given users from firebase database. """
+    try:
+        with open('deactivated-emails.json') as data_file:
+            data = json.load(data_file)
+            deactivated_emails = data['emails']
+    except FileNotFoundError:
+        print("File 'deactivated-emails.json' not found in directory.")
+        for user in firebase.database().child('/users/admin/').get().each():
+            uid = user.key()
+            val = user.val()
+            if (val['email'] in deactivated_emails):
+                firebase.database().child('/users/admin/' + uid).remove()
+                firebase.database().child('/users/private_students/' + uid).remove()
+                firebase.database().child('/users/private_groups/' + uid).remove()
 
-    for user in firebase.database().child('/users/admin/').get().each():
-        uid = user.key()
-        val = user.val()
-        if (val['email'] in deactivated_emails):
-            firebase.database().child('/users/admin/' + uid).remove()
-            firebase.database().child('/users/private_students/' + uid).remove()
-            firebase.database().child('/users/private_groups/' + uid).remove()
+deactivate()
