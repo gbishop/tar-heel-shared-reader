@@ -20,6 +20,18 @@ class Store {
     });
   }
 
+  // initial Accordion component (recent books)
+  @observable initialAccordion: JSX.Element | string = '';
+  // set initial Accordion component
+  @action.bound setInitialAccordion(initialAccordion: string | JSX.Element) {
+    this.initialAccordion = initialAccordion;
+  }
+  // main Accordion component (all other books)
+  @observable accordion: JSX.Element | string = '';
+  // set main Accordion component
+  @action.bound setAccordion(accordion: string | JSX.Element) {
+    this.accordion = accordion;
+  }
   // login message 
   @observable message: string = 'Please sign in to Google to continue';
   // change login message 

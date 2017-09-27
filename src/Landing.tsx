@@ -92,7 +92,7 @@ export default class Landing extends React.Component <LandingProps, LandingState
                     self.props.store.setIsSignedIn(true);
                 } else {
                     // Run activation script
-                    fetch('/api/activate/activate', {
+                    fetch('http://localhost:8080/activate', {
                         method: 'POST',
                         headers: {
                         'Accept': 'application/json',
@@ -112,8 +112,13 @@ export default class Landing extends React.Component <LandingProps, LandingState
                             self.props.store.
                             setMessage('Email is not verified. Please contact Dr. Erickson for assistance.');
                         }
-                    }).catch((error) => {
-                        console.log(error);
+                        console.log(responseJson);
+                    }).catch((error: Error) => {
+                        if (error.message === 'Failed to fetch') {
+                            self.props.store.
+                            setMessage('Activation script is currently offline. Please try again later.');
+                            console.log('Activation script is currently offline.');
+                        }
                     });
                 }
             });
@@ -137,7 +142,7 @@ export default class Landing extends React.Component <LandingProps, LandingState
                     </div>
                     <br/>
                     &nbsp;
-                    <button className="nested-register-button" type="button" onClick={this.validate}>Sign In
+                    <button className="nested-register-button" type="button" onClick={this.validate}>Login
                     </button>
                 </div>
             </div>

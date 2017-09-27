@@ -33,36 +33,49 @@ def enable_cors():
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Authorization, Origin, Accept, Content-Type, X-Requested-With'
 
-@app.route('/hello', method=['OPTIONS', 'GET'])
-def hello():
-    """Send an example GET request """
-    if request.method == 'OPTIONS':
-        print('An options request was sent')
-        return {}
-    else: 
-        return {
-            'id': 410
-        }
-        
+
 @app.route('/activate', method='OPTIONS')
 def activate():
     """Send an activation request"""
     return {}
 
+
 @app.route('/activate', method='POST')
 def activate():
     """Send an activation request"""
-    teacherID = request.json['teacherID']
-    email = request.json['email']
     active = False
-    
-    with open('emails.json') as data_file:
-        data = json.load(data_file)
-        verifiedEmails = data['emails']
-        if email in verifiedEmails:
-            active = True
-            getFirebaseRef('/users/admin/' + teacherID).set({'email': email, 'active': True})
+
+    try:
+        teacherID = request.json['teacherID']
+        email = request.json['email']
+
+        if type(teacherID) is not str or type(email) is not str:
+            response.status = 400
+            response.content_type = 'application/json'
+            return json.dumps(""" One or more JSON values were not of type string.
+                Make sure that JSON values are supplied.
+            """)
+    except KeyError:
+        response.status = 400
+        response.content_type = 'application/json'
+        return json.dumps('The requested key(s) does not exist in supplied json file.')
+    except TypeError:
+        response.status = 400
+        response_content_type = 'application/json'
+        return json.dumps('JSON was not supplied at all. Check the body of POST request.')
+
+    try:
+        with open('emails.json') as data_file:
+            data = json.load(data_file)
+            verifiedEmails = data['emails']
+            if email in verifiedEmails:
+                active = True
+                getFirebaseRef('/users/admin/' + teacherID).set({'email': email, 'active': True})
+    except FileNotFoundError:
+        response.status = 400
+        response_content_type = 'application/json'
+        return json.dumps("File 'emails.json' was not supplied.'")
 
     return {'active': active}
 
-#run(app, host='localhost', port=8080)
+run(app, host='localhost', port=8080)

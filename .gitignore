@@ -21,6 +21,7 @@ yarn-debug.log*
 yarn-error.log*
 
 src/emails.json
+src/deactivated-emails.json
 
 src/backup.json
 
@@ -31,3 +32,6 @@ src/__pycache__
 
 .vscode 
 .idea
+
+public/api/activate/credentials.json
+public/api/activate/emails.json
