@@ -367,7 +367,10 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         }).catch(function(error: Error) {
             console.log(error.message);
             errorSet = true;
-            self.setState({registerMessage: 'Student initials must be 3 characters long.'});
+            self.setState({
+                    registerMessage: 'Student initials must be no longer than three characters long.'
+                }
+            );
         }).then(function() {
             if (errorSet === false) {
                 self.closeWindow();

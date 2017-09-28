@@ -135,7 +135,6 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
         fetch(fullURL).then(function(response: Response) {
             response.json().then(function(result: JSON) {
                 let currentCategory = result[0].sheet;
-                // TODO
                 for (let i = 0; i < Object.keys(result).length; i++) {
                     let newCategory = result[i].sheet;
                     if (i === Object.keys(result).length - 1) {

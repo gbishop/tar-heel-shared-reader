@@ -131,7 +131,7 @@
   
   .book:hover {
     cursor: pointer;
-    background: linear-gradient(gray, darkgray);
+    outline: 3px solid skyblue;
   }
   
   .book {
@@ -145,6 +145,7 @@
     margin-bottom: 10px;
     margin-right: 5px;
     color: white;
+    text-shadow: 4px 4px 4px #000000;
     opacity: 0.75;
   }
 
