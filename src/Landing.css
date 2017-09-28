@@ -103,6 +103,7 @@
     border-radius: 10px;
     background-color: inherit;
     border: 1px solid gray;
+    box-shadow: 2px 2px 2px #888888;
   }
   
   .student-button:hover{
@@ -194,6 +195,7 @@
     background-color: transparent;
     border-radius: 10px;
     border: 1px solid gray;
+    box-shadow: 2px 2px 2px #888888;
   }
   
   .nested-register-button:hover {
