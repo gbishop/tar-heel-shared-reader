@@ -17,6 +17,100 @@ class Store {
       date: new Date(new Date().getTime()).toLocaleString(),
       book: book,
       event: event
+    }).then(() => {
+      let updatedAttributes: Array<{ attrName: string; attrValue: string | number }> = [];
+      updatedAttributes.push({ attrName: 'number_events', attrValue: 1 });
+
+      if (event.includes('RESPONSE')) {
+        updatedAttributes.push({ attrName: 'number_response_events', attrValue: 1 });
+      } else if (event.includes('TURN PAGE')) {
+        updatedAttributes.push({ attrName: 'number_turn_page_events', attrValue: 1 });
+      } else if (event.includes('START READING')) {
+        updatedAttributes.push({ attrName: 'number_start_reading_events', attrValue: 1 });
+      } else if (event.includes('FINISH READING')) {
+        updatedAttributes.push({ attrName: 'number_finish_reading_events', attrValue: 1 });
+        updatedAttributes.push({ attrName: 'number_books_read', attrValue: 1});
+      } else if (event.includes('PAGE NUMBER')) {
+        updatedAttributes.push({ attrName: 'number_turn_page_events', attrValue: 1 });
+      } else {
+        return;
+      }
+
+      this.firebaseUsageEvent(updatedAttributes);
+    });
+  }
+
+  // push user usage summary to database 
+  firebaseUsageEvent(updatedAttributes: Array<{ attrName: string, attrValue: string | number }>) {
+    if (this.isSignedIn === false) { return; }
+
+    let newUsageSummary: {
+      email: string;
+      last_active_teacher: string;
+      number_students: number;
+      number_books_read: number;
+      number_pages_read: number;
+      number_events: number;
+      number_start_reading_events: number;
+      number_finish_reading_events: number;
+      number_response_events: number;
+      number_page_number_events: number;
+      number_turn_page_events: number;
+      number_groups: number;
+      number_books_opened: number;
+    };
+
+    firebase.database().ref('/users/private_usage/' + this.teacherid).
+    once('value', (snapshot) => {
+      if (snapshot.val() === null) {
+        newUsageSummary = {
+          email: this.teacherid, 
+          last_active_teacher: new Date(new Date().getTime()).toLocaleString(),
+          number_students: 0, 
+          number_books_read: 0, 
+          number_pages_read: 0,
+          number_events: 0, 
+          number_start_reading_events: 0,
+          number_finish_reading_events: 0, 
+          number_response_events: 0,
+          number_page_number_events: 0, 
+          number_turn_page_events: 0,
+          number_groups: 0,
+          number_books_opened: 0
+        };
+      } else {
+        newUsageSummary = {
+          email: snapshot.child('email').val(),
+          last_active_teacher: new Date(new Date().getTime()).toLocaleString(),
+          number_students: snapshot.child('number_students').val(),
+          number_books_read: snapshot.child('number_books_read').val(),
+          number_pages_read: snapshot.child('number_pages_read').val(),
+          number_events: snapshot.child('number_events').val(),
+          number_start_reading_events: snapshot.child('number_start_reading_events').val(),
+          number_finish_reading_events: snapshot.child('number_finish_reading_events').val(),
+          number_response_events: snapshot.child('number_response_events').val(),
+          number_page_number_events: snapshot.child('number_page_number_events').val(),
+          number_turn_page_events: snapshot.child('number_turn_page_events').val(),
+          number_groups: snapshot.child('number_groups').val(),
+          number_books_opened: snapshot.child('number_books_opened').val()
+        };
+
+        if (updatedAttributes.length <= 0) { return; }
+        
+        for (let i = 0; i < updatedAttributes.length; i++) {
+          if (updatedAttributes[i].attrName in newUsageSummary) {
+            if (typeof updatedAttributes[i].attrValue === 'number') {
+              newUsageSummary[updatedAttributes[i].attrName] = 
+                updatedAttributes[i].attrValue + newUsageSummary[updatedAttributes[i].attrName];
+              
+            } else {
+              newUsageSummary[updatedAttributes[i].attrName] = updatedAttributes[i].attrValue;
+            }
+          }
+        }
+      }
+    }).then(() => {
+      firebase.database().ref('/users/private_usage/' + this.teacherid).set(newUsageSummary);
     });
   }
 

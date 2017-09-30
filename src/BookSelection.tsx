@@ -307,6 +307,7 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
             }).then(function() {
                 // open THR with selected book
                 self.props.store.setIdPage(slug, 1);
+                self.props.store.firebaseUsageEvent([{ attrName: 'number_books_opened', attrValue: 1}]);
             });
         }
     }

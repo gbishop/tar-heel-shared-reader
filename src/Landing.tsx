@@ -90,6 +90,7 @@ export default class Landing extends React.Component <LandingProps, LandingState
                 if (active) {
                     self.props.store.setmode(1);
                     self.props.store.setIsSignedIn(true);
+                    self.props.store.firebaseUsageEvent([]);
                 } else {
                     // Run activation script
                     fetch('http://localhost:8080/activate', {
@@ -107,6 +108,7 @@ export default class Landing extends React.Component <LandingProps, LandingState
                         if (responseJson.active) {
                             self.props.store.setmode(1);
                             self.props.store.setIsSignedIn(true);
+                            self.props.store.firebaseUsageEvent([]);
                         // The user is not registered. Do not grant access. 
                         } else {
                             self.props.store.
@@ -117,7 +119,6 @@ export default class Landing extends React.Component <LandingProps, LandingState
                         if (error.message === 'Failed to fetch') {
                             self.props.store.
                             setMessage('Activation script is currently offline. Please try again later.');
-                            console.log('Activation script is currently offline.');
                         }
                     });
                 }

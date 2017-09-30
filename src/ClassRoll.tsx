@@ -374,6 +374,7 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         }).then(function() {
             if (errorSet === false) {
                 self.closeWindow();
+                self.props.store.firebaseUsageEvent([{ attrName: 'number_students', attrValue: 1 }]);
             }
         });
     }
@@ -391,6 +392,8 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
             firebase.database().ref('/users/private_students/' + uid + '/' + key).remove().then(function() {
                 self.setState({checkedSelection: ''});
                 self.closeWindow();
+            }).then(function() {
+                self.props.store.firebaseUsageEvent([{ attrName: 'number_students', attrValue: -1 }]);
             });
         } else if (targetHTML === 'No') {
             self.closeWindow();
@@ -462,6 +465,7 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
             groupName: this.state.groupName
         }).then(function() {
             self.closeWindow();
+            self.props.store.firebaseUsageEvent([{ attrName: 'number_groups', attrValue: 1 }]);
         });
     }
 
@@ -474,6 +478,9 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
             firebase.database().ref('users/private_groups/' + uid + '/' + key).remove().then(function() {
                 self.setState({checkedSelection: '', checkedGroup: '', groupName: ''});
                 self.closeWindow();
+            }).then(function() {
+                console.log('here?');
+                self.props.store.firebaseUsageEvent([{ attrName: 'number_groups', attrValue: -1 }]);
             });
         } else if (e.target.innerHTML === 'No') {
             self.closeWindow();
