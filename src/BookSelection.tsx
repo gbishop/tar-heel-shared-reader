@@ -230,21 +230,27 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
             let author = getNodeText(1);
             let slug = getNodeText(2);
 
-            // pageNumber event
+            // pageNumber, startReading events
             self.props.store.firebaseEvent(
                 self.props.store.teacherid,
                 self.props.store.studentid,
                 title,
-                'PAGE NUMBER 1'
+                'PAGE NUMBER 1',
+                () => {
+                    self.props.store.firebaseEvent(
+                        self.props.store.teacherid, 
+                        self.props.store.studentid, 
+                        title, 
+                        'START READING'
+                    );
+                }
             );
 
-            // startReading event
-            self.props.store.firebaseEvent(
-                self.props.store.teacherid, 
-                self.props.store.studentid, 
-                title, 
-                'START READING'
-            );
+            self.props.store.firebaseUsageEvent([
+                { attrName: 'number_page_number_events', attrValue: 1 },
+                { attrName: 'number_start_reading_events', attrValue: 1 },
+                { attrName: 'number_books_opened', attrValue: 1 } 
+            ]);
 
             firebase.database().ref('users/private_variables/' + self.props.store.teacherid).
             once('value', function(snapshot: firebase.database.DataSnapshot) {
