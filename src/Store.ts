@@ -37,7 +37,7 @@ class Store {
     once('value', (snapshot) => {
       if (snapshot.val() === null) {
         newUsageSummary = {
-          email: this.teacherid, 
+          email: this.email, 
           last_active_teacher: new Date(new Date().getTime()).toLocaleString(),
           number_students: 0, 
           number_books_read: 0, 
