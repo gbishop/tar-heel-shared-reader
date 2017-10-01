@@ -9,9 +9,16 @@ type Layout = {
 };
 
 class Store {
-  // versatile function used to push events to database 
+  /**
+   * Versatile function used to push events to Firebase database. 
+   * @param { string } teacherID 
+   * @param { string } studentID 
+   * @param { string } book 
+   * @param { string } event 
+   * @param { () => void } callback 
+   */
   firebaseEvent(teacherID: string, studentID: string, book: string, event: string, callback?: () => void): void {
-    firebase.database().ref('events').push().set({
+    firebase.database().ref('/users/private_events/' + this.teacherid).push().set({
       teacherID: teacherID,
       studentID: studentID,
       date: new Date(new Date().getTime()).toLocaleString(),
@@ -24,15 +31,17 @@ class Store {
     });
   }
 
-  // push user usage summary to database 
+  /**
+   * Used to push usage summary to Firebase database. 
+   * @param { Array<{}> } updatedAttributes 
+   * @param { () => void } callback 
+   */
   firebaseUsageEvent(
     updatedAttributes: Array<{ attrName: string, attrValue: string | number }>, 
     callback?: () => void
   ) {
     if (this.isSignedIn === false) { return; }
-
     let newUsageSummary: {};
-
     firebase.database().ref('/users/private_usage/' + this.teacherid).
     once('value', (snapshot) => {
       if (snapshot.val() === null) {
@@ -91,6 +100,12 @@ class Store {
     });
   }
 
+  // uri for spreadsheet export 
+  @observable link: HTMLAnchorElement;
+  // set uri for spreadsheet export 
+  @action.bound setLink(link: HTMLAnchorElement): void {
+    this.link = link;
+  }
   // initial Accordion component (recent books)
   @observable initialAccordion: JSX.Element | string = '';
   // set initial Accordion component

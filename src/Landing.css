@@ -111,6 +111,11 @@
     background: linear-gradient(to right, #985E6D, #985E6D);
     color: white;
   }
+
+  .export-spreadsheet {
+    top: 50%;
+    left: 80%;
+  }
   
   .register-button {
     border-collapse: collapse;

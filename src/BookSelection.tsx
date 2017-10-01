@@ -45,6 +45,11 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
         this.chooseBook = this.chooseBook.bind(this);
     }
 
+    /**
+     * Renders the most recent books in the Firebase database for
+     * that particular user. Add event listeners to update the 
+     * recent books if the user selects a new book. 
+     */
     componentDidMount() {
         const self = this;
 
@@ -201,6 +206,10 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
         });
     }
 
+    /**
+     * Select a particular book and update the Firebase database
+     * with new recent books. 
+     */
     chooseBook = (e) => {
         e.preventDefault();
         const self = this;
