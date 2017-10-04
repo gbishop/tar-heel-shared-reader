@@ -45,6 +45,11 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
         this.chooseBook = this.chooseBook.bind(this);
     }
 
+    /**
+     * Renders the most recent books in the Firebase database for
+     * that particular user. Add event listeners to update the 
+     * recent books if the user selects a new book. 
+     */
     componentDidMount() {
         const self = this;
 
@@ -135,7 +140,6 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
         fetch(fullURL).then(function(response: Response) {
             response.json().then(function(result: JSON) {
                 let currentCategory = result[0].sheet;
-                // TODO
                 for (let i = 0; i < Object.keys(result).length; i++) {
                     let newCategory = result[i].sheet;
                     if (i === Object.keys(result).length - 1) {
@@ -202,6 +206,10 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
         });
     }
 
+    /**
+     * Select a particular book and update the Firebase database
+     * with new recent books. 
+     */
     chooseBook = (e) => {
         e.preventDefault();
         const self = this;
@@ -231,21 +239,27 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
             let author = getNodeText(1);
             let slug = getNodeText(2);
 
-            // pageNumber event
+            // pageNumber, startReading events
             self.props.store.firebaseEvent(
                 self.props.store.teacherid,
                 self.props.store.studentid,
                 title,
-                'PAGE NUMBER 1'
+                'PAGE NUMBER 1',
+                () => {
+                    self.props.store.firebaseEvent(
+                        self.props.store.teacherid, 
+                        self.props.store.studentid, 
+                        title, 
+                        'START READING'
+                    );
+                }
             );
 
-            // startReading event
-            self.props.store.firebaseEvent(
-                self.props.store.teacherid, 
-                self.props.store.studentid, 
-                title, 
-                'START READING'
-            );
+            self.props.store.firebaseUsageEvent([
+                { attrName: 'number_page_number_events', attrValue: 1 },
+                { attrName: 'number_start_reading_events', attrValue: 1 },
+                { attrName: 'number_books_opened', attrValue: 1 } 
+            ]);
 
             firebase.database().ref('users/private_variables/' + self.props.store.teacherid).
             once('value', function(snapshot: firebase.database.DataSnapshot) {
@@ -308,6 +322,7 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
             }).then(function() {
                 // open THR with selected book
                 self.props.store.setIdPage(slug, 1);
+                self.props.store.firebaseUsageEvent([{ attrName: 'number_books_opened', attrValue: 1}]);
             });
         }
     }

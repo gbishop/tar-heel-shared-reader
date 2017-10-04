@@ -59,6 +59,7 @@ const Reader = observer(function Reader(props: {store: Store}) {
       store.book.title,
       'RESPONSE ' + store.word
     );
+    store.firebaseUsageEvent([{ attrName: 'number_response_events', attrValue: 1 }]);
     var msg = new SpeechSynthesisUtterance(store.word);
     msg.lang = 'en-US';
     speechSynthesis.speak(msg);
@@ -101,19 +102,34 @@ const ReaderContent = observer(function ReaderContent(props: ReaderContentProps)
   };
   if (pageno > store.npages) {
     // past the end
-    // finishReading event
+    // finishReading, number_books_read events
     store.firebaseEvent(
       store.teacherid,
       store.studentid,
       store.book.title,
       'FINISH READING'
     );
+    store.firebaseUsageEvent([
+      { attrName: 'number_finish_reading_events', attrValue: 1 },
+      { attrName: 'number_books_read', attrValue: 1 } 
+    ]);
 
     return (
       <div className="book-page" style={pageStyle}>
         <h1 className="title">What would you like to do now?</h1>
         <div className="choices">
-          <button onClick={e => store.setPage(1)}>Read this book again</button>
+          <button 
+            onClick={
+              () => {
+                store.setPage(1); 
+                store.firebaseUsageEvent([
+                  { attrName: 'number_books_opened', attrValue: 1}
+                ]); 
+              }
+            }
+          >
+            Read this book again
+          </button>
           <button 
             onClick={
               e => { 

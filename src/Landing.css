@@ -103,12 +103,18 @@
     border-radius: 10px;
     background-color: inherit;
     border: 1px solid gray;
+    box-shadow: 2px 2px 2px #888888;
   }
   
   .student-button:hover{
     cursor: pointer;
     background: linear-gradient(to right, #985E6D, #985E6D);
     color: white;
+  }
+
+  .export-spreadsheet {
+    top: 50%;
+    left: 80%;
   }
   
   .register-button {
@@ -131,7 +137,7 @@
   
   .book:hover {
     cursor: pointer;
-    background: linear-gradient(gray, darkgray);
+    outline: 3px solid skyblue;
   }
   
   .book {
@@ -145,6 +151,7 @@
     margin-bottom: 10px;
     margin-right: 5px;
     color: white;
+    text-shadow: 4px 4px 4px #000000;
     opacity: 0.75;
   }
 
@@ -193,6 +200,7 @@
     background-color: transparent;
     border-radius: 10px;
     border: 1px solid gray;
+    box-shadow: 2px 2px 2px #888888;
   }
   
   .nested-register-button:hover {
