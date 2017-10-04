@@ -76,8 +76,13 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         this.addGroup = this.addGroup.bind(this);
         this.addStudent = this.addStudent.bind(this);
         this.logout = this.logout.bind(this);
+        this.exportSpreadsheet = this.exportSpreadsheet.bind(this);
     }
 
+    /**
+     * Load the students and groups from database, add event listeners
+     * so the front-end is updated if changes are made to the database.
+     */
     componentDidMount() {
         const self = this;
 
@@ -208,6 +213,11 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         });
     }
 
+    /**
+     * Check at which index of the table the student initials
+     * are located, along with the student's key. 
+     * @param { number | string } key
+     */
     getRowIndex(key: number | string) {
         let ind: number = 0;
         for (let i = 0; i < this.state.tableCellsArray.length; i++) {
@@ -219,6 +229,11 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         return ind;
     }
 
+    /**
+     * Check at which index of the table the group 
+     * is located, along with the group's key 
+     * @param { number | string } 
+     */
     getGroupRowIndex(key: number | string) {
         let ind: number = 0;
         for (let i = 0; i < this.state.groupCellsArray.length; i++) {
@@ -230,6 +245,12 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         return ind;
     }
 
+    /**
+     * Blurs the screen each time a button is clicked on 
+     * the ClassRoll page. Also takes care of binding
+     * the selected table row to the state variable.
+     * @param { Event } e
+     */
     handleBlur = (e) => {
         e.preventDefault();
         if (
@@ -317,6 +338,11 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         });
     }
 
+    /**
+     * Unblurs the window again, as well as changes the 
+     * boolean state variables which dictate whether or 
+     * not the window should be open or not. 
+     */
     closeWindow() {
         if (this.state.isRegisterHidden === false) {
             this.setState({
@@ -356,6 +382,9 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         });
     }
 
+    /**
+     * Add student information to the Firebase database. 
+     */
     addStudent() {
         const self = this;
         let uid = self.props.store.teacherid;
@@ -367,14 +396,22 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         }).catch(function(error: Error) {
             console.log(error.message);
             errorSet = true;
-            self.setState({registerMessage: 'Student initials must be 3 characters long.'});
+            self.setState({
+                    registerMessage: 'Student initials must be no longer than three characters long.'
+                }
+            );
         }).then(function() {
             if (errorSet === false) {
                 self.closeWindow();
+                self.props.store.firebaseUsageEvent([{ attrName: 'number_students', attrValue: 1 }]);
             }
         });
     }
 
+    /**
+     * Remove student information from the Firebase database. 
+     * @param {React.MouseEvent<HTMLButtonElement>} e
+     */
     removeStudent(e: React.MouseEvent<HTMLButtonElement>) {
         const self = this;
         e.preventDefault();
@@ -388,12 +425,17 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
             firebase.database().ref('/users/private_students/' + uid + '/' + key).remove().then(function() {
                 self.setState({checkedSelection: ''});
                 self.closeWindow();
+            }).then(function() {
+                self.props.store.firebaseUsageEvent([{ attrName: 'number_students', attrValue: -1 }]);
             });
         } else if (targetHTML === 'No') {
             self.closeWindow();
         }
     }
 
+    /**
+     * Updates student information from the Firebase database. 
+     */
     updateStudent() {
         const self = this;
         let uid = self.props.store.teacherid;
@@ -407,12 +449,22 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         });
     }
 
+    /**
+     * Each time a value is inputted by the user, 
+     * the state variables are updated to reflect
+     * the changes. 
+     */
     handleInput = (e) => {
         e.preventDefault();
         let name = e.target.name;
         this.setState({[name]: e.target.value});
     }
 
+    /**
+     * Selects a student to be read with using the
+     * shared reading interface and stores the id 
+     * of that student in Store. 
+     */
     activate() {
         let id = ((this.state.checkedSelection as HTMLTableElement).childNodes[1] as HTMLTableElement).innerHTML;
         this.props.store.setmode(2);
@@ -422,6 +474,9 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         this.closeWindow();
     }
 
+    /**
+     * Binds checked selection to proper state variables. 
+     */
     checkSelection = (e) => {
         e.preventDefault();
         
@@ -453,15 +508,22 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         }
     }
 
+    /**
+     * Adds group information to Firebase database. 
+     */
     addGroup() {
         const self = this;
         firebase.database().ref('users/private_groups/' + self.props.store.teacherid).push().set({
             groupName: this.state.groupName
         }).then(function() {
             self.closeWindow();
+            self.props.store.firebaseUsageEvent([{ attrName: 'number_groups', attrValue: 1 }]);
         });
     }
 
+    /**
+     * Removes group information from Firebase database. 
+     */
     removeGroup = (e) => {
         const self = this;
         e.preventDefault();
@@ -471,12 +533,17 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
             firebase.database().ref('users/private_groups/' + uid + '/' + key).remove().then(function() {
                 self.setState({checkedSelection: '', checkedGroup: '', groupName: ''});
                 self.closeWindow();
+            }).then(function() {
+                self.props.store.firebaseUsageEvent([{ attrName: 'number_groups', attrValue: -1 }]);
             });
         } else if (e.target.innerHTML === 'No') {
             self.closeWindow();
         }
     }
 
+    /**
+     * Updates group informatio in Firebase database. 
+     */
     updateGroup() {
         const self = this;
         let uid = self.props.store.teacherid;
@@ -488,6 +555,10 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         });
     }
 
+    /**
+     * Binds keyboard input with proper Firebase function. 
+     * @param {React.KeyboardEvent<HTMLInputElement>} e 
+     */
     handleKeyInput(e: React.KeyboardEvent<HTMLInputElement>) {
         let action = (e.target as HTMLInputElement).dataset.action;
         if (e.key === 'Enter') {
@@ -503,6 +574,84 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         }
     }
 
+    /**
+     * Exports user's usage summary as well as a list of 
+     * all events saved to the Firebase database. 
+     */
+    exportSpreadsheet() {
+        if (this.props.store.isSignedIn === false) {
+            return;
+        }
+
+        let self = this;
+        let spreadsheet: string = 'data:text/csv;charset=utf-8,';
+        let rows: Array<Array<string>> = [];
+        rows.push(['Usage Summary'], [
+            'Email', 'Last Active Teacher', 'Number Students', 'Number Groups',
+            'Number Events', 'Number Books Opened', 'Number Books Read',
+            'Number Pages Read', 'Number Start Reading Events',
+            'Number Finish Reading Events', 'Number Response Events',
+            'Number Turn Page Events', 'Number Page Number Events'
+        ]);
+        
+        // Obtain user's usage summary
+        firebase.database().ref('/users/private_usage/' + self.props.store.teacherid).
+        once('value', (snapshot: firebase.database.DataSnapshot) => {
+            rows.push([
+                snapshot.child('email').val(),
+                snapshot.child('last_active_teacher').val(),
+                snapshot.child('number_students').val(),
+                snapshot.child('number_groups').val(),
+                snapshot.child('number_events').val(),
+                snapshot.child('number_books_opened').val(),
+                snapshot.child('number_books_read').val(),
+                snapshot.child('number_pages_read').val(),
+                snapshot.child('number_start_reading_events').val(),
+                snapshot.child('number_finish_reading_events').val(),
+                snapshot.child('number_response_events').val(),
+                snapshot.child('number_turn_page_events').val(),
+                snapshot.child('number_page_number_events').val()
+            ]);
+            rows.push(['\n'], ['User Activity'], ['Date', 'Student ID', 'Book', 'Event']);
+        }).then(() => {
+            firebase.database().ref('/users/private_events/' + self.props.store.teacherid).
+            once('value', (snapshot: firebase.database.DataSnapshot) => {
+                snapshot.forEach((childSnapshot: firebase.database.DataSnapshot) => {
+                    rows.push([
+                        childSnapshot.child('date').val(),
+                        childSnapshot.child('studentID').val(),
+                        childSnapshot.child('book').val(),
+                        childSnapshot.child('event').val()
+                    ]);
+                    return false;
+                });
+            }).then(() => {
+                rows.forEach((child, i) => {
+                    let modifier: string = '';
+                    child.forEach((value, j) => {
+                        if (i >= 6 && j === 0) {
+                            if (typeof value === 'string') {
+                                modifier += value.replace(',', '') + ',';
+                                return;
+                            }
+                        }
+                        modifier += child[j] + ',';
+                    });
+                    spreadsheet += (modifier + '\n');
+                });
+
+                let link = document.createElement('a');
+                link.setAttribute('href', encodeURI(spreadsheet));
+                link.setAttribute('download', 'activity(' + self.props.store.email + ').csv');
+                link.click();
+                self.props.store.setLink(link);
+            });
+        });
+    }
+
+    /**
+     * Signs user out of the Firebase authentication system. 
+     */
     logout = (e) => {
         const self = this;
         firebase.auth().signOut().then(function() {
@@ -592,6 +741,16 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
                                         onClick={this.logout}
                                     >
                                         Logout
+                                    </button>
+                                </td>
+                                <td>
+                                    <button
+                                        className="student-button export-spreadsheet"
+                                        type="text"
+                                        onClick={this.exportSpreadsheet}
+                                    >
+                                        Export Spreadsheet
+                                        {() => { return this.props.store.link; }}
                                     </button>
                                 </td>
                             </tr>

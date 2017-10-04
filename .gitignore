@@ -35,3 +35,5 @@ src/__pycache__
 
 public/api/activate/credentials.json
 public/api/activate/emails.json
+src/user_activity.csv
+src/export-user-spreadsheet.py

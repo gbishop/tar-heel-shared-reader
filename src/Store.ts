@@ -9,17 +9,103 @@ type Layout = {
 };
 
 class Store {
-  // versatile function used to push events to database 
-  firebaseEvent(teacherID: string, studentID: string, book: string, event: string): void {
-    firebase.database().ref('events').push().set({
+  /**
+   * Versatile function used to push events to Firebase database. 
+   * @param { string } teacherID 
+   * @param { string } studentID 
+   * @param { string } book 
+   * @param { string } event 
+   * @param { () => void } callback 
+   */
+  firebaseEvent(teacherID: string, studentID: string, book: string, event: string, callback?: () => void): void {
+    firebase.database().ref('/users/private_events/' + this.teacherid).push().set({
       teacherID: teacherID,
       studentID: studentID,
       date: new Date(new Date().getTime()).toLocaleString(),
       book: book,
       event: event
+    }).then(() => {
+      if (callback !== undefined) {
+        callback();
+      }
     });
   }
 
+  /**
+   * Used to push usage summary to Firebase database. 
+   * @param { Array<{}> } updatedAttributes 
+   * @param { () => void } callback 
+   */
+  firebaseUsageEvent(
+    updatedAttributes: Array<{ attrName: string, attrValue: string | number }>, 
+    callback?: () => void
+  ) {
+    if (this.isSignedIn === false) { return; }
+    let newUsageSummary: {};
+    firebase.database().ref('/users/private_usage/' + this.teacherid).
+    once('value', (snapshot) => {
+      if (snapshot.val() === null) {
+        newUsageSummary = {
+          email: this.email, 
+          last_active_teacher: new Date(new Date().getTime()).toLocaleString(),
+          number_students: 0, 
+          number_books_read: 0, 
+          number_pages_read: 0,
+          number_events: 0, 
+          number_start_reading_events: 0,
+          number_finish_reading_events: 0, 
+          number_response_events: 0,
+          number_page_number_events: 0, 
+          number_turn_page_events: 0,
+          number_groups: 0,
+          number_books_opened: 0
+        };
+      } else {
+        newUsageSummary = {
+          email: snapshot.child('email').val(),
+          last_active_teacher: new Date(new Date().getTime()).toLocaleString(),
+          number_students: snapshot.child('number_students').val(),
+          number_books_read: snapshot.child('number_books_read').val(),
+          number_pages_read: snapshot.child('number_pages_read').val(),
+          number_events: snapshot.child('number_events').val(),
+          number_start_reading_events: snapshot.child('number_start_reading_events').val(),
+          number_finish_reading_events: snapshot.child('number_finish_reading_events').val(),
+          number_response_events: snapshot.child('number_response_events').val(),
+          number_page_number_events: snapshot.child('number_page_number_events').val(),
+          number_turn_page_events: snapshot.child('number_turn_page_events').val(),
+          number_groups: snapshot.child('number_groups').val(),
+          number_books_opened: snapshot.child('number_books_opened').val()
+        };
+
+        if (updatedAttributes.length <= 0) { return; }
+        updatedAttributes.push({ attrName: 'number_events', attrValue: updatedAttributes.length });
+        
+        for (let i = 0; i < updatedAttributes.length; i++) {
+          if (updatedAttributes[i].attrName in newUsageSummary) {
+            if (typeof updatedAttributes[i].attrValue === 'number') {
+              newUsageSummary[updatedAttributes[i].attrName] = 
+              updatedAttributes[i].attrValue + newUsageSummary[updatedAttributes[i].attrName];
+            } else {
+              newUsageSummary[updatedAttributes[i].attrName] = updatedAttributes[i].attrValue;
+            }
+          }
+        }
+      }
+    }).then(() => {
+      firebase.database().ref('/users/private_usage/' + this.teacherid).set(newUsageSummary).then(() => {
+        if (callback !== undefined) {
+          callback();
+        }
+      });
+    });
+  }
+
+  // uri for spreadsheet export 
+  @observable link: HTMLAnchorElement;
+  // set uri for spreadsheet export 
+  @action.bound setLink(link: HTMLAnchorElement): void {
+    this.link = link;
+  }
   // initial Accordion component (recent books)
   @observable initialAccordion: JSX.Element | string = '';
   // set initial Accordion component
@@ -105,37 +191,70 @@ class Store {
         this.teacherid, 
         this.studentid, 
         this.book.title, 
-        'PAGE NUMBER ' + this.pageno
+        'PAGE NUMBER ' + this.pageno,
+        () => {
+          this.firebaseEvent(
+            this.teacherid,
+            this.studentid,
+            this.book.title,
+            'TURN PAGE'
+          );
+        }
       );
+      this.firebaseUsageEvent([
+        { attrName: 'number_page_number_events', attrValue: 1 },
+        { attrName: 'number_turn_page_events', attrValue: 1 },
+        { attrName: 'number_pages_read', attrValue: 1 }
+      ]);
     }
-    this.firebaseEvent(
-      this.teacherid,
-      this.studentid,
-      this.book.title,
-      'TURN PAGE'
-    );
     console.log('nextPage', this.pageno);
   }
   // step back to previous page
   // turnPage event
   @action.bound backPage() {
+    let doesPageNumberEventExist: boolean = false;
+    let updatedAttributes: Array<{attrName: string, attrValue: string | number }> = [];
+
     if (this.pageno > 1) {
       this.pageno -= 1;
+      doesPageNumberEventExist = true;
+    } else {
+      this.pageno = this.npages + 1;
+    }
+
+    if (doesPageNumberEventExist) {
       this.firebaseEvent(
         this.teacherid,
         this.studentid,
         this.book.title,
-        'PAGE NUMBER ' + this.pageno
+        'PAGE NUMBER ' + this.pageno,
+        () => {
+          this.firebaseEvent(
+            this.teacherid,
+            this.studentid,
+            this.book.title,
+            'TURN PAGE'
+          );
+        }
+      );
+      updatedAttributes.push(
+        { attrName: 'number_page_number_events', attrValue: 1 }, 
+        { attrName: 'number_turn_page_events', attrValue: 1 },
+        { attrName: 'number_pages_read', attrValue: 1 }
       );
     } else {
-      this.pageno = this.npages + 1;
+      this.firebaseEvent(
+        this.teacherid,
+        this.studentid,
+        this.book.title,
+        'TURN PAGE'
+      );
+      updatedAttributes.push(
+        { attrName: 'number_turn_page_events', attrValue: 1 },
+        { attrName: 'number_pages_read', attrValue: 1 } 
+      );
     }
-    this.firebaseEvent(
-      this.teacherid,
-      this.studentid,
-      this.book.title,
-      'TURN PAGE'
-    );
+    this.firebaseUsageEvent(updatedAttributes);
     console.log('backPage', this.pageno);
   }
   // set the page number
@@ -147,6 +266,9 @@ class Store {
       this.book.title,
       'PAGE NUMBER ' + this.pageno
     );
+    this.firebaseUsageEvent([
+      { attrName: 'number_page_number_events', attrValue: 1}
+    ]);
   }
   // index to the readings array
   @observable reading: number = 0;

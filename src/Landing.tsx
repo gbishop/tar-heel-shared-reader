@@ -21,6 +21,10 @@ export default class Landing extends React.Component <LandingProps, LandingState
         this.validate = this.validate.bind(this);
     }
 
+    /**
+     * Take user to proper login page, if the user is logged in 
+     * to Firebase and is an active member. 
+     */
     componentDidMount() {
         const self = this;
 
@@ -29,6 +33,10 @@ export default class Landing extends React.Component <LandingProps, LandingState
                 if (self.props.store.mode !== 2) {
                     // Set the firebase teacherid in store
                     self.props.store.setteacherid(user.uid);
+                    // set the firebase email in store 
+                    if (user.email !== null) {
+                        self.props.store.setemail(user.email);
+                    }
                     // If the user is already logged on, 
                     // then go straight to ClassRoll
                     firebase.database().ref('users/admin/' + user.uid + '/active').
@@ -46,12 +54,26 @@ export default class Landing extends React.Component <LandingProps, LandingState
         });
     }
 
+    /**
+     * Each time a value is inputted by the user, 
+     * the state variables are updated to reflect
+     * the changes. 
+     */
     handleInput = (e) => {
         e.preventDefault();
         let name = e.target.name;
         this.setState({[name]: e.target.value});
     }
 
+    /**
+     * Logs the user in Firebase authentication system. 
+     * Checks if user is authenticated and is an active
+     * member. If user is not currently active, make 
+     * request to check if user should be activated.
+     * If user is indeed active, grant access. Otherwise,
+     * reject access to shared reading interface. 
+     * @param { React.MouseEvent<HTMLButtonElement> } e
+     */
     validate(e: React.MouseEvent<HTMLButtonElement>) {
         e.preventDefault();
         const self = this;
@@ -90,6 +112,7 @@ export default class Landing extends React.Component <LandingProps, LandingState
                 if (active) {
                     self.props.store.setmode(1);
                     self.props.store.setIsSignedIn(true);
+                    self.props.store.firebaseUsageEvent([]);
                 } else {
                     // Run activation script
                     fetch('http://localhost:8080/activate', {
@@ -107,6 +130,7 @@ export default class Landing extends React.Component <LandingProps, LandingState
                         if (responseJson.active) {
                             self.props.store.setmode(1);
                             self.props.store.setIsSignedIn(true);
+                            self.props.store.firebaseUsageEvent([]);
                         // The user is not registered. Do not grant access. 
                         } else {
                             self.props.store.
@@ -117,7 +141,6 @@ export default class Landing extends React.Component <LandingProps, LandingState
                         if (error.message === 'Failed to fetch') {
                             self.props.store.
                             setMessage('Activation script is currently offline. Please try again later.');
-                            console.log('Activation script is currently offline.');
                         }
                     });
                 }
