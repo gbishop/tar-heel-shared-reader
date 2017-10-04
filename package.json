@@ -29,7 +29,7 @@
   },
   "proxy": {
     "/api": {
-      "target": "http://gb.cs.unc.edu/"
+      "target": "http://shared.tarheelreader.org/"
     }
   },
   "scripts": {
