@@ -100,6 +100,35 @@ class Store {
     });
   }
 
+  // is the user list hidden or not
+  @observable isUserListHidden: boolean = true;
+  // set if user list is hidden or not
+  @action.bound setIsUserListHidden(isUserListHidden: boolean) {
+    this.isUserListHidden = isUserListHidden;
+  }
+  // does user have admin privileges 
+  @observable isAdmin: boolean = false;
+  // set user admin privileges
+  @action.bound setIsAdmin(isAdmin: boolean) {
+    this.isAdmin = isAdmin;
+  }
+  // either checks or unchecks a checkbox
+  @action.bound check(index: number) {
+    this.userList[index].props.children[1].props.checked = 
+    !this.userList[index].props.children[1].props.checked;
+  }
+  // list of user keys 
+  @observable userKeys: Array<string>;
+  // set list of user keys 
+  @action.bound setUserKeys(userKeys: Array<string>) {
+    this.userKeys = userKeys;
+  }
+  // list of user emails
+  @observable userList: JSX.Element[];
+  // set list of user emails 
+  @action.bound setUserList(userList: JSX.Element[]) {
+    this.userList = userList;
+  }
   // uri for spreadsheet export 
   @observable link: HTMLAnchorElement;
   // set uri for spreadsheet export 

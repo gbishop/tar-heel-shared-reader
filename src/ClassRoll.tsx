@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as firebase from 'firebase';
 import Store from './Store';
+import { observer } from 'mobx-react';
 
 interface ClassRollProps {
     store: Store;
@@ -26,6 +27,7 @@ interface ClassRollState {
     isUpdateGroupHidden: boolean;
 }
 
+@observer
 export default class ClassRoll extends React.Component<ClassRollProps, ClassRollState> {
     constructor() {
         super();
@@ -77,6 +79,7 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         this.addStudent = this.addStudent.bind(this);
         this.logout = this.logout.bind(this);
         this.exportSpreadsheet = this.exportSpreadsheet.bind(this);
+        this.getUserList = this.getUserList.bind(this);
     }
 
     /**
@@ -210,6 +213,12 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
                 tempArr.splice(ind, 1);
                 self.setState({groupCellsArray: tempArr});
             }
+        });
+
+        // check if user has admin privileges
+        firebase.database().ref('users/admin/' + this.props.store.teacherid + '/admin').
+        once('value', (snapshot: firebase.database.DataSnapshot) => {
+            (snapshot.val() === true) ? self.props.store.setIsAdmin(true) : self.props.store.setIsAdmin(false);
         });
     }
 
@@ -575,17 +584,113 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
     }
 
     /**
+     * Obtain list of all users to be exported
+     */
+    getUserList(): void {
+        let self = this;
+        let isAdmin = self.props.store.isAdmin;
+        if (isAdmin === false) { 
+            alert('You do not have admin privileges to access this feature.');
+            return; 
+        }
+        let userList: Array<string> = [];
+        let userKeys: Array<string> = [];
+        firebase.database().ref('/users/private_usage/').
+        once('value', (snapshot: firebase.database.DataSnapshot) => {
+            snapshot.forEach((childSnapshot) => {
+                if (childSnapshot.key !== null) {
+                    userKeys.push(childSnapshot.key);
+                }
+                userList.push(childSnapshot.child('email').val()); 
+                return false;
+            });
+        }).then(() => {
+            let userArray: Array<JSX.Element> = [];
+            userList.forEach((email, index) => {
+                userArray.push(
+                    <div className="users" key={email}>
+                        {userList[index]} 
+                        <input 
+                            type="checkbox" 
+                            checked={false}
+                            onClick={() => self.props.store.check(index)}
+                        />
+                    </div>
+                );
+            });
+            self.props.store.setUserList(userArray);
+            self.props.store.setUserKeys(userKeys);
+            self.props.store.setIsUserListHidden(false);
+            this.setState({
+                outerDivStyle: {
+                    position: 'absolute',
+                    width: '750px',
+                    height: '600px',
+                    background: 'linear-gradient(white, #8e8e8e)',
+                    display: 'inline-flex',
+                    left: '50%',
+                    top: '50%',
+                    marginLeft: '-375px',
+                    marginTop: '-300px',
+                    borderRadius: '25px',
+                    userSelect: 'none',
+                    filter: 'blur(10px)',
+                    overflowY: 'auto',
+                    overflowX: 'hidden'
+                }
+            });
+        });
+    }
+
+    /**
      * Exports user's usage summary as well as a list of 
      * all events saved to the Firebase database. 
      */
-    exportSpreadsheet() {
-        if (this.props.store.isSignedIn === false) {
-            return;
+    exportSpreadsheet = (e) => {
+        e.preventDefault();
+        if (this.props.store.userList === undefined) { return; }
+        if (this.props.store.isSignedIn === false) { return; }
+
+        let userArray = this.props.store.userList;
+        let userDetails: Array<string> = [];
+        let userKeys: Array<string> = [];
+        let checkCounter: number = 0;
+        for  (let i = 0; i < userArray.length; i++) {
+            let checked = userArray[i].props.children[1].props.checked;
+            let email = userArray[i].props.children[0];
+            if (checked) {
+                checkCounter++;
+                userDetails.push(email);
+                userKeys.push(this.props.store.userKeys[i]);
+            } 
+        }
+
+        if (checkCounter === 0) { 
+            alert('Please select one or more users first.');
+            return; 
         }
 
         let self = this;
         let spreadsheet: string = 'data:text/csv;charset=utf-8,';
-        let rows: Array<Array<string>> = [];
+        let rows: Array<Array<string | number>> = [];
+        let usage: Array<{
+            key: string | null, 
+            usage: {
+            email: string,
+            last_active_teacher: string,
+            number_books_opened: number,
+            number_books_read: number,
+            number_events: number,
+            number_finish_reading_events: number,
+            number_groups: number,
+            number_page_number_events: number,
+            number_pages_read: number,
+            number_response_events: number,
+            number_start_reading_events: number,
+            number_students: number,
+            number_turn_page_events: number
+        }}> = [];
+
         rows.push(['Usage Summary'], [
             'Email', 'Last Active Teacher', 'Number Students', 'Number Groups',
             'Number Events', 'Number Books Opened', 'Number Books Read',
@@ -593,44 +698,78 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
             'Number Finish Reading Events', 'Number Response Events',
             'Number Turn Page Events', 'Number Page Number Events'
         ]);
-        
-        // Obtain user's usage summary
-        firebase.database().ref('/users/private_usage/' + self.props.store.teacherid).
-        once('value', (snapshot: firebase.database.DataSnapshot) => {
-            rows.push([
-                snapshot.child('email').val(),
-                snapshot.child('last_active_teacher').val(),
-                snapshot.child('number_students').val(),
-                snapshot.child('number_groups').val(),
-                snapshot.child('number_events').val(),
-                snapshot.child('number_books_opened').val(),
-                snapshot.child('number_books_read').val(),
-                snapshot.child('number_pages_read').val(),
-                snapshot.child('number_start_reading_events').val(),
-                snapshot.child('number_finish_reading_events').val(),
-                snapshot.child('number_response_events').val(),
-                snapshot.child('number_turn_page_events').val(),
-                snapshot.child('number_page_number_events').val()
-            ]);
-            rows.push(['\n'], ['User Activity'], ['Date', 'Student ID', 'Book', 'Event']);
+
+        // Obtain usage info for all selected users from database
+        firebase.database().ref('/users/private_usage').once('value', (snapshot: firebase.database.DataSnapshot) => {
+            snapshot.forEach((user) => {
+                if (userDetails.indexOf(user.child('email').val()) > -1) {
+                    usage.push({
+                        key: user.key,
+                        usage: user.val()
+                    });
+                }
+                return false;
+            });
         }).then(() => {
-            firebase.database().ref('/users/private_events/' + self.props.store.teacherid).
+            // Obtain events for all selected users from database
+            let events: Array<{key: string | null, events: {
+                book: string,
+                date: string,
+                event: string,
+                studentID: string,
+                teacherID: string
+            }}> = [];
+            firebase.database().ref('/users/private_events').
             once('value', (snapshot: firebase.database.DataSnapshot) => {
-                snapshot.forEach((childSnapshot: firebase.database.DataSnapshot) => {
-                    rows.push([
-                        childSnapshot.child('date').val(),
-                        childSnapshot.child('studentID').val(),
-                        childSnapshot.child('book').val(),
-                        childSnapshot.child('event').val()
-                    ]);
+                snapshot.forEach((childSnapshot) => {
+                    childSnapshot.forEach((item: firebase.database.DataSnapshot) => {
+                        if (userKeys.indexOf(item.val().teacherID) > - 1) {
+                            events.push({
+                                key: childSnapshot.key,
+                                events: item.val()
+                            }); 
+                        }
+                        return false;
+                    });
                     return false;
                 });
             }).then(() => {
+                // Print usage information for selected users 
+                usage.forEach((user) => {
+                    rows.push([
+                        user.usage.email,
+                        user.usage.last_active_teacher,
+                        user.usage.number_students,
+                        user.usage.number_groups,
+                        user.usage.number_events,
+                        user.usage.number_books_opened,
+                        user.usage.number_books_read,
+                        user.usage.number_pages_read,
+                        user.usage.number_start_reading_events,
+                        user.usage.number_finish_reading_events,
+                        user.usage.number_response_events,
+                        user.usage.number_turn_page_events,
+                        user.usage.number_page_number_events
+                    ]);
+                });
+                rows.push(['\n'], ['User Activity'], ['Date', 'Student ID', 'Book', 'Event']);
+                events.forEach((event, i) => {
+                    rows.push([
+                        event.events.date,
+                        event.events.studentID,
+                        event.events.book,
+                        event.events.event
+                    ]);
+                });
+
                 rows.forEach((child, i) => {
                     let modifier: string = '';
                     child.forEach((value, j) => {
-                        if (i >= 6 && j === 0) {
-                            if (typeof value === 'string') {
+                        if (typeof value === 'string') {
+                            if (value.includes('@') === false && j === 0) {
+                                modifier += value.replace(',', '') + ',';
+                                return;
+                            } else if (value.includes(',') && value.includes('/') && value.includes(':')) {
                                 modifier += value.replace(',', '') + ',';
                                 return;
                             }
@@ -645,6 +784,26 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
                 link.setAttribute('download', 'activity(' + self.props.store.email + ').csv');
                 link.click();
                 self.props.store.setLink(link);
+
+                self.props.store.setIsUserListHidden(true);
+                this.setState({
+                    outerDivStyle: {
+                        position: 'absolute',
+                        width: '750px',
+                        height: '600px',
+                        background: 'linear-gradient(white, #8e8e8e)',
+                        display: 'inline-flex',
+                        left: '50%',
+                        top: '50%',
+                        marginLeft: '-375px',
+                        marginTop: '-300px',
+                        borderRadius: '25px',
+                        userSelect: 'none',
+                        filter: 'blur(0px)',
+                        overflowY: 'auto',
+                        overflowX: 'hidden'
+                    }
+                });
             });
         });
     }
@@ -659,6 +818,33 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
             self.props.store.setIsSignedIn(false);
         }).catch(function(err: Error) {
             console.log(err.message);
+        });
+    }
+
+    /**
+     * Cancel export of spreadsheet  
+     */
+
+    cancelExport = (e) => {
+        e.preventDefault();
+        this.props.store.setIsUserListHidden(true);
+        this.setState({
+            outerDivStyle: {
+                position: 'absolute',
+                width: '750px',
+                height: '600px',
+                background: 'linear-gradient(white, #8e8e8e)',
+                display: 'inline-flex',
+                left: '50%',
+                top: '50%',
+                marginLeft: '-375px',
+                marginTop: '-300px',
+                borderRadius: '25px',
+                userSelect: 'none',
+                filter: 'blur(0px)',
+                overflowY: 'auto',
+                overflowX: 'hidden'
+            }
         });
     }
 
@@ -744,10 +930,10 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
                                     </button>
                                 </td>
                                 <td>
-                                    <button
+                                    <button 
                                         className="student-button export-spreadsheet"
                                         type="text"
-                                        onClick={this.exportSpreadsheet}
+                                        onClick={this.getUserList}
                                     >
                                         Export Spreadsheet
                                         {() => { return this.props.store.link; }}
@@ -895,6 +1081,17 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
                             Close
                         </button>
                     </span>
+                </div>
+                <div hidden={this.props.store.isUserListHidden} className="user-list">
+                    Please select users to be exported
+                    <br/> <br/>
+                    <form onSubmit={this.exportSpreadsheet}>
+                        {this.props.store.userList}
+                        <br/>
+                        <input className="user-list-submit" type="submit" value="Submit"/>
+                        <br/>
+                    </form>
+                    <button className="user-list-button" onClick={this.cancelExport}> Cancel </button>
                 </div>
             </div>
         );

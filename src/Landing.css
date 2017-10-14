@@ -56,6 +56,7 @@
     border: 1px solid black;
     padding: 10px;
     user-select: none;
+    overflow: auto;
   }
   
   button {
@@ -243,4 +244,67 @@
   
   .group-table-tr th, .student-table-tr th {
     font-size: 18px;
+  }
+
+  .users {
+    font-weight: bold;
+  }
+
+  .user-list {
+    font-family: Didot;
+    position: fixed;
+    width: 500px;
+    height: 140px;
+    background: linear-gradient(transparent, transparent);
+    margin-left: -250px;
+    margin-top: -70px;
+    left: 50%;
+    top: 50%;
+    z-index: 1;
+    border-radius: 5px;
+    color: black;
+    text-align: center;
+    border: 1px solid black;
+    padding: 10px;
+    user-select: none;
+    overflow: auto;
+  }
+
+  .user-list-submit {
+    position: absolute;
+    width: 100px;
+    height: 35px;
+    border-radius: 10px;
+    background-color: inherit;
+    border: 1px solid gray;
+    box-shadow: 2px 2px 2px #888888;
+    left: 25%;
+    outline: none;
+  }
+
+  .user-list-submit:hover {
+    cursor: pointer;
+    background: linear-gradient(to right, #985E6D, #985E6D);
+    color: white;
+    outline: none;
+  }
+
+  .user-list-button {
+    outline: none;
+    position: absolute;
+    width: 100px;
+    height: 35px;
+    border-radius: 10px;
+    background-color: inherit;
+    border: 1px solid gray;
+    box-shadow: 2px 2px 2px #888888;
+    left: 55%;
+    bottom: 7.5%;
+  }
+
+  .user-list-button:hover {
+    cursor: pointer;
+    background: linear-gradient(to right, #985E6D, #985E6D);
+    color: white;
+    outline: none;
   }
