@@ -242,13 +242,13 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
             // pageNumber, startReading events
             self.props.store.firebaseEvent(
                 self.props.store.teacherid,
-                self.props.store.studentid,
+                self.props.store.studentInitials,
                 title,
                 'PAGE NUMBER 1',
                 () => {
                     self.props.store.firebaseEvent(
                         self.props.store.teacherid, 
-                        self.props.store.studentid, 
+                        self.props.store.studentInitials, 
                         title, 
                         'START READING'
                     );

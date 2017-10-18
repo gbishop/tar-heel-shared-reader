@@ -89,7 +89,7 @@ export default class Landing extends React.Component <LandingProps, LandingState
 
         // Sign in to Google
         var provider = new firebase.auth.GoogleAuthProvider();
-        firebase.auth().signInWithPopup(provider).then(function(result: firebase.auth.UserCredential) {
+        firebase.auth().signInWithPopup(provider).then((result: firebase.auth.UserCredential) => {
             // Make sure Firebase is not null during log in process 
             if (result !== null) {
                 if (result.user !== null && result.user) {
@@ -145,9 +145,26 @@ export default class Landing extends React.Component <LandingProps, LandingState
                     });
                 }
             });
-        }).catch(function(error: Error) {
+        }).catch((error) => {
+            // Check for common errors and report to user 
+            let code = error['code'];
+            if (code === 'auth/web-storage-unsupported') {
+                self.props.store.setMessage('Please make sure JavaScript and 3rd party cookies are enabled.');
+            } else if (code === 'auth/invalid-user-token') {
+                self.props.store.setMessage('Sessions ended. Please refresh the page and login again.');
+            } else if (code === 'auth/network-request-failed') {
+                self.props.store.setMessage('Please make sure you are connected to the Internet.');
+            } else if (code === 'auth/too-many-requests') {
+                self.props.store.setMessage('Too many requests. Please wait a couple minutes and then try agian.');
+            } else if (code === 'auth/user-disabled') {
+                self.props.store.setMessage('The user has been disabled. Please contact an administrator.');
+            } else if (code === 'auth/web-storage-unsupported') {
+                self.props.store.setMessage('Please enable web storage first.');
+            }
+
+            console.log('code', code);
             console.log(error.message);
-        }).then(function() {
+        }).then(() => {
             // The user is no longer signing in
             self.props.store.setIsSigningIn(false);
         });
