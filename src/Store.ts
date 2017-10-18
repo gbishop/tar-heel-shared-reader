@@ -12,12 +12,11 @@ class Store {
   /**
    * Versatile function used to push events to Firebase database. 
    * @param { string } teacherID 
-   * @param { string } studentID 
+   * @param { string } studentInitials 
    * @param { string } book 
    * @param { string } event 
    * @param { () => void } callback 
    */
-  // TODO
   firebaseEvent(teacherID: string, studentInitials: string, book: string, event: string, callback?: () => void): void {
     firebase.database().ref('/users/private_events/' + this.teacherid).push().set({
       teacherID: teacherID,
@@ -79,7 +78,14 @@ class Store {
         };
 
         if (updatedAttributes.length <= 0) { return; }
-        updatedAttributes.push({ attrName: 'number_events', attrValue: updatedAttributes.length });
+        let numberEvents: number = 0;
+        for (let i = 0; i < updatedAttributes.length; i++) {
+          if (updatedAttributes[i].attrName !== 'number_students' && 
+              updatedAttributes[i].attrName !== 'number_groups') {
+            numberEvents++;
+          }
+        }
+        updatedAttributes.push({ attrName: 'number_events', attrValue: numberEvents });
         
         for (let i = 0; i < updatedAttributes.length; i++) {
           if (updatedAttributes[i].attrName in newUsageSummary) {
@@ -101,7 +107,58 @@ class Store {
     });
   }
 
-  // TODO
+  /**
+   * Logs the user out of the Firebase interface 
+   */
+  @action.bound logout(): void {
+    const self = this;
+    firebase.auth().signOut().then(function () {
+      self.setmode(0);
+      self.setIsSignedIn(false);
+    }).catch(function (err: Error) {
+      console.log(err.message);
+    });
+  }
+
+  /**
+   * Blurs or unblurs the main interface 
+   */
+  @action.bound blurInterface(): void {
+    this.interfaceCSS = {
+      position: 'absolute',
+      width: '750px',
+      height: '600px',
+      background: 'linear-gradient(white, #8e8e8e)',
+      display: 'inline-flex',
+      left: '50%',
+      top: '50%',
+      marginLeft: '-375px',
+      marginTop: '-300px',
+      borderRadius: '25px',
+      userSelect: 'none',
+      filter: (this.interfaceCSS.filter === 'blur(10px)') ? 'blur(0px)' : 'blur(10px)',
+      overflowY: 'auto',
+      overflowX: 'hidden'
+    };
+  }
+
+  // the interface CSS 
+  @observable interfaceCSS: React.CSSProperties = {
+    position: 'absolute',
+    width: '750px',
+    height: '600px',
+    background: 'linear-gradient(white, #8e8e8e)',
+    display: 'inline-flex',
+    left: '50%',
+    top: '50%',
+    marginLeft: '-375px',
+    marginTop: '-300px',
+    borderRadius: '25px',
+    userSelect: 'none',
+    filter: 'blur(0px)',
+    overflowY: 'auto',
+    overflowX: 'hidden'
+  };
   // the selected student's initials
   @observable studentInitials: string = '';
   // set the selected student's initials 
