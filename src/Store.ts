@@ -17,10 +17,11 @@ class Store {
    * @param { string } event 
    * @param { () => void } callback 
    */
-  firebaseEvent(teacherID: string, studentID: string, book: string, event: string, callback?: () => void): void {
+  // TODO
+  firebaseEvent(teacherID: string, studentInitials: string, book: string, event: string, callback?: () => void): void {
     firebase.database().ref('/users/private_events/' + this.teacherid).push().set({
       teacherID: teacherID,
-      studentID: studentID,
+      studentID: studentInitials,
       date: new Date(new Date().getTime()).toLocaleString(),
       book: book,
       event: event
@@ -100,6 +101,13 @@ class Store {
     });
   }
 
+  // TODO
+  // the selected student's initials
+  @observable studentInitials: string = '';
+  // set the selected student's initials 
+  @action.bound setStudentInitials(studentInitials: string) {
+    this.studentInitials = studentInitials;
+  }
   // is the user list hidden or not
   @observable isUserListHidden: boolean = true;
   // set if user list is hidden or not
@@ -218,13 +226,13 @@ class Store {
       this.pageno += 1;
       this.firebaseEvent(
         this.teacherid, 
-        this.studentid, 
+        this.studentInitials, 
         this.book.title, 
         'PAGE NUMBER ' + this.pageno,
         () => {
           this.firebaseEvent(
             this.teacherid,
-            this.studentid,
+            this.studentInitials,
             this.book.title,
             'TURN PAGE'
           );
@@ -254,13 +262,13 @@ class Store {
     if (doesPageNumberEventExist) {
       this.firebaseEvent(
         this.teacherid,
-        this.studentid,
+        this.studentInitials,
         this.book.title,
         'PAGE NUMBER ' + this.pageno,
         () => {
           this.firebaseEvent(
             this.teacherid,
-            this.studentid,
+            this.studentInitials,
             this.book.title,
             'TURN PAGE'
           );
@@ -274,7 +282,7 @@ class Store {
     } else {
       this.firebaseEvent(
         this.teacherid,
-        this.studentid,
+        this.studentInitials,
         this.book.title,
         'TURN PAGE'
       );
@@ -291,7 +299,7 @@ class Store {
     this.pageno = i;
     this.firebaseEvent(
       this.teacherid,
-      this.studentid,
+      this.studentInitials,
       this.book.title,
       'PAGE NUMBER ' + this.pageno
     );

@@ -476,8 +476,10 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
      */
     activate() {
         let id = ((this.state.checkedSelection as HTMLTableElement).childNodes[1] as HTMLTableElement).innerHTML;
+        let initials = ((this.state.checkedSelection as HTMLTableElement).childNodes[0] as HTMLTableElement).innerHTML;
         this.props.store.setmode(2);
         this.props.store.setstudentid(id);
+        this.props.store.setStudentInitials(initials);
         (this.state.checkedSelection as HTMLTableElement).style.backgroundColor = 'transparent';
         this.setState({checkedSelection: ''});
         this.closeWindow();
@@ -646,23 +648,28 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
      * Exports user's usage summary as well as a list of 
      * all events saved to the Firebase database. 
      */
-    exportSpreadsheet = (e) => {
+    exportSpreadsheet = (e, exportAll: boolean) => {
         e.preventDefault();
-        if (this.props.store.userList === undefined) { return; }
+        if (this.props.store.userList === undefined || this.props.store.userList.length === 0) { return; }
         if (this.props.store.isSignedIn === false) { return; }
 
         let userArray = this.props.store.userList;
         let userDetails: Array<string> = [];
         let userKeys: Array<string> = [];
         let checkCounter: number = 0;
+
         for  (let i = 0; i < userArray.length; i++) {
             let checked = userArray[i].props.children[1].props.checked;
             let email = userArray[i].props.children[0];
-            if (checked) {
+            if (checked || exportAll) {
                 checkCounter++;
                 userDetails.push(email);
                 userKeys.push(this.props.store.userKeys[i]);
             } 
+        }
+
+        if (exportAll) {
+            checkCounter = userArray.length;
         }
 
         if (checkCounter === 0) { 
@@ -1085,13 +1092,25 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
                 <div hidden={this.props.store.isUserListHidden} className="user-list">
                     Please select users to be exported
                     <br/> <br/>
-                    <form onSubmit={this.exportSpreadsheet}>
+                    <form onSubmit={(e) => this.exportSpreadsheet(e, false)}>
                         {this.props.store.userList}
                         <br/>
-                        <input className="user-list-submit" type="submit" value="Submit"/>
+                        <input className="user-list-submit" type="submit" value="Export"/>
                         <br/>
                     </form>
-                    <button className="user-list-button" onClick={this.cancelExport}> Cancel </button>
+                    <button 
+                        className="user-list-button user-list-button-1" 
+                        onClick={this.cancelExport}
+                    > 
+                        Cancel 
+                    </button>
+                    <br/>
+                    <button 
+                        className="user-list-button user-list-button-2" 
+                        onClick={(e) => this.exportSpreadsheet(e, true)}
+                    >
+                        Export All
+                    </button>
                 </div>
             </div>
         );
