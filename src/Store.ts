@@ -17,10 +17,11 @@ class Store {
    * @param { string } event 
    * @param { () => void } callback 
    */
-  firebaseEvent(teacherID: string, studentID: string, book: string, event: string, callback?: () => void): void {
+  // TODO
+  firebaseEvent(teacherID: string, studentInitials: string, book: string, event: string, callback?: () => void): void {
     firebase.database().ref('/users/private_events/' + this.teacherid).push().set({
       teacherID: teacherID,
-      studentID: studentID,
+      studentID: studentInitials,
       date: new Date(new Date().getTime()).toLocaleString(),
       book: book,
       event: event
@@ -100,6 +101,42 @@ class Store {
     });
   }
 
+  // TODO
+  // the selected student's initials
+  @observable studentInitials: string = '';
+  // set the selected student's initials 
+  @action.bound setStudentInitials(studentInitials: string) {
+    this.studentInitials = studentInitials;
+  }
+  // is the user list hidden or not
+  @observable isUserListHidden: boolean = true;
+  // set if user list is hidden or not
+  @action.bound setIsUserListHidden(isUserListHidden: boolean) {
+    this.isUserListHidden = isUserListHidden;
+  }
+  // does user have admin privileges 
+  @observable isAdmin: boolean = false;
+  // set user admin privileges
+  @action.bound setIsAdmin(isAdmin: boolean) {
+    this.isAdmin = isAdmin;
+  }
+  // either checks or unchecks a checkbox
+  @action.bound check(index: number) {
+    this.userList[index].props.children[1].props.checked = 
+    !this.userList[index].props.children[1].props.checked;
+  }
+  // list of user keys 
+  @observable userKeys: Array<string>;
+  // set list of user keys 
+  @action.bound setUserKeys(userKeys: Array<string>) {
+    this.userKeys = userKeys;
+  }
+  // list of user emails
+  @observable userList: JSX.Element[];
+  // set list of user emails 
+  @action.bound setUserList(userList: JSX.Element[]) {
+    this.userList = userList;
+  }
   // uri for spreadsheet export 
   @observable link: HTMLAnchorElement;
   // set uri for spreadsheet export 
@@ -189,13 +226,13 @@ class Store {
       this.pageno += 1;
       this.firebaseEvent(
         this.teacherid, 
-        this.studentid, 
+        this.studentInitials, 
         this.book.title, 
         'PAGE NUMBER ' + this.pageno,
         () => {
           this.firebaseEvent(
             this.teacherid,
-            this.studentid,
+            this.studentInitials,
             this.book.title,
             'TURN PAGE'
           );
@@ -225,13 +262,13 @@ class Store {
     if (doesPageNumberEventExist) {
       this.firebaseEvent(
         this.teacherid,
-        this.studentid,
+        this.studentInitials,
         this.book.title,
         'PAGE NUMBER ' + this.pageno,
         () => {
           this.firebaseEvent(
             this.teacherid,
-            this.studentid,
+            this.studentInitials,
             this.book.title,
             'TURN PAGE'
           );
@@ -245,7 +282,7 @@ class Store {
     } else {
       this.firebaseEvent(
         this.teacherid,
-        this.studentid,
+        this.studentInitials,
         this.book.title,
         'TURN PAGE'
       );
@@ -262,7 +299,7 @@ class Store {
     this.pageno = i;
     this.firebaseEvent(
       this.teacherid,
-      this.studentid,
+      this.studentInitials,
       this.book.title,
       'PAGE NUMBER ' + this.pageno
     );
