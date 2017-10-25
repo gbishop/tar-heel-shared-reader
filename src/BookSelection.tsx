@@ -328,8 +328,27 @@ export default class BookSelection extends React.Component<BookSelectionProps, B
     }
 
     render () {
+        let user: string = 'user';
+        if (this.props.store.email !== undefined && this.props.store.email !== null) {
+            if (this.props.store.email !== undefined) {
+                user = this.props.store.email;
+            }
+        }
         return (
             <div>
+                <div className="dropdown-box">
+                    <span className="dropdown-box-title">Account</span>
+                    <div className="dropdown-contents">
+                        <p> {user} </p>
+                        <button
+                            className="student-button"
+                            type="text"
+                            onClick={this.props.store.logout}
+                        >
+                            Logout
+                        </button>
+                    </div>
+                </div>
                 <div style={this.state.outerDivStyle}>
                     <div className="book-table" onClick={this.chooseBook}>
                         {this.props.store.initialAccordion}
