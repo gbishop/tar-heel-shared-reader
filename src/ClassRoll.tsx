@@ -8,7 +8,6 @@ interface ClassRollProps {
 }
 
 interface ClassRollState {
-    outerDivStyle: React.CSSProperties;
     studentInitials: string;
     isRegisterHidden: boolean;
     isUpdateHidden: boolean;
@@ -32,22 +31,6 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
     constructor() {
         super();
         this.state = {
-            outerDivStyle: {
-                fontFamily: 'Didot',
-                position: 'absolute',
-                width: '750px',
-                height: '600px',
-                background: 'linear-gradient(white, #8e8e8e)',
-                display: 'inline-flex',
-                left: '50%',
-                top: '50%',
-                marginLeft: '-375px',
-                marginTop: '-300px',
-                borderRadius: '25px',
-                userSelect: 'none',
-                overflowY: 'auto',
-                overflowX: 'hidden'
-            },
             isRegisterHidden: true,
             isUpdateHidden: true,
             isRemoveHidden: true,
@@ -77,7 +60,6 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         this.activate = this.activate.bind(this);
         this.addGroup = this.addGroup.bind(this);
         this.addStudent = this.addStudent.bind(this);
-        this.logout = this.logout.bind(this);
         this.exportSpreadsheet = this.exportSpreadsheet.bind(this);
         this.getUserList = this.getUserList.bind(this);
     }
@@ -326,25 +308,7 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
             }
             this.setState({isUpdateGroupHidden: false});
         }
-
-        this.setState({
-            outerDivStyle: {
-                position: 'absolute',
-                width: '750px',
-                height: '600px',
-                background: 'linear-gradient(white, #8e8e8e)',
-                display: 'inline-flex',
-                left: '50%',
-                top: '50%',
-                marginLeft: '-375px',
-                marginTop: '-300px',
-                borderRadius: '25px',
-                userSelect: 'none',
-                filter: (this.state.outerDivStyle.filter === 'blur(10px)') ? 'blur(0px)' : 'blur(10px)',
-                overflowY: 'auto',
-                overflowX: 'hidden'
-            }
-        });
+        this.props.store.blurInterface();
     }
 
     /**
@@ -370,25 +334,7 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         } else if (this.state.isUpdateGroupHidden === false) {
             this.setState({isUpdateGroupHidden: !this.state.isUpdateGroupHidden});
         }
-
-        this.setState({
-            outerDivStyle: {
-                position: 'absolute',
-                width: '750px',
-                height: '600px',
-                background: 'linear-gradient(white, #8e8e8e)',
-                display: 'inline-flex',
-                left: '50%',
-                top: '50%',
-                marginLeft: '-375px',
-                marginTop: '-300px',
-                borderRadius: '25px',
-                userSelect: 'none',
-                filter: (this.state.outerDivStyle.filter === 'blur(10px)') ? 'blur(0px)' : 'blur(10px)',
-                overflowY: 'auto',
-                overflowX: 'hidden'
-            }
-        });
+        this.props.store.blurInterface();
     }
 
     /**
@@ -623,24 +569,8 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
             self.props.store.setUserList(userArray);
             self.props.store.setUserKeys(userKeys);
             self.props.store.setIsUserListHidden(false);
-            this.setState({
-                outerDivStyle: {
-                    position: 'absolute',
-                    width: '750px',
-                    height: '600px',
-                    background: 'linear-gradient(white, #8e8e8e)',
-                    display: 'inline-flex',
-                    left: '50%',
-                    top: '50%',
-                    marginLeft: '-375px',
-                    marginTop: '-300px',
-                    borderRadius: '25px',
-                    userSelect: 'none',
-                    filter: 'blur(10px)',
-                    overflowY: 'auto',
-                    overflowX: 'hidden'
-                }
-            });
+
+            this.props.store.blurInterface();
         });
     }
 
@@ -793,38 +723,8 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
                 self.props.store.setLink(link);
 
                 self.props.store.setIsUserListHidden(true);
-                this.setState({
-                    outerDivStyle: {
-                        position: 'absolute',
-                        width: '750px',
-                        height: '600px',
-                        background: 'linear-gradient(white, #8e8e8e)',
-                        display: 'inline-flex',
-                        left: '50%',
-                        top: '50%',
-                        marginLeft: '-375px',
-                        marginTop: '-300px',
-                        borderRadius: '25px',
-                        userSelect: 'none',
-                        filter: 'blur(0px)',
-                        overflowY: 'auto',
-                        overflowX: 'hidden'
-                    }
-                });
+                this.props.store.blurInterface();
             });
-        });
-    }
-
-    /**
-     * Signs user out of the Firebase authentication system. 
-     */
-    logout = (e) => {
-        const self = this;
-        firebase.auth().signOut().then(function() {
-            self.props.store.setmode(0);
-            self.props.store.setIsSignedIn(false);
-        }).catch(function(err: Error) {
-            console.log(err.message);
         });
     }
 
@@ -835,30 +735,32 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
     cancelExport = (e) => {
         e.preventDefault();
         this.props.store.setIsUserListHidden(true);
-        this.setState({
-            outerDivStyle: {
-                position: 'absolute',
-                width: '750px',
-                height: '600px',
-                background: 'linear-gradient(white, #8e8e8e)',
-                display: 'inline-flex',
-                left: '50%',
-                top: '50%',
-                marginLeft: '-375px',
-                marginTop: '-300px',
-                borderRadius: '25px',
-                userSelect: 'none',
-                filter: 'blur(0px)',
-                overflowY: 'auto',
-                overflowX: 'hidden'
-            }
-        });
+        this.props.store.blurInterface();
     }
 
     render() {
+        let user: string = 'user';
+        if (this.props.store.email !== undefined && this.props.store.email !== null) {
+            if (this.props.store.email !== undefined) {
+                user = this.props.store.email;
+            }
+        }
         return (
             <div>
-                <div style={this.state.outerDivStyle}>
+                <div className="dropdown-box">
+                    <span className="dropdown-box-title">Account</span>
+                    <div className="dropdown-contents">
+                        <p> {user} </p>
+                        <button
+                            className="student-button"
+                            type="text"
+                            onClick={this.props.store.logout}
+                        >
+                            Logout
+                        </button>
+                    </div>
+                </div>
+                <div style={this.props.store.interfaceCSS}>
                     <table className="register-button">
                         <tbody>
                             <tr>
@@ -925,15 +827,6 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
                                         onClick={this.handleBlur}
                                     >
                                         Update Group
-                                    </button>
-                                </td>
-                                <td>
-                                    <button
-                                        className="student-button"
-                                        type="text"
-                                        onClick={this.logout}
-                                    >
-                                        Logout
                                     </button>
                                 </td>
                                 <td>
