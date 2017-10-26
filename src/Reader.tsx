@@ -55,7 +55,7 @@ const Reader = observer(function Reader(props: {store: Store}) {
     console.log('response', store.word);
     store.firebaseEvent(
       store.teacherid,
-      store.studentid,
+      store.studentInitials,
       store.book.title,
       'RESPONSE ' + store.word
     );
@@ -105,7 +105,7 @@ const ReaderContent = observer(function ReaderContent(props: ReaderContentProps)
     // finishReading, number_books_read events
     store.firebaseEvent(
       store.teacherid,
-      store.studentid,
+      store.studentInitials,
       store.book.title,
       'FINISH READING'
     );
