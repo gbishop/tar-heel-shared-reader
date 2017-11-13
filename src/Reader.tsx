@@ -143,6 +143,29 @@ const ReaderContent = observer(function ReaderContent(props: ReaderContentProps)
           <button onClick={() => {window.location.href = 'https://tarheelreader.org/'; }}> 
             Go to Tar Heel Reader
           </button>
+          <button 
+            onClick={
+              () => {
+                store.setIdPage('', 0);
+                store.setmode(1);
+                document.body.style.background = 'linear-gradient(#967f8a, #404663) fixed';
+              }}
+          >
+            Select another student
+          </button>
+          <button 
+            onClick={
+              () => { 
+                store.logout(); 
+                store.setIdPage('', 0); 
+                document.body.style.background = 'linear-gradient(#967f8a, #404663) fixed';
+              }}
+          >
+            Logout
+          </button>
+          <button onClick={() => location.reload()}>
+            Refresh
+          </button>
         </div>
       </div>
     );
