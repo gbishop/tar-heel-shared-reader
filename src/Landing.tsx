@@ -160,6 +160,8 @@ export default class Landing extends React.Component <LandingProps, LandingState
                 self.props.store.setMessage('The user has been disabled. Please contact an administrator.');
             } else if (code === 'auth/web-storage-unsupported') {
                 self.props.store.setMessage('Please enable web storage first.');
+            } else if (code === 'auth/popup-closed-by-user') {
+                self.props.store.setMessage('The popup was closed by the user. Please try logging in again.');
             }
 
             console.log('code', code);
