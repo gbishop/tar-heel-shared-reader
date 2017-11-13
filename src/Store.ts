@@ -104,6 +104,11 @@ class Store {
           callback();
         }
       });
+      firebase.database().ref('/users/private_usage_admin/' + this.teacherid).set(newUsageSummary).then(() => {
+        if (callback !== undefined) {
+          callback();
+        }
+      });
     });
   }
 
@@ -314,6 +319,7 @@ class Store {
       doesPageNumberEventExist = true;
     } else {
       this.pageno = this.npages + 1;
+      return;
     }
 
     if (doesPageNumberEventExist) {

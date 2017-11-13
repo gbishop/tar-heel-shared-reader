@@ -55,7 +55,7 @@ const Reader = observer(function Reader(props: {store: Store}) {
     console.log('response', store.word);
     store.firebaseEvent(
       store.teacherid,
-      store.studentid,
+      store.studentInitials,
       store.book.title,
       'RESPONSE ' + store.word
     );
@@ -105,7 +105,7 @@ const ReaderContent = observer(function ReaderContent(props: ReaderContentProps)
     // finishReading, number_books_read events
     store.firebaseEvent(
       store.teacherid,
-      store.studentid,
+      store.studentInitials,
       store.book.title,
       'FINISH READING'
     );
@@ -142,6 +142,29 @@ const ReaderContent = observer(function ReaderContent(props: ReaderContentProps)
           </button>
           <button onClick={() => {window.location.href = 'https://tarheelreader.org/'; }}> 
             Go to Tar Heel Reader
+          </button>
+          <button 
+            onClick={
+              () => {
+                store.setIdPage('', 0);
+                store.setmode(1);
+                document.body.style.background = 'linear-gradient(#967f8a, #404663) fixed';
+              }}
+          >
+            Select another student
+          </button>
+          <button 
+            onClick={
+              () => { 
+                store.logout(); 
+                store.setIdPage('', 0); 
+                document.body.style.background = 'linear-gradient(#967f8a, #404663) fixed';
+              }}
+          >
+            Logout
+          </button>
+          <button onClick={() => location.reload()}>
+            Refresh
           </button>
         </div>
       </div>

@@ -104,6 +104,11 @@ fieldset label {
   background: white;
 }
 
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+}
+
 .reading-container {
   position: absolute;
   overflow: hidden;

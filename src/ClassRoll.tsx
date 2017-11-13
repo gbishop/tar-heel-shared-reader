@@ -284,14 +284,11 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
                 isUpdateHidden: !this.state.isUpdateHidden,
                 defaultStudentInitials: initials
             });
-        } else if (e.target.innerHTML === 'Activate Student') {
-            if (this.state.checkedSelection === '' || className === 'group-table-tr') {
-                alert('Please select a student first.');
+        } else if (e.target.innerHTML === 'Activate') {
+            if (this.state.checkedSelection === '') {
+                alert('Please select a student or group first.');
                 return;
             }
-            this.setState({
-                defaultStudentInitials: initials
-            });
             this.activate();
         } else if (e.target.innerHTML === 'Add Group') {
             this.setState({isAddGroupHidden: !this.state.isAddGroupHidden});
@@ -441,13 +438,16 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
             e.target.parentElement.tagName === 'TABLE' || e.target.parentElement.tagName === 'DIV') {
             return;
         }
-
-        let originalTarget = this.state.checkedSelection;
-        let newTarget = e.target.parentElement;
-
-        if (originalTarget !== '' && newTarget !== originalTarget) {
-            alert('Please deselect previous item first.');
-            return;
+        
+        if (typeof this.state.checkedSelection !== 'string') {
+            if (this.state.checkedSelection.style.backgroundColor === 'white') {
+                if (this.state.checkedSelection === e.target.parentElement) {
+                    e.target.parentElement.style.backgroundColor = 'transparent';
+                    return;
+                } else {
+                    this.state.checkedSelection.style.backgroundColor = 'transparent';
+                }
+            }
         }
 
         if (e.target.parentElement.style.backgroundColor !== 'white') {
@@ -543,7 +543,7 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         }
         let userList: Array<string> = [];
         let userKeys: Array<string> = [];
-        firebase.database().ref('/users/private_usage/').
+        firebase.database().ref('/users/private_usage_admin/').
         once('value', (snapshot: firebase.database.DataSnapshot) => {
             snapshot.forEach((childSnapshot) => {
                 if (childSnapshot.key !== null) {
@@ -637,7 +637,8 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
         ]);
 
         // Obtain usage info for all selected users from database
-        firebase.database().ref('/users/private_usage').once('value', (snapshot: firebase.database.DataSnapshot) => {
+        firebase.database().ref('/users/private_usage_admin').
+        once('value', (snapshot: firebase.database.DataSnapshot) => {
             snapshot.forEach((user) => {
                 if (userDetails.indexOf(user.child('email').val()) > -1) {
                     usage.push({
@@ -797,7 +798,7 @@ export default class ClassRoll extends React.Component<ClassRollProps, ClassRoll
                                             type="text" 
                                             onClick={this.handleBlur}
                                     >
-                                        Activate Student
+                                        Activate
                                     </button>
                                 </td>
                             </tr>
