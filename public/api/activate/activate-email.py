@@ -76,6 +76,8 @@ def activate():
         response_content_type = 'application/json'
         return json.dumps("File 'emails.json' was not supplied.'")
 
+
     return {'active': active}
 
-run(app, host='localhost', port=8080)
+if __name__ == '__main__':
+    run(app, host='localhost', port=8080)
