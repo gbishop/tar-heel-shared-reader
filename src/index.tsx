@@ -32,13 +32,13 @@ function startRouter(store: Store) {
 
   // update url on state changes
   // TODO
-  // autorun(() => {
-  //   const path = baseUrl + store.currentPath;
-  //   if (path !== window.location.pathname) {
-  //     console.log('push', path, window.location.pathname);
-  //     window.history.pushState(null, '', path);
-  //   }
-  // });
+  autorun(() => {
+    const path = baseUrl + store.currentPath;
+    if (path !== window.location.pathname) {
+      console.log('push', path, window.location.pathname);
+      window.history.pushState(null, '', path);
+    }
+  });
 
 }
 
