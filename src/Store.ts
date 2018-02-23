@@ -3,10 +3,17 @@ import { fromPromise, IPromiseBasedObservable } from 'mobx-utils';
 import { SharedBook, fetchBook } from './SharedBook';
 import * as firebase from 'firebase';
 
-// sides of the display to include responses
-type Layout = {
-  left: boolean, right: boolean, top: boolean, bottom: boolean;
-};
+const allResponses: string[] = [
+  'like', 'want', 'not', 'go',
+  'get', 'make', 'look', 'turn',
+  'good', 'more', 'help', 'different',
+  'I', 'he', 'you', 'she',
+  'open', 'do', 'that', 'up',
+  'put', 'same', 'all', 'some',
+  'it', 'here', 'where', 'what',
+  'in', 'on', 'why', 'who',
+  'can', 'finished', 'when', 'stop'
+];
 
 class Store {
   /**
@@ -385,14 +392,32 @@ class Store {
       return '';
     }
   }
+  // allow excluding responses from the list
+  @observable responsesExcluded: string[] = [];
+
+  @observable responseOffset = 0;
+  @observable responsesPerPage = 4;
+
+  @computed get allowedResponses() {
+    return allResponses.filter(r => this.responsesExcluded.indexOf(r) < 0);
+  }
   // get responses for this reading
-  @computed get responses() { return this.book.readings[this.reading].responses; }
+  @computed get responses() {
+    return this.allowedResponses.slice(this.responseOffset, this.responseOffset + this.responsesPerPage);
+  }
+  @action.bound stepResponsePage(direction: number) {
+    var pageNo = Math.floor(this.responseOffset / this.responsesPerPage);
+    this.responseOffset = ((pageNo + direction) * this.responsesPerPage) % this.allowedResponses.length;
+    if (this.responseOffset < 0) {
+      this.responseOffset += this.allowedResponses.length;
+    }
+    console.log('ro', this.responseOffset);
+  }
 
   // placement of the response symbols
-  @observable layout: Layout = {
-    left: true, right: true, top: false, bottom: false };
-  @action.bound setLayout(side: string, value: boolean) {
-    this.layout[side] = value;
+  @observable layout: string = 'bottom';
+  @action.bound setLayout(side: string) {
+    this.layout = side;
   }
 
   // size of the response symbols
@@ -403,7 +428,7 @@ class Store {
 
   // currently selected response symbol
   @observable responseIndex: number = 0;
-  @computed get nresponses() { return this.book.readings[this.reading].responses.length; }
+  @computed get nresponses() { return this.responses.length; }
   @action.bound nextResponseIndex() {
     this.responseIndex = (this.responseIndex + 1) % this.nresponses;
   }

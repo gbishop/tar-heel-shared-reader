@@ -4,6 +4,8 @@ import KeyHandler from 'react-key-handler';
 import Modal = require('react-modal');
 const NextArrow = require('./NextArrow.png');
 const BackArrow = require('./BackArrow.png');
+const NextResponsePage = require('./NextResponsePage.png');
+const BackResponsePage = require('./BackResponsePage.png');
 import Store from './Store';
 import SharedBook from './SharedBook';
 import './Reader.css';
@@ -24,21 +26,21 @@ const Reader = observer(function Reader(props: {store: Store}) {
   };
 
   var rboxes: Array<Box> = []; // boxes for responses
-  if (store.layout.left && rboxes.length < store.nresponses) {
+  if (store.layout === 'left' && rboxes.length < store.nresponses) {
     cbox.width -= rs;
     cbox.left = rs;
     rboxes.push({ top: 0, left: 0, height: cbox.height, width: rs, align: 'v' });
   }
-  if (store.layout.right && rboxes.length < store.nresponses) {
+  if (store.layout === 'right' && rboxes.length < store.nresponses) {
     cbox.width -= rs;
     rboxes.push({ top: 0, left: sc.width - rs, height: cbox.height, width: rs, align: 'v'});
   }
-  if (store.layout.top && rboxes.length < store.nresponses) {
+  if (store.layout === 'top' && rboxes.length < store.nresponses) {
     cbox.height -= rs;
     cbox.top = rs;
     rboxes.push({ top: 0, left: cbox.left, height: rs, width: cbox.width, align: 'h'});
   }
-  if (store.layout.bottom && rboxes.length < store.nresponses) {
+  if (store.layout === 'bottom' && rboxes.length < store.nresponses) {
     cbox.height -= rs;
     rboxes.push({ top: containerHeight - rs, left: cbox.left, height: rs, width: cbox.width,
                   align: 'h'});
@@ -265,8 +267,11 @@ const Responses = observer(function Responses(props: ResponsesProps) {
     const { pax, sax } = {'v': { pax: 'height', sax: 'width' },
                           'h': { pax: 'width', sax: 'height' }}[box.align];
     var bstyle = {};
-    bstyle[pax] = box[pax] / nchunk;
+    bstyle[pax] = box[pax] / (nchunk + 1);
     bstyle[sax] = box[sax];
+    var nbstyle = {};
+    nbstyle[pax] = bstyle[pax] / 2;
+    nbstyle[sax] = bstyle[sax];
     const dstyle = { top: box.top, left: box.left, width: box.width, height: box.height };
     const responseGroup = chunk.map((w, j) => (
       <ResponseButton
@@ -280,7 +285,19 @@ const Responses = observer(function Responses(props: ResponsesProps) {
     ));
     return (
       <div key={i} style={dstyle} className="response-container">
+        <button
+          style={nbstyle}
+          onClick={() => store.stepResponsePage(-1)}
+        >
+          <img src={BackResponsePage} style={{width: '50%'}}/>
+        </button>
         {responseGroup}
+        <button
+          style={nbstyle}
+          onClick={() => store.stepResponsePage(1)}
+        >
+          <img src={NextResponsePage} style={{width: '50%'}}/>
+        </button>
       </div>
     );
   });
@@ -384,7 +401,9 @@ const Controls = observer(function Controls(props: ControlsProps) {
               set={store.setReading}
             />
           </label>
-          <Layout store={store} />
+          <label>Side:&nbsp;
+            <Layout store={store} />
+          </label>
           <label>Size:&nbsp;
             <input
               type="range"
@@ -474,23 +493,13 @@ function capitalize(s: string) {
 const Layout = observer(function Layout(props: {store: Store}) {
   const store = props.store;
   const sides = ['left', 'right', 'top', 'bottom'];
-  const onCheck = (e: React.FormEvent<HTMLInputElement>) =>
-    store.setLayout(e.currentTarget.name, e.currentTarget.checked);
   return (
-    <fieldset>
-      <legend>Layout</legend>
-      {
-        sides.map(side => (
-          <label key={side}>{capitalize(side)}:
-            <input
-              name={side}
-              type="checkbox"
-              checked={store.layout[side]}
-              onChange={onCheck}
-            />
-          </label>))
+    <select value={store.layout} onChange={(e) => store.setLayout(e.target.value)}>
+      {sides.map(side => (
+        <option key={side} value={side} >{capitalize(side)}</option>))
       }
-    </fieldset>);
+    </select>
+  );
 });
 
 export default Reader;
