@@ -6,7 +6,7 @@ const NextArrow = require('./NextArrow.png');
 const BackArrow = require('./BackArrow.png');
 const NextResponsePage = require('./NextResponsePage.png');
 const BackResponsePage = require('./BackResponsePage.png');
-import Store from './Store';
+import Store, { allResponses } from './Store';
 import SharedBook from './SharedBook';
 import './Reader.css';
 
@@ -52,19 +52,26 @@ const Reader = observer(function Reader(props: {store: Store}) {
     top: commentHeight
   };
 
-  function sayWord() {
+  function saySelectedWord() {
+    if (store.responseIndex >= 0 && store.responseIndex < store.nresponses) {
+      sayWord(store.word);
+    }
+  }
+
+  function sayWord(word: string) {
     // response event
-    console.log('response', store.word);
+    console.log('response', word);
+    var msg = new SpeechSynthesisUtterance(word);
+    msg.lang = 'en-US';
+    speechSynthesis.speak(msg);
+    console.log('here', msg);
     store.firebaseEvent(
       store.teacherid,
       store.studentInitials,
       store.book.title,
-      'RESPONSE ' + store.word
+      'RESPONSE ' + word
     );
     store.firebaseUsageEvent([{ attrName: 'number_response_events', attrValue: 1 }]);
-    var msg = new SpeechSynthesisUtterance(store.word);
-    msg.lang = 'en-US';
-    speechSynthesis.speak(msg);
   }
 
   return (
@@ -73,7 +80,7 @@ const Reader = observer(function Reader(props: {store: Store}) {
       <div className="reading-container" style={containerStyle}>
         <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store} />
         <Responses boxes={rboxes} responses={store.responses} store={store} doResponse={sayWord} />
-        <Controls store={store} doResponse={sayWord}/>
+        <Controls store={store} doResponse={saySelectedWord}/>
       </div>
     </div>
   );
@@ -253,7 +260,7 @@ interface ResponsesProps {
   store: Store;
   boxes: Array<Box>;
   responses: Array<string>;
-  doResponse: () => void;
+  doResponse: (word: string) => void;
 }
 
 const Responses = observer(function Responses(props: ResponsesProps) {
@@ -309,7 +316,7 @@ interface ResponseButtonProps {
   index: number;
   style: React.CSSProperties;
   store: Store;
-  doResponse: () => void;
+  doResponse: (word: string) => void;
 }
 
 const ResponseButton = observer(function ResponseButton(props: ResponseButtonProps) {
@@ -328,9 +335,8 @@ const ResponseButton = observer(function ResponseButton(props: ResponseButtonPro
   return (
     <button
       className={`${isFocused ? 'selected' : ''}`}
-      onClick={() => doResponse()}
+      onClick={() => doResponse(word)}
       style={style}
-      onFocus={(e) => store.setResponseIndex(index)}
     >
       <figure>
         <img
@@ -395,10 +401,12 @@ const Controls = observer(function Controls(props: ControlsProps) {
         <div className="controls">
           <h1>Reading controls</h1>
           <label>Reading:&nbsp; 
-            <ReadingSelector
-              value={store.reading}
+            <input
+              type="number"
+              value={store.reading + 1}
+              min={1}
               max={store.nreadings}
-              set={store.setReading}
+              onChange={e => store.setReading(+e.target.value - 1)}
             />
           </label>
           <label>Side:&nbsp;
@@ -420,6 +428,20 @@ const Controls = observer(function Controls(props: ControlsProps) {
               onChange={store.togglePageTurnVisible}
             />
           </label>
+          <h2>Words</h2>
+          <div id="responseWords">
+            { allResponses.map(w => (
+              <label key={w}>
+                <input
+                  type="checkbox"
+                  name={w}
+                  checked={!store.responsesExcluded.get(w)}
+                  onChange={(event) => store.setExcluded(event.target.name, !event.target.checked)}
+                />
+                {w}
+              </label>
+            ))}
+          </div>
 
           <button onClick={store.toggleControlsVisible}>
             Done
@@ -467,32 +489,13 @@ class NRKeyHandler extends React.Component<NRKeyHandlerProps, {}> {
   }
 }
 
-interface ReadingSelectProps {
-  value: number;
-  max: number;
-  set: (value: number) => void;
-}
-
-const ReadingSelector = observer(function ReadingSelector(props: ReadingSelectProps) {
-  const { value, max, set } = props;
-  const spelled = [ 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth',
-                    'eleventh', 'twelth' ];
-  const options = spelled.slice(0, max).map((option, i) => (
-    <option key={option} value={i} >{option}</option>));
-  return (
-    <select value={value} onChange={(e) => set(+e.target.value)}>
-      {options}
-    </select>
-  );
-});
-  
 function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 const Layout = observer(function Layout(props: {store: Store}) {
   const store = props.store;
-  const sides = ['left', 'right', 'top', 'bottom'];
+  const sides = ['left', 'right', 'top', 'bottom', 'none'];
   return (
     <select value={store.layout} onChange={(e) => store.setLayout(e.target.value)}>
       {sides.map(side => (

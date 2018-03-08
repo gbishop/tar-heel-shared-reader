@@ -16,6 +16,7 @@
     "mobx-react-devtools": "^4.2.13",
     "mobx-utils": "^2.0.1",
     "react": "^15.5.4",
+    "react-accessible-tabs": "^0.3.3",
     "react-accordion": "^0.1.0",
     "react-collapsible": "^1.5.0",
     "react-dom": "^15.5.4",

@@ -3,7 +3,7 @@ import { fromPromise, IPromiseBasedObservable } from 'mobx-utils';
 import { SharedBook, fetchBook } from './SharedBook';
 import * as firebase from 'firebase';
 
-const allResponses: string[] = [
+export const allResponses: string[] = [
   'like', 'want', 'not', 'go',
   'get', 'make', 'look', 'turn',
   'good', 'more', 'help', 'different',
@@ -393,25 +393,27 @@ class Store {
     }
   }
   // allow excluding responses from the list
-  @observable responsesExcluded: string[] = [];
+  @observable responsesExcluded = new Map<string, boolean>();
+  @action.bound setExcluded(word: string, value: boolean) {
+    this.responsesExcluded.set(word, value);
+  }
 
   @observable responseOffset = 0;
   @observable responsesPerPage = 4;
 
   @computed get allowedResponses() {
-    return allResponses.filter(r => this.responsesExcluded.indexOf(r) < 0);
+    return allResponses.filter(r => !this.responsesExcluded.get(r));
   }
   // get responses for this reading
   @computed get responses() {
     return this.allowedResponses.slice(this.responseOffset, this.responseOffset + this.responsesPerPage);
   }
   @action.bound stepResponsePage(direction: number) {
-    var pageNo = Math.floor(this.responseOffset / this.responsesPerPage);
-    this.responseOffset = ((pageNo + direction) * this.responsesPerPage) % this.allowedResponses.length;
-    if (this.responseOffset < 0) {
-      this.responseOffset += this.allowedResponses.length;
-    }
-    console.log('ro', this.responseOffset);
+    var rpp = this.responsesPerPage,
+        pageNo = Math.floor(this.responseOffset / rpp),
+        N = this.allowedResponses.length;
+    this.responseOffset = (((pageNo + direction) * rpp) % N + N) % N;
+    this.responseIndex = -1;
   }
 
   // placement of the response symbols
@@ -427,7 +429,7 @@ class Store {
   }
 
   // currently selected response symbol
-  @observable responseIndex: number = 0;
+  @observable responseIndex: number = -1;
   @computed get nresponses() { return this.responses.length; }
   @action.bound nextResponseIndex() {
     this.responseIndex = (this.responseIndex + 1) % this.nresponses;
