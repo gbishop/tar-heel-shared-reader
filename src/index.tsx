@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import App from './App';
 import Store from './Store';
+import DB from './db';
 // import registerServiceWorker from './registerServiceWorker';
 import './index.css';
 
@@ -52,7 +53,10 @@ function startPersist(store: Store) {
   });
 }
 
+const db = new DB();
 const store = new Store();
+store.db = db;
+store.authUser();
 startRouter(store);
 startPersist(store);
 window.addEventListener('resize', store.resize);

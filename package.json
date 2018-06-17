@@ -29,8 +29,9 @@
     "react-scripts-ts": "2.2.0"
   },
   "proxy": {
-    "/api": {
-      "target": "http://gb.cs.unc.edu/"
+    "/api/db": {
+      "target": "http://localhost:5500",
+      "pathRewrite": { "^/api/db": "/" }
     }
   },
   "scripts": {
