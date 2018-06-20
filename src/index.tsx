@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import App from './App';
 import Store from './Store';
-import DB from './db';
+import { DB } from './db';
 // import registerServiceWorker from './registerServiceWorker';
 import './index.css';
 
@@ -22,11 +22,14 @@ function startRouter(store: Store) {
 
   // update state on url change
   let router = new Router();
-  router.on(baseUrl + '/([-a-z0-9]*)', id => store.setIdPage(id, 1));
-  router.on(baseUrl + '/([-a-z0-9]+)/(\\d+)',
-    (id, pageno) => store.setIdPage(id, +pageno));
+  // I bet there is a cooler nested way to do this.
+  router.on(baseUrl + '/([a-zA-Z0-9%]+)', studentid => store.setPath(decodeURIComponent(studentid), '', 1));
+  router.on(baseUrl + '/([a-zA-Z0-9%]+)/([-a-z0-9]*)',
+    (studentid, bookid) => store.setPath(decodeURIComponent(studentid), bookid, 1));
+  router.on(baseUrl + '/([a-zA-Z0-9%]+)/([-a-z0-9]+)/(\\d+)',
+    (studentid, bookid, pageno) => store.setPath(decodeURIComponent(studentid), bookid, +pageno));
   router.configure({
-    notfound: () => store.setIdPage('', 1),
+    notfound: () => store.setPath('', '', 1),
     html5history: true
   });
   router.init();
@@ -36,7 +39,6 @@ function startRouter(store: Store) {
   autorun(() => {
     const path = baseUrl + store.currentPath;
     if (path !== window.location.pathname) {
-      console.log('push', path, window.location.pathname);
       window.history.pushState(null, '', path);
     }
   });
@@ -49,7 +51,7 @@ function startPersist(store: Store) {
     store.setPersist(persist);
   }
   autorun(() => {
-    window.localStorage.setItem('settings', store.persist);
+    window.localStorage.setItem('THSR-settings', store.persist);
   });
 }
 
@@ -59,6 +61,7 @@ store.db = db;
 store.authUser();
 startRouter(store);
 startPersist(store);
+autorun(() => store.log());
 window.addEventListener('resize', store.resize);
 
 ReactDOM.render(

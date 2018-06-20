@@ -7,7 +7,7 @@ const BackArrow = require('./BackArrow.png');
 const NextResponsePage = require('./NextResponsePage.png');
 const BackResponsePage = require('./BackResponsePage.png');
 import Store, { allResponses } from './Store';
-import SharedBook from './SharedBook';
+import { SharedBook } from './SharedBook';
 import './Reader.css';
 
 @observer
@@ -62,20 +62,10 @@ class Reader extends React.Component<{store: Store}, {}> {
 
     function sayWord(word: string) {
       // response event
-      console.log('response', word);
       var msg = new SpeechSynthesisUtterance(word);
       msg.lang = 'en-US';
       speechSynthesis.speak(msg);
-      console.log('here', msg);
-      /*
-      store.firebaseEvent(
-        store.teacherid,
-        store.studentInitials,
-        store.book.title,
-        'RESPONSE ' + word
-      );
-      store.firebaseUsageEvent([{ attrName: 'number_response_events', attrValue: 1 }]);
-      */
+      store.log(word);
     }
 
     return (
@@ -134,49 +124,17 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
           <h1 className="title">What would you like to do now?</h1>
           <div className="choices">
             <button 
-              onClick={
-                () => {
-                  store.setPage(1); 
-  //                store.firebaseUsageEvent([
-  //                  { attrName: 'number_books_opened', attrValue: 1}
-  //                ]); 
-                }
-              }
+              onClick={() => { store.setPage(1); }}
             >
               Read this book again
             </button>
             <button 
-              onClick={
-                e => { 
-                  store.setIdPage('', 0); 
-                }
-              }
+              onClick={() => { store.setBookid(''); }}
             >
               Read another book
             </button>
-            <button onClick={() => {window.location.href = 'https://tarheelreader.org/'; }}> 
+            <button onClick={() => { window.location.href = 'https://tarheelreader.org/'; }}> 
               Go to Tar Heel Reader
-            </button>
-            <button 
-              onClick={
-                () => {
-                  store.setIdPage('', 0);
-                  // store.setmode(1);
-                }}
-            >
-              Select another student
-            </button>
-            <button 
-              onClick={
-                () => { 
-                  // store.logout(); 
-                  store.setIdPage('', 0); 
-                }}
-            >
-              Logout
-            </button>
-            <button onClick={() => location.reload()}>
-              Refresh
             </button>
           </div>
         </div>

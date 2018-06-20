@@ -1,0 +1,77 @@
+.LevelButton {
+  font-size: 1.5em;
+  font-weight: bold;
+  width: 15em;  
+  margin-bottom: 0.5em;
+  margin-top: 0.5em;
+}
+
+#StudentList button {
+  font-size: 1.5em;
+}
+
+#StudentList label {
+  font-size: 1.5em;
+  padding-right: 1em;
+}
+
+#StudentList select {
+  font-size: 1em;
+}
+
+#StudentList input {
+  font-size: 1em;
+}
+
+
+.Find-Results { 
+    list-style: none;
+    padding-left: 0.0em;
+    margin: 0 auto;
+    text-align: center;
+  }
+  
+  .Find-Results li {
+    margin: 0.1em;
+    line-height: 1em;
+    width: 40em;
+    border: 1px solid black;
+    text-align: left;
+    display: inline-block;
+    padding: 0.5em;
+    border-radius: 0.5em;
+  }
+  
+  .Find-ReadButton {
+    text-align: left;
+    padding: 0.1em;
+    float: left;
+    margin-right: 0.5em;
+    padding: 0.1em;
+  }
+  
+  .Find-ReadButton img {
+    float: left;
+    margin-right: 0.2em;
+    width: 8em;
+    height: 8em;
+    display: block;
+    object-fit: contain;
+  }
+  
+  .Find-Results h1 {
+    margin: 0 0 0.25em 0.25em;
+    height: 2.2em;
+    line-height: 1.1em;
+    overflow: hidden;
+  }
+  
+  .Find-Author {
+    font-size: 0.8em;
+    overflow: hidden;
+    margin: 0;
+    width: 20em;
+    height: 1em;
+    vertical-align: middle;
+    display: inline-block;
+  }

@@ -1,9 +1,18 @@
 import { observable, computed, action } from 'mobx';
 import { fromPromise, IPromiseBasedObservable } from 'mobx-utils';
 
-const THRURL = 'https://gbserver3.cs.unc.edu/';
+export const THRURL = 'https://gbserver3.cs.unc.edu/';
 
-class DB {
+export interface LogRecord {
+  teacher: string;
+  student: string;
+  book: string;
+  reading: number;
+  page: number;
+  response?: string;
+}
+
+export class DB {
   @observable login: string = '';
   @observable role: string = '';
   token: string = '';
@@ -28,11 +37,8 @@ class DB {
   @observable StudentListReload = 0;
 
   @computed get studentListP(): IPromiseBasedObservable<string[]> {
-    if (this.StudentListReload) {
-      console.log('hi');
-    }
     return fromPromise(new Promise((resolve, reject) => {
-      window.fetch(`/api/db/students?teacher=${encodeURIComponent(this.login)}`)
+      window.fetch(`/api/db/students?teacher=${encodeURIComponent(this.login)}&reload=${this.StudentListReload}`)
         .then(res => {
           if (res.ok) {
             res.json().then(obj => resolve(obj.students as string[])).catch(reject);
@@ -51,13 +57,20 @@ class DB {
     });
   }
   @action addStudent(studentid: string) {
-    window.fetch(`/api/db/students`, {
+    if (studentid.length > 0) {
+      window.fetch(`/api/db/students`, {
+        method: 'POST',
+        body: JSON.stringify({teacher: this.login, student: studentid}),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      this.StudentListReload += 1;
+    }
+  }
+  log(state: LogRecord) {
+    window.fetch('/api/db/log', {
       method: 'POST',
-      body: JSON.stringify({teacher: this.login, student: studentid}),
+      body: JSON.stringify(state),
       headers: { 'Content-Type': 'application/json' }
     });
-    this.StudentListReload += 1;
   }
 }
-
-export default DB;

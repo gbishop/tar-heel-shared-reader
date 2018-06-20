@@ -128,6 +128,22 @@ def addStudent(db):
     return 'ok'
 
 
+@app.route('/log', method='POST')
+@with_db
+def log(db):
+    '''
+    Add a record to the log
+    '''
+    d = request.json
+    db.execute('''
+        insert into log
+            (time, teacher, student, book, reading, page, action) values
+            (?, ?, ?, ?, ?, ?, ?)
+    ''', [datetime.now(), d['teacher'], d['student'], d['book'], d['reading'],
+          d['page'], d.get('response')]).fetchall()
+    return 'ok'
+
+
 class StripPathMiddleware(object):
     '''
     Get that slash out of the request

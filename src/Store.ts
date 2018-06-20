@@ -1,7 +1,7 @@
 import { observable, computed, action } from 'mobx';
 import { fromPromise, IPromiseBasedObservable } from 'mobx-utils';
-import { SharedBook, fetchBook } from './SharedBook';
-import DB from './db';
+import { SharedBook, fetchBook, fetchBookList } from './SharedBook';
+import { DB, LogRecord } from './db';
 
 export const allResponses: string[] = [
   'like', 'want', 'not', 'go',
@@ -35,8 +35,22 @@ class Store {
   @action.bound setstudentid(id: string) {
     this.studentid = id;
   }
+  // list of books to display
+  @computed get sharedBookListP() {
+    return fromPromise(fetchBookList());
+  }
+  // state of booklist display
+  @observable booklistOpen = observable.map();
+  @action.bound bookListToggle(level: string) {
+    this.booklistOpen.set(level, !this.booklistOpen.get(level));
+  }
+
   // the id of the book to read or '' for the landing page
   @observable bookid: string = '';
+  @action.bound setBookid(s: string) {
+    this.bookid = s;
+  }
+
   // an observable promise for the book associated with bookid
   @computed get bookP() {
     return fromPromise(fetchBook(`/api/sharedbooks/${this.bookid}.json`)) as
@@ -49,51 +63,28 @@ class Store {
   // number of pages in the book
   @computed get npages() { return this.book.pages.length; }
   // update the state typically from a URL
-  @action.bound setIdPage(id: string, page: number) {
-    this.bookid = id;
+  @action.bound setPath(studentid: string, bookid: string, page: number) {
+    this.studentid = studentid;
+    this.bookid = bookid;
     this.pageno = page;
   }
   // map the state to a url
   @computed get currentPath() {
-    return `/${this.bookid}` + (this.pageno > 1 ? `/${this.pageno}` : '');
+    if (!this.studentid) {
+      return '/';
+    }
+    return `/${encodeURIComponent(this.studentid)}/${this.bookid}` + (this.pageno > 1 ? `/${this.pageno}` : '');
   }
   // step to the next page
   // turnPage event
   @action.bound nextPage() {
     if (this.pageno <= this.npages) {
       this.pageno += 1;
-      /*
-      this.firebaseEvent(
-        this.teacherid, 
-        this.studentInitials, 
-        this.book.title, 
-        'PAGE NUMBER ' + this.pageno,
-        () => {
-          this.firebaseEvent(
-            this.teacherid,
-            this.studentInitials,
-            this.book.title,
-            'TURN PAGE'
-          );
-        }
-      );
-      this.firebaseUsageEvent([
-        { attrName: 'number_page_number_events', attrValue: 1 },
-        { attrName: 'number_turn_page_events', attrValue: 1 },
-        { attrName: 'number_pages_read', attrValue: 1 }
-      ]);
-      */
     }
-    console.log('nextPage', this.pageno);
   }
   // step back to previous page
   // turnPage event
   @action.bound backPage() {
-  /*
-    let doesPageNumberEventExist: boolean = false;
-    let updatedAttributes: Array<{attrName: string, attrValue: string | number }> = [];
-    */
-
     if (this.pageno > 1) {
       this.pageno -= 1;
       // doesPageNumberEventExist = true;
@@ -102,59 +93,10 @@ class Store {
       return;
     }
 
-    /*
-    if (doesPageNumberEventExist) {
-      this.firebaseEvent(
-        this.teacherid,
-        this.studentInitials,
-        this.book.title,
-        'PAGE NUMBER ' + this.pageno,
-        () => {
-          this.firebaseEvent(
-            this.teacherid,
-            this.studentInitials,
-            this.book.title,
-            'TURN PAGE'
-          );
-        }
-      );
-      updatedAttributes.push(
-        { attrName: 'number_page_number_events', attrValue: 1 }, 
-        { attrName: 'number_turn_page_events', attrValue: 1 },
-        { attrName: 'number_pages_read', attrValue: 1 }
-      );
-    } else {
-      this.firebaseEvent(
-        this.teacherid,
-        this.studentInitials,
-        this.book.title,
-        'TURN PAGE'
-      );
-      updatedAttributes.push(
-        { attrName: 'number_turn_page_events', attrValue: 1 },
-        { attrName: 'number_pages_read', attrValue: 1 } 
-      );
-    }
-    */
-    /*
-    this.firebaseUsageEvent(updatedAttributes);
-    */
-    console.log('backPage', this.pageno);
   }
   // set the page number
   @action.bound setPage(i: number) {
     this.pageno = i;
-    /*
-    this.firebaseEvent(
-      this.teacherid,
-      this.studentInitials,
-      this.book.title,
-      'PAGE NUMBER ' + this.pageno
-    );
-    this.firebaseUsageEvent([
-      { attrName: 'number_page_number_events', attrValue: 1}
-    ]);
-    */
   }
   // index to the readings array
   @observable reading: number = 0;
@@ -243,7 +185,8 @@ class Store {
     return JSON.stringify({
       layout: this.layout,
       responseSize: this.responseSize,
-      pageTurnVisible: this.pageTurnVisible
+      pageTurnVisible: this.pageTurnVisible,
+      bookListOpen: this.booklistOpen.toJS()
     });
   }
   // restore the state from json
@@ -252,6 +195,22 @@ class Store {
     this.layout = v.layout;
     this.responseSize = v.responseSize;
     this.pageTurnVisible = v.pageTurnVisible;
+    Object.keys(v.bookListOpen).forEach(key => this.booklistOpen.set(key, v.bookListOpen[key]));
+  }
+
+  // log state changes
+  log(response?: string) {
+    let lr: LogRecord = {
+      teacher: this.teacherid,
+      student: this.studentid,
+      book: this.bookid,
+      page: this.pageno,
+      reading: this.reading
+    };
+    if (response) {
+      lr.response = response;
+    }
+    this.db.log(lr);
   }
 }
 
