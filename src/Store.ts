@@ -16,7 +16,7 @@ export const allResponses: string[] = [
 ];
 
 class Store {
-  db: DB;
+  public db: DB;
 
   // does user have admin privileges 
   @computed get isAdmin() { return this.db.isAdmin; }
@@ -26,7 +26,7 @@ class Store {
     return this.db.login;
   }
   // auth with THR setting the id and role
-  authUser() {
+  public authUser() {
     this.db.auth();
   }
 
@@ -53,15 +53,18 @@ class Store {
 
   // an observable promise for the book associated with bookid
   @computed get bookP() {
-    return fromPromise(fetchBook(`/api/sharedbooks/${this.bookid}.json`)) as
+    return fromPromise(fetchBook(this.bookid)) as
         IPromiseBasedObservable<SharedBook>; }
-  // get the book without having to say bookP.value all the time
-  // these computed are cached so this function only runs once after a change
-  @computed get book() { return this.bookP.value; }
   // the page number we're reading
   @observable pageno: number = 1;
   // number of pages in the book
-  @computed get npages() { return this.book.pages.length; }
+  @computed get npages() {
+    return this.bookP.case({
+      rejected: () => 0,
+      pending: () => 0,
+      fulfilled: (book) => book.pages.length
+    })
+  }
   // update the state typically from a URL
   @action.bound setPath(studentid: string, bookid: string, page: number) {
     this.studentid = studentid;
@@ -77,14 +80,14 @@ class Store {
   }
   // step to the next page
   // turnPage event
-  @action.bound nextPage() {
+  @action.bound public nextPage() {
     if (this.pageno <= this.npages) {
       this.pageno += 1;
     }
   }
   // step back to previous page
   // turnPage event
-  @action.bound backPage() {
+  @action.bound public backPage() {
     if (this.pageno > 1) {
       this.pageno -= 1;
       // doesPageNumberEventExist = true;
@@ -95,32 +98,41 @@ class Store {
 
   }
   // set the page number
-  @action.bound setPage(i: number) {
+  @action.bound public setPage(i: number) {
     this.pageno = i;
   }
   // index to the readings array
-  @observable reading: number = 0;
-  @action.bound setReading(n: number) {
+  @observable public reading: number = 0;
+  @action.bound public setReading(n: number) {
     this.reading = n;
     this.responseIndex = 0;
   }
-  @computed get nreadings() { return this.book.readings.length; }
+  @computed get nreadings() {
+    return this.bookP.case({
+      rejected: () => 0,
+      pending: () => 0,
+      fulfilled: (book) => book.readings.length
+    })
+  }
   // get comment for page and reading
   @computed get comment() {
-    if (this.pageno <= this.npages) {
-      return this.book.readings[this.reading].comments[this.pageno - 1];
-    } else {
-      return '';
-    }
+    return this.bookP.case({
+      rejected: () => '',
+      pending: () => '',
+      fulfilled: (book) => 
+        this.pageno <= this.npages ?
+          book.readings[this.reading].comments[this.pageno - 1] :
+          ''
+    })
   }
   // allow excluding responses from the list
-  @observable responsesExcluded = new Map<string, boolean>();
-  @action.bound setExcluded(word: string, value: boolean) {
+  @observable public responsesExcluded = new Map<string, boolean>();
+  @action.bound public setExcluded(word: string, value: boolean) {
     this.responsesExcluded.set(word, value);
   }
 
-  @observable responseOffset = 0;
-  @observable responsesPerPage = 4;
+  @observable public responseOffset = 0;
+  @observable public responsesPerPage = 4;
 
   @computed get allowedResponses() {
     return allResponses.filter(r => !this.responsesExcluded.get(r));
@@ -129,54 +141,54 @@ class Store {
   @computed get responses() {
     return this.allowedResponses.slice(this.responseOffset, this.responseOffset + this.responsesPerPage);
   }
-  @action.bound stepResponsePage(direction: number) {
-    var rpp = this.responsesPerPage,
-        pageNo = Math.floor(this.responseOffset / rpp),
-        N = this.allowedResponses.length;
+  @action.bound public stepResponsePage(direction: number) {
+    const rpp = this.responsesPerPage,
+          pageNo = Math.floor(this.responseOffset / rpp),
+          N = this.allowedResponses.length;
     this.responseOffset = (((pageNo + direction) * rpp) % N + N) % N;
     this.responseIndex = -1;
   }
 
   // placement of the response symbols
-  @observable layout: string = 'bottom';
-  @action.bound setLayout(side: string) {
+  @observable public layout: string = 'bottom';
+  @action.bound public setLayout(side: string) {
     this.layout = side;
   }
 
   // size of the response symbols
-  @observable responseSize: number = 30;
-  @action.bound setResponseSize(i: number) {
+  @observable public responseSize: number = 30;
+  @action.bound public setResponseSize(i: number) {
     this.responseSize = i;
   }
 
   // currently selected response symbol
-  @observable responseIndex: number = -1;
+  @observable public responseIndex: number = -1;
   @computed get nresponses() { return this.responses.length; }
-  @action.bound nextResponseIndex() {
+  @action.bound public nextResponseIndex() {
     this.responseIndex = (this.responseIndex + 1) % this.nresponses;
   }
-  @action.bound setResponseIndex(i: number) {
+  @action.bound public setResponseIndex(i: number) {
     this.responseIndex = i;
   }
   // current response
   @computed get word() { return this.responses[this.responseIndex]; }
 
   // visibility of the controls modal
-  @observable controlsVisible: boolean = false;
-  @action.bound toggleControlsVisible() {
+  @observable public controlsVisible: boolean = false;
+  @action.bound public toggleControlsVisible() {
     this.controlsVisible = !this.controlsVisible;
   }
   // visibility of page turn buttons on book page
-  @observable pageTurnVisible: boolean = true;
-  @action.bound togglePageTurnVisible() {
+  @observable public pageTurnVisible: boolean = true;
+  @action.bound public togglePageTurnVisible() {
     this.pageTurnVisible = !this.pageTurnVisible;
   }
   // screen dimensions updated on resize
-  @observable screen = {
+  @observable public screen = {
     width: window.innerWidth,
     height: window.innerHeight
   };
-  @action.bound resize() {
+  @action.bound public resize() {
     this.screen.width = window.innerWidth;
     this.screen.height = window.innerHeight;
   }
@@ -190,8 +202,8 @@ class Store {
     });
   }
   // restore the state from json
-  @action.bound setPersist(js: string) {
-    var v = JSON.parse(js);
+  @action.bound public setPersist(js: string) {
+    const v = JSON.parse(js);
     this.layout = v.layout;
     this.responseSize = v.responseSize;
     this.pageTurnVisible = v.pageTurnVisible;
@@ -199,8 +211,8 @@ class Store {
   }
 
   // log state changes
-  log(response?: string) {
-    let lr: LogRecord = {
+  public log(response?: string) {
+    const lr: LogRecord = {
       teacher: this.teacherid,
       student: this.studentid,
       book: this.bookid,

@@ -1,83 +1,88 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import KeyHandler from 'react-key-handler';
-import Modal = require('react-modal');
-const NextArrow = require('./NextArrow.png');
-const BackArrow = require('./BackArrow.png');
-const NextResponsePage = require('./NextResponsePage.png');
-const BackResponsePage = require('./BackResponsePage.png');
+import * as ReactModal from 'react-modal';
+import NextArrow from './NextArrow.png';
+import BackArrow from './BackArrow.png';
+import NextResponsePage from './NextResponsePage.png';
+import BackResponsePage from './BackResponsePage.png';
 import Store, { allResponses } from './Store';
 import { SharedBook } from './SharedBook';
 import './Reader.css';
 
 @observer
 class Reader extends React.Component<{store: Store}, {}> {
-  render() {
+  public render() {
     const { store } = this.props;
-    const book = store.book;
-    const commentHeight = 30;
-    const containerHeight = store.screen.height - commentHeight;
-    const sc = store.screen;
-    const rs = Math.hypot(sc.width, sc.height) * (0.04 + 0.1 * store.responseSize / 100);
-    var cbox: Box = {
-      width: sc.width,
-      height: containerHeight,
-      left: 0,
-      top: 0,
-      align: 'v'
-    };
+    return store.bookP.case({
+      rejected: () => <p>Error</p>,
+      pending: () => <p>Wait for it</p>,
+      fulfilled: (book) => {
+        const commentHeight = 30;
+        const containerHeight = store.screen.height - commentHeight;
+        const sc = store.screen;
+        const rs = Math.hypot(sc.width, sc.height) * (0.04 + 0.1 * store.responseSize / 100);
+        const cbox: Box = {
+          width: sc.width,
+          height: containerHeight,
+          left: 0,
+          top: 0,
+          align: 'v'
+        };
 
-    var rboxes: Array<Box> = []; // boxes for responses
-    if (store.layout === 'left' && rboxes.length < store.nresponses) {
-      cbox.width -= rs;
-      cbox.left = rs;
-      rboxes.push({ top: 0, left: 0, height: cbox.height, width: rs, align: 'v' });
-    }
-    if (store.layout === 'right' && rboxes.length < store.nresponses) {
-      cbox.width -= rs;
-      rboxes.push({ top: 0, left: sc.width - rs, height: cbox.height, width: rs, align: 'v'});
-    }
-    if (store.layout === 'top' && rboxes.length < store.nresponses) {
-      cbox.height -= rs;
-      cbox.top = rs;
-      rboxes.push({ top: 0, left: cbox.left, height: rs, width: cbox.width, align: 'h'});
-    }
-    if (store.layout === 'bottom' && rboxes.length < store.nresponses) {
-      cbox.height -= rs;
-      rboxes.push({ top: containerHeight - rs, left: cbox.left, height: rs, width: cbox.width,
-                    align: 'h'});
-    }
+        const rboxes: Box[] = []; // boxes for responses
+        if (store.layout === 'left' && rboxes.length < store.nresponses) {
+          cbox.width -= rs;
+          cbox.left = rs;
+          rboxes.push({ top: 0, left: 0, height: cbox.height, width: rs, align: 'v' });
+        }
+        if (store.layout === 'right' && rboxes.length < store.nresponses) {
+          cbox.width -= rs;
+          rboxes.push({ top: 0, left: sc.width - rs, height: cbox.height, width: rs, align: 'v'});
+        }
+        if (store.layout === 'top' && rboxes.length < store.nresponses) {
+          cbox.height -= rs;
+          cbox.top = rs;
+          rboxes.push({ top: 0, left: cbox.left, height: rs, width: cbox.width, align: 'h'});
+        }
+        if (store.layout === 'bottom' && rboxes.length < store.nresponses) {
+          cbox.height -= rs;
+          rboxes.push({ top: containerHeight - rs, left: cbox.left, height: rs, width: cbox.width,
+                        align: 'h'});
+        }
 
-    const containerStyle = {
-      width: store.screen.width,
-      height: store.screen.height - 30,
-      top: commentHeight
-    };
+        const containerStyle = {
+          width: store.screen.width,
+          height: store.screen.height - 30,
+          top: commentHeight
+        };
 
-    function saySelectedWord() {
-      if (store.responseIndex >= 0 && store.responseIndex < store.nresponses) {
-        sayWord(store.word);
+        function saySelectedWord() {
+          if (store.responseIndex >= 0 && store.responseIndex < store.nresponses) {
+            sayWord(store.word);
+          }
+        }
+
+        function sayWord(word: string) {
+          // response event
+          const msg = new SpeechSynthesisUtterance(word);
+          msg.lang = 'en-US';
+          speechSynthesis.speak(msg);
+          store.log(word);
+        }
+
+        return (
+          <div>
+            <div className="comment" >{store.comment}</div>
+            <div className="reading-container" style={containerStyle}>
+              <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store} />
+              <Responses boxes={rboxes} responses={store.responses} store={store} doResponse={sayWord} />
+              <Controls store={store} doResponse={saySelectedWord}/>
+            </div>
+          </div>
+        );
       }
-    }
-
-    function sayWord(word: string) {
-      // response event
-      var msg = new SpeechSynthesisUtterance(word);
-      msg.lang = 'en-US';
-      speechSynthesis.speak(msg);
-      store.log(word);
-    }
-
-    return (
-      <div>
-        <div className="comment" >{store.comment}</div>
-        <div className="reading-container" style={containerStyle}>
-          <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store} />
-          <Responses boxes={rboxes} responses={store.responses} store={store} doResponse={sayWord} />
-          <Controls store={store} doResponse={saySelectedWord}/>
-        </div>
-      </div>
-    );
+    })
   }}
 
 // Reader component
@@ -98,11 +103,11 @@ interface ReaderContentProps {
 
 @observer
 class ReaderContent extends React.Component<ReaderContentProps, {}> {
-  render() {
+  public render() {
     const {book, box, pageno, store} = this.props;
     const {width, height, top, left} = box; 
     const fontSize = width / height < 4 / 3 ? width / 36 : height / 36;
-    let pageStyle = {
+    const pageStyle = {
       width, height, top, left, fontSize
     };
     if (pageno > store.npages) {
@@ -160,7 +165,7 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
     }
 
     if (pageno === 1) {
-      let titleStyle = {
+      const titleStyle = {
         height: 4 * fontSize,
         fontSize: 2 * fontSize,
         padding: 0,
@@ -200,7 +205,7 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
 
 @observer
 class PageNavButtons extends React.Component<{store: Store}, {}> {
-  render() {
+  public render() {
     if (this.props.store.pageTurnVisible) {
       return (
         <div>
@@ -223,27 +228,27 @@ class PageNavButtons extends React.Component<{store: Store}, {}> {
 
 interface ResponsesProps {
   store: Store;
-  boxes: Array<Box>;
-  responses: Array<string>;
+  boxes: Box[];
+  responses: string[];
   doResponse: (word: string) => void;
 }
 
 @observer
 class Responses extends React.Component<ResponsesProps, {}> {
-  render() {
+  public render() {
     const {store, boxes, responses, doResponse } = this.props;
-    var words = responses;
-    var index = 0;
+    let words = responses;
+    let index = 0;
     const responseGroups = boxes.map((box, i) => {
       const nchunk = Math.max(1, Math.floor(words.length / (boxes.length - i)));
       const chunk = words.slice(0, nchunk);
       words = words.slice(nchunk);
       const { pax, sax } = {'v': { pax: 'height', sax: 'width' },
                             'h': { pax: 'width', sax: 'height' }}[box.align];
-      var bstyle = {};
+      const bstyle = {};
       bstyle[pax] = box[pax] / (nchunk + 1);
       bstyle[sax] = box[sax];
-      var nbstyle = {};
+      const nbstyle = {};
       nbstyle[pax] = bstyle[pax] / 2;
       nbstyle[sax] = bstyle[sax];
       const dstyle = { top: box.top, left: box.left, width: box.width, height: box.height };
@@ -289,9 +294,9 @@ interface ResponseButtonProps {
 
 @observer
 class ResponseButton extends React.Component<ResponseButtonProps, {}> {
-  render() {
+  public render() {
     const { word, index, style, store, doResponse } = this.props;
-    const maxSize = Math.min(style.width, style.height);
+    const maxSize = Math.min(style.width as number, style.height as number);
     const fontSize = maxSize / 5;
     const iconSize = maxSize - fontSize - 10;
     const iStyle = {
@@ -328,7 +333,7 @@ interface ControlsProps {
 
 @observer
 class Controls extends React.Component<ControlsProps, {}> {
-  render() {
+  public render() {
     const { store, doResponse } = this.props;
     const customStyles = {
       content : {
@@ -366,10 +371,11 @@ class Controls extends React.Component<ControlsProps, {}> {
           keyValue="Escape"
           onKeyHandle={store.toggleControlsVisible}
         />
-        <Modal 
+        <ReactModal 
           isOpen={store.controlsVisible}
           contentLabel="Reading controls"
           style={customStyles}
+          ariaHideApp={false}
         >
           <div className="controls">
             <h1>Reading controls</h1>
@@ -420,7 +426,7 @@ class Controls extends React.Component<ControlsProps, {}> {
               Done
             </button>
           </div>
-        </Modal>
+        </ReactModal>
       </div>
     );
   }
@@ -433,18 +439,18 @@ interface NRKeyHandlerProps {
 
 @observer
 class NRKeyHandler extends React.Component<NRKeyHandlerProps, {}> {
-  isDown = false;
-  keyDown = (e: Event) => {
+  public isDown = false;
+  public keyDown = (e: Event) => {
     e.preventDefault();
     if (!this.isDown) {
       this.isDown = true;
       this.props.onKeyHandle(e);
     }
   }
-  keyUp = (e: Event) => {
+  public keyUp = (e: Event) => {
     this.isDown = false;
   }
-  render() {
+  public render() {
     const keyValue = this.props.keyValue;
     return (
       <div>
@@ -469,7 +475,7 @@ function capitalize(s: string) {
 
 @observer
 class Layout extends React.Component<{store: Store}, {}> {
-  render() {
+  public render() {
     const store = this.props.store;
     const sides = ['left', 'right', 'top', 'bottom', 'none'];
     return (

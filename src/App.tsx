@@ -8,7 +8,7 @@ import StudentList from './StudentList';
 
 @observer
 class App extends React.Component<{store: Store}, {}> {
-  render() {
+  public render() {
     const {store} = this.props;
     if (store.teacherid.length === 0) {
       return <div>You need to login</div>;

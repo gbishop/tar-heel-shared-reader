@@ -64,15 +64,16 @@ class StudentList extends React.Component<{store: Store}, {}> {
                     (store.booklistOpen.get(level)) ? (
                       <ul className="Find-Results">
                         {sharedBookList
-                          .filter(item => item.sheet === level)
+                          .results
+                          .filter(item => item.level === level)
                           .sort((a, b) => a.title.localeCompare(b.title))
                           .map(item => (
                             <li key={item.slug}>
                               <button
                                 className="Find-ReadButton"
-                                onClick={() => store.setBookid(item.slug)}
+                                onClick={() => store.setBookid(item.id.toString())}
                               >
-                                <img src={THRURL + item.cover.url}/>
+                                <img src={THRURL + item.image}/>
                               </button>
                               <h1>{item.title}</h1>
                               <p className="Find-Author">{item.author}</p>

@@ -9,8 +9,10 @@ import './index.css';
 // https://github.com/flatiron/director/issues/349 explains
 // why I need the strange path.
 import { Router } from 'director/build/director';
-import { autorun, useStrict } from 'mobx';
-useStrict(true);
+import { autorun, configure } from 'mobx';
+configure({
+  enforceActions: true
+});
 
 // unregister the service worker if we installed it.
 navigator.serviceWorker.getRegistrations().then(registrations => 
@@ -21,7 +23,7 @@ function startRouter(store: Store) {
   const baseUrl = process.env.PUBLIC_URL;
 
   // update state on url change
-  let router = new Router();
+  const router = new Router();
   // I bet there is a cooler nested way to do this.
   router.on(baseUrl + '/([a-zA-Z0-9%]+)', studentid => store.setPath(decodeURIComponent(studentid), '', 1));
   router.on(baseUrl + '/([a-zA-Z0-9%]+)/([-a-z0-9]*)',
@@ -46,7 +48,7 @@ function startRouter(store: Store) {
 }
 
 function startPersist(store: Store) {
-  var persist = window.localStorage.getItem('THSR-settings');
+  const persist = window.localStorage.getItem('THSR-settings');
   if (persist) {
     store.setPersist(persist);
   }
@@ -56,16 +58,16 @@ function startPersist(store: Store) {
 }
 
 const db = new DB();
-const store = new Store();
-store.db = db;
-store.authUser();
-startRouter(store);
-startPersist(store);
-autorun(() => store.log());
-window.addEventListener('resize', store.resize);
+const theStore = new Store();
+theStore.db = db;
+theStore.authUser();
+startRouter(theStore);
+startPersist(theStore);
+autorun(() => theStore.log());
+window.addEventListener('resize', theStore.resize);
 
 ReactDOM.render(
-  <App store={store} />,
+  <App store={theStore} />,
   document.getElementById('root') as HTMLElement
 );
 // registerServiceWorker();

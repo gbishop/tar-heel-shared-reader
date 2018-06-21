@@ -8,6 +8,7 @@ from bottle import Bottle, request, response
 from datetime import datetime
 from db import with_db
 import os.path as osp
+import json
 
 app = application = Bottle()
 
@@ -26,7 +27,8 @@ def static_path(filename):
     m = osp.getmtime(p)
     s = '%x' % int(m)
     u = app.get_url('static', filename=filename)
-    return u+'?'+s
+    return u + '?' + s
+
 
 bottle.SimpleTemplate.defaults['static'] = static_path
 
@@ -70,8 +72,8 @@ def auth(check):
         def wrapper(*args, **kwargs):
             user = get_user()
             if not user:
-                path = app.get_url('root')+request.path[1:]
-                bottle.redirect(app.get_url('login')+'?path='+path)
+                path = app.get_url('root') + request.path[1:]
+                bottle.redirect(app.get_url('login') + '?path=' + path)
             elif not check(user):
                 raise bottle.HTTPError(403, 'Forbidden')
             return function(*args, **kwargs)
@@ -128,6 +130,39 @@ def addStudent(db):
     return 'ok'
 
 
+@app.route('/books')
+@with_db
+def getBooksIndex(db):
+    '''
+    List all books
+    '''
+    results = db.execute('''
+        select title, author, pages, slug, level, image, id from sharedbooks
+    ''').fetchall()
+    return {'results': [{
+        'title': r[0],
+        'author': r[1],
+        'pages': r[2],
+        'slug': r[3],
+        'level': r[4],
+        'image': r[5],
+        'id': r[6]
+    } for r in results]}
+
+
+@app.route('/books/:id')
+@with_db
+def getBook(db, id):
+    '''
+    Return json for a book
+    '''
+    result = db.execute('''
+        select json from sharedbooks where id = ?
+    ''', [id]).fetchone()
+    book = json.loads(result[0])
+    return book
+
+
 @app.route('/log', method='POST')
 @with_db
 def log(db):
@@ -154,6 +189,7 @@ class StripPathMiddleware(object):
     def __call__(self, e, h):
         e['PATH_INFO'] = e['PATH_INFO'].rstrip('/')
         return self.a(e, h)
+
 
 if __name__ == '__main__':
     bottle.run(
