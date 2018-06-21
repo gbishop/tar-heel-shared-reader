@@ -7,7 +7,7 @@ import BackArrow from './BackArrow.png';
 import NextResponsePage from './NextResponsePage.png';
 import BackResponsePage from './BackResponsePage.png';
 import Store, { allResponses } from './Store';
-import { SharedBook } from './SharedBook';
+import { SharedBook } from './db';
 import './Reader.css';
 
 @observer

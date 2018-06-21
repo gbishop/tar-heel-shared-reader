@@ -1,6 +1,4 @@
 import { observable, computed, action } from 'mobx';
-import { fromPromise, IPromiseBasedObservable } from 'mobx-utils';
-import { SharedBook, fetchBook, fetchBookList } from './SharedBook';
 import { DB, LogRecord } from './db';
 
 export const allResponses: string[] = [
@@ -37,7 +35,7 @@ class Store {
   }
   // list of books to display
   @computed get sharedBookListP() {
-    return fromPromise(fetchBookList());
+    return this.db.fetchBookList();
   }
   // state of booklist display
   @observable booklistOpen = observable.map();
@@ -53,8 +51,8 @@ class Store {
 
   // an observable promise for the book associated with bookid
   @computed get bookP() {
-    return fromPromise(fetchBook(this.bookid)) as
-        IPromiseBasedObservable<SharedBook>; }
+    return this.db.fetchBook(this.bookid);
+  }
   // the page number we're reading
   @observable pageno: number = 1;
   // number of pages in the book
