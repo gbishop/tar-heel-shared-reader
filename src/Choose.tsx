@@ -18,7 +18,7 @@ const LevelNames = [
 ];
 
 @observer
-class StudentList extends React.Component<{store: Store}, {}> {
+class Choose extends React.Component<{store: Store}, {}> {
   @observable newstudent = '';
   @action updateNewStudent(s: string) {
     this.newstudent = s;
@@ -92,4 +92,4 @@ class StudentList extends React.Component<{store: Store}, {}> {
   }
 }
 
-export default StudentList;
+export default Choose;

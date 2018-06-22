@@ -4,7 +4,7 @@ import DevTools from 'mobx-react-devtools';
 import './App.css';
 import Store from './Store';
 import Reader from './Reader';
-import StudentList from './StudentList';
+import Choose from './Choose';
 
 @observer
 class App extends React.Component<{store: Store}, {}> {
@@ -15,7 +15,7 @@ class App extends React.Component<{store: Store}, {}> {
 
     } else if (store.studentid.length === 0 || store.bookid.length === 0) {
       return (
-        <StudentList store={store} />
+        <Choose store={store} />
       );
 
     } else if (store.bookP.state === 'pending') {
