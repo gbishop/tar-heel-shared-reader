@@ -71,11 +71,16 @@ class Reader extends React.Component<{store: Store}, {}> {
           store.log(word);
         }
 
+        const npages = book.pages.length;
+        const pageno = store.pageno;
+        const comment = store.pageno <= npages ?
+          book.readings[store.reading].comments[pageno] : '';
+
         return (
           <div>
-            <div className="comment" >{store.comment}</div>
+            <div className="comment" >{comment}</div>
             <div className="reading-container" style={containerStyle}>
-              <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store} />
+              <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store}/>
               <Responses boxes={rboxes} responses={store.responses} store={store} doResponse={sayWord} />
               <Controls store={store} doResponse={saySelectedWord}/>
             </div>
@@ -110,19 +115,7 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
     const pageStyle = {
       width, height, top, left, fontSize
     };
-    if (pageno > store.npages) {
-      // past the end
-      // finishReading, number_books_read events
-      // store.firebaseEvent(
-      //   store.teacherid,
-      //   store.studentInitials,
-      //   store.book.title,
-      //   'FINISH READING'
-      // );
-      // store.firebaseUsageEvent([
-      //   { attrName: 'number_finish_reading_events', attrValue: 1 },
-      //   { attrName: 'number_books_read', attrValue: 1 } 
-      // ]);
+    if (pageno > book.pages.length) {
 
       return (
         <div className="book-page" style={pageStyle}>
@@ -203,16 +196,22 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
     }
   }}
 
+
+interface PageNavButtonsProps {
+  store: Store;
+}
+
 @observer
-class PageNavButtons extends React.Component<{store: Store}, {}> {
+class PageNavButtons extends React.Component<PageNavButtonsProps, {}> {
   public render() {
-    if (this.props.store.pageTurnVisible) {
+    const store = this.props.store;
+    if (store.pageTurnVisible) {
       return (
         <div>
-          <button className="next-link" onClick={this.props.store.nextPage}>
+          <button className="next-link" onClick={()=>store.setPage(store.pageno+1)}>
             <img src={NextArrow} alt="next"/>Next
           </button>
-          <button className="back-link" onClick={this.props.store.backPage}>
+          <button className="back-link" onClick={()=>store.setPage(store.pageno-1)}>
             <img src={BackArrow} alt="back"/>Back
           </button>
         </div>
@@ -353,11 +352,11 @@ class Controls extends React.Component<ControlsProps, {}> {
       <div>
         <NRKeyHandler
           keyValue={'ArrowRight'}
-          onKeyHandle={store.nextPage}
+          onKeyHandle={()=>store.setPage(store.pageno+1)}
         />
         <NRKeyHandler
           keyValue={'ArrowLeft'}
-          onKeyHandle={store.backPage}
+          onKeyHandle={()=>store.setPage(store.pageno-1)}
         />
         <NRKeyHandler
           keyValue={' '}

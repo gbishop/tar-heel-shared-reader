@@ -76,28 +76,12 @@ class Store {
     }
     return `/${encodeURIComponent(this.studentid)}/${this.bookid}` + (this.pageno > 1 ? `/${this.pageno}` : '');
   }
-  // step to the next page
-  // turnPage event
-  @action.bound public nextPage() {
-    if (this.pageno <= this.npages) {
-      this.pageno += 1;
-    }
-  }
-  // step back to previous page
-  // turnPage event
-  @action.bound public backPage() {
-    if (this.pageno > 1) {
-      this.pageno -= 1;
-      // doesPageNumberEventExist = true;
-    } else {
-      this.pageno = this.npages + 1;
-      return;
-    }
-
-  }
   // set the page number
   @action.bound public setPage(i: number) {
     this.pageno = i;
+    if (this.bookP.state === 'fulfilled') {
+      this.pageno = Math.max(1, Math.min(this.bookP.value.pages.length+1, this.pageno));
+    }
   }
   // index to the readings array
   @observable public reading: number = 0;
@@ -110,17 +94,6 @@ class Store {
       rejected: () => 0,
       pending: () => 0,
       fulfilled: (book) => book.readings.length
-    })
-  }
-  // get comment for page and reading
-  @computed get comment() {
-    return this.bookP.case({
-      rejected: () => '',
-      pending: () => '',
-      fulfilled: (book) => 
-        this.pageno <= this.npages ?
-          book.readings[this.reading].comments[this.pageno - 1] :
-          ''
     })
   }
   // allow excluding responses from the list
