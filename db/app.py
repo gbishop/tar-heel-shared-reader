@@ -110,7 +110,7 @@ def students(db):
     '''
     result = db.execute('''
         select distinct student from log
-          where teacher = ?
+          where teacher = ? and student != ''
     ''', [request.query.get('teacher')]).fetchall()
     return {'students': result}
 
