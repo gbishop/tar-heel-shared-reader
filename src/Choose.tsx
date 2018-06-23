@@ -3,7 +3,7 @@ import { observer } from 'mobx-react';
 import Store from './Store';
 import { observable, action } from 'mobx';
 import { THRURL } from './db';
-import './StudentList.css';
+import './Choose.css';
 
 const LevelNames = [
   'K-2',
@@ -23,6 +23,10 @@ class Choose extends React.Component<{store: Store}, {}> {
   @action updateNewStudent(s: string) {
     this.newstudent = s;
   }
+  @observable newgroup = '';
+  @action updateNewGroup(s: string) {
+    this.newgroup = s;
+  }
   @action addStudent(s: string) {
     this.props.store.db.addStudent(s);
     this.props.store.studentid = s;
@@ -31,14 +35,14 @@ class Choose extends React.Component<{store: Store}, {}> {
     const store = this.props.store;
     return (
       <div id="StudentList">
-        <h2>Select a student</h2>
-        <label>Reading with:&nbsp;
+        <h2>Select a student or group</h2>
+        <label><b>{store.teacherid}</b> is reading with:&nbsp;
           <select value={store.studentid} onChange={(e) => store.setstudentid(e.target.value)}>
             <option value="">none selected</option>
             {store.db.studentList.map(id => (<option key={id} value={id}>{id}</option>))}
           </select>
-        </label>
-        <label>Or add a student:&nbsp;
+        </label><br/>
+        <label>Add a student:&nbsp;
           <input
             type="text"
             value={this.newstudent}
@@ -46,7 +50,20 @@ class Choose extends React.Component<{store: Store}, {}> {
             placeholder="Enter student initials"
           />
         </label>
-        <button onClick={() => this.addStudent(this.newstudent)}>Add</button>
+        <button
+          onClick={()=>{this.addStudent(this.newstudent); this.updateNewStudent('');}}
+        >+</button><br/>
+        <label>Add a group:&nbsp;
+          <input
+            type="text"
+            value={this.newgroup}
+            onChange={(e) => this.updateNewGroup(e.target.value)}
+            placeholder="Enter group name"
+          />
+        </label>
+        <button
+          onClick={()=>{this.addStudent('Group: ' + this.newgroup); this.updateNewGroup('')}}
+        >+</button><br/>
         {!store.studentid ? null : store.sharedBookListP.case({
           pending: () => (<p>Wait for it...</p>),
           rejected: (e) => (<p>Something went wrong</p>),

@@ -13,6 +13,8 @@
 #StudentList label {
   font-size: 1em;
   padding-right: 1em;
+  display: inline-block;
+  margin: 0.5em 0.1em;
 }
 
 #StudentList select {
