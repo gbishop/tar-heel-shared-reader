@@ -111,6 +111,7 @@ def students(db):
     result = db.execute('''
         select distinct student from log
           where teacher = ? and student != ''
+          order by student
     ''', [request.query.get('teacher')]).fetchall()
     return {'students': result}
 
