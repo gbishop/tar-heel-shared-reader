@@ -11,7 +11,22 @@ class App extends React.Component<{store: Store}, {}> {
   public render() {
     const {store} = this.props;
     if (store.teacherid.length === 0) {
-      return <div>You need to login</div>;
+      return (
+        <div>
+          <p>Please login to Tar Heel Reader below and then click
+            <button onClick={()=>window.location.reload(true)}>here</button>
+          </p>
+          <iframe
+            /* THR needs remove_action('login_init', 'send_frame_options_header'); */
+            src="https://gbserver3.cs.unc.edu/login"
+            width="500"
+            height="550"
+          />
+        </div>
+      );
+
+    } else if (store.db.role.length === 0) {
+      return (<p>Contact Karen to get registered for the study</p>);
 
     } else if (store.studentid.length === 0 || store.bookid.length === 0) {
       return (
