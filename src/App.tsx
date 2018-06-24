@@ -5,6 +5,7 @@ import './App.css';
 import Store from './Store';
 import Reader from './Reader';
 import Choose from './Choose';
+import { THRURL } from './db';
 
 @observer
 class App extends React.Component<{store: Store}, {}> {
@@ -18,7 +19,7 @@ class App extends React.Component<{store: Store}, {}> {
           </p>
           <iframe
             /* THR needs remove_action('login_init', 'send_frame_options_header'); */
-            src="https://gbserver3.cs.unc.edu/login"
+            src={`${THRURL}/login`}
             width="500"
             height="550"
           />
