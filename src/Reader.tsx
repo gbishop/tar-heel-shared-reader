@@ -78,6 +78,18 @@ class Reader extends React.Component<{store: Store}, {}> {
 
         return (
           <div>
+            <button
+              onClick={store.toggleControlsVisible}
+              style={{border:'none', backgroundColor: 'inherit'}}
+            >&#x2699;</button>
+            <input 
+              type="number" 
+              value={store.reading} 
+              min={1} 
+              max={store.nreadings} 
+              onChange={(e) => store.setReading(+e.target.value)}
+              style={{width: "2em"}}
+            />
             <div className="comment" >{comment}</div>
             <div className="reading-container" style={containerStyle}>
               <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store}/>
