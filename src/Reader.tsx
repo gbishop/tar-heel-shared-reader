@@ -84,10 +84,10 @@ class Reader extends React.Component<{store: Store}, {}> {
             >&#x2699;</button>
             <input 
               type="number" 
-              value={store.reading} 
+              value={store.reading+1} 
               min={1} 
               max={store.nreadings} 
-              onChange={(e) => store.setReading(+e.target.value)}
+              onChange={(e) => store.setReading(+e.target.value-1)}
               style={{width: "2em"}}
             />
             <div className="comment" >{comment}</div>
