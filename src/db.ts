@@ -2,7 +2,8 @@ import { Number, String, Array, Record, Static } from 'runtypes';
 import { observable, computed, action } from 'mobx';
 import { fromPromise, IPromiseBasedObservable } from 'mobx-utils';
 
-export const THRURL = 'https://gbserver3.cs.unc.edu/';
+// export const THRURL = 'https://gbserver3.cs.unc.edu/';
+export const THRURL = 'https://tarheelreader.org/';
 
 export interface LogRecord {
   teacher: string;
