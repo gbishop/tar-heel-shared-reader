@@ -36,7 +36,7 @@
   .Find-Results li {
     margin: 0.1em;
     line-height: 1em;
-    width: 40em;
+    width: 20em;
     border: 1px solid black;
     text-align: left;
     display: inline-block;
@@ -55,8 +55,8 @@
   .Find-ReadButton img {
     float: left;
     margin-right: 0.2em;
-    width: 8em;
-    height: 8em;
+    width: 6em;
+    height: 6em;
     display: block;
     object-fit: contain;
   }
@@ -64,6 +64,7 @@
   .Find-Results h1 {
     margin: 0 0 0.25em 0.25em;
     height: 2.2em;
+    font-size: 1em;
     line-height: 1.1em;
     overflow: hidden;
   }
@@ -72,7 +73,6 @@
     font-size: 0.8em;
     overflow: hidden;
     margin: 0;
-    width: 20em;
     height: 1em;
     vertical-align: middle;
     display: inline-block;

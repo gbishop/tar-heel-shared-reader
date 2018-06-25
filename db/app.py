@@ -137,9 +137,22 @@ def getBooksIndex(db):
     '''
     List all books
     '''
-    results = db.execute('''
-        select title, author, pages, slug, level, image, id from sharedbooks
-    ''').fetchall()
+    teacher = request.query.get('teacher')
+    if teacher:
+        results = db.execute('''
+            select title, author, pages, slug, level, image, id
+            from sharedbooks
+            where id in
+                (select distinct book from log
+                where teacher = ?
+                order by time desc
+                limit 8)
+        ''', [teacher]).fetchall()
+    else:
+        results = db.execute('''
+            select title, author, pages, slug, level, image, id
+            from sharedbooks
+        ''').fetchall()
     return {'results': [{
         'title': r[0],
         'author': r[1],

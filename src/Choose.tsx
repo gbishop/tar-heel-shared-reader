@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import Store from './Store';
 import { observable, action } from 'mobx';
-import { THRURL } from './db';
+import { THRURL, SharedBookList } from './db';
 import './Choose.css';
 
 const LevelNames = [
@@ -33,6 +33,41 @@ class Choose extends React.Component<{store: Store}, {}> {
   }
   render() {
     const store = this.props.store;
+    function BookList(sharedBookList: SharedBookList, levelNames: string[]) {
+      return (
+        <div style={{textAlign: 'center'}}>
+          {levelNames.map(level => (
+            <div key={level}>
+              <button
+                className="LevelButton"
+                onClick={() => store.bookListToggle(level)}
+              >
+                {level}
+              </button>
+              {
+                (store.booklistOpen.get(level)) ? (
+                  <ul className="Find-Results">
+                    {sharedBookList
+                      .results
+                      .filter(item => item.level === level || level === 'Recent')
+                      .sort((a, b) => a.title.localeCompare(b.title))
+                      .map(item => (
+                        <li key={item.slug}>
+                          <button className="Find-ReadButton" onClick={() => store.setBookid(item.id.toString())}>
+                            <img src={THRURL + item.image} />
+                          </button>
+                          <h1>{item.title}</h1>
+                          <p className="Find-Author">{item.author}</p>
+                        </li>
+                      ))
+                    }
+                  </ul>) : null
+              }
+            </div>
+          ))}
+        </div>
+      );
+    }
     return (
       <div id="StudentList">
         <h2>Select a student or group</h2>
@@ -64,49 +99,24 @@ class Choose extends React.Component<{store: Store}, {}> {
         <button
           onClick={()=>{this.addStudent('Group: ' + this.newgroup); this.updateNewGroup('')}}
         >+</button><br/>
+        {store.recentBookListP.case({
+          pending: () => (<p>Recent books loading</p>),
+          rejected: () => (<p>Recent books failed</p>),
+          fulfilled: recentBooksList => (
+            BookList(recentBooksList, ['Recent'])
+          )})
+        }
         {!store.studentid ? null : store.sharedBookListP.case({
           pending: () => (<p>Wait for it...</p>),
           rejected: (e) => (<p>Something went wrong</p>),
           fulfilled: sharedBookList => 
-            <div style={{textAlign: 'center'}}>
-              {LevelNames.map(level => (
-                <div key={level}>
-                  <button
-                    className="LevelButton"
-                    onClick={() => store.bookListToggle(level)}
-                  >
-                    {level}
-                  </button>
-                  {
-                    (store.booklistOpen.get(level)) ? (
-                      <ul className="Find-Results">
-                        {sharedBookList
-                          .results
-                          .filter(item => item.level === level)
-                          .sort((a, b) => a.title.localeCompare(b.title))
-                          .map(item => (
-                            <li key={item.slug}>
-                              <button
-                                className="Find-ReadButton"
-                                onClick={() => store.setBookid(item.id.toString())}
-                              >
-                                <img src={THRURL + item.image}/>
-                              </button>
-                              <h1>{item.title}</h1>
-                              <p className="Find-Author">{item.author}</p>
-                            </li>
-                          ))
-                        }
-                      </ul>) : null
-                  }
-                </div>
-              ))}
-            </div>
+            BookList(sharedBookList, LevelNames)
           })
         }
       </div>
     );
   }
+
 }
 
 export default Choose;

@@ -46,9 +46,7 @@ function validateLengths(sba: {}) {
   return true;
 }
 
-const SharedBookListValidator = 
-  Record({
-    results: Array(Record({
+const SharedBookListItemValidator = Record({
     title: String,
     author: String,
     pages: Number,
@@ -56,12 +54,17 @@ const SharedBookListValidator =
     level: String,
     image: String,
     id: Number
-  }))
+  });
+
+const SharedBookListValidator = 
+  Record({
+    results: Array(SharedBookListItemValidator)
   });
 
 // construct the typescript type
 export type SharedBook = Static<typeof SharedBookValidator>;
-type SharedBookList = Static<typeof SharedBookListValidator>;
+export type SharedBookListItem = Static<typeof SharedBookListItemValidator>;
+export type SharedBookList = Static<typeof SharedBookListValidator>;
 
 export class DB {
   @observable login: string = '';
@@ -141,9 +144,9 @@ export class DB {
       })) as IPromiseBasedObservable<SharedBook>;
   }
 
-  fetchBookList() {
+  fetchBookList(teacher: string) {
     return fromPromise(new Promise((resolve, reject) => {
-      window.fetch('/api/db/books')
+      window.fetch(`/api/db/books?teacher=${encodeURIComponent(teacher)}`)
         .then(res => {
           if (res.ok) {
             res.json().then(obj => resolve(SharedBookListValidator.check(obj))).catch(reject);

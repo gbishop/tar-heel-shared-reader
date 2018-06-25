@@ -35,12 +35,16 @@ class Store {
   }
   // list of books to display
   @computed get sharedBookListP() {
-    return this.db.fetchBookList();
+    return this.db.fetchBookList('');
   }
   // state of booklist display
   @observable booklistOpen = observable.map();
   @action.bound bookListToggle(level: string) {
     this.booklistOpen.set(level, !this.booklistOpen.get(level));
+  }
+  // list of recent books for this teacher
+  @computed get recentBookListP() {
+    return this.db.fetchBookList(this.teacherid);
   }
 
   // the id of the book to read or '' for the landing page
