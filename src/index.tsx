@@ -60,7 +60,7 @@ function startPersist(store: Store) {
 const db = new DB();
 const theStore = new Store();
 theStore.db = db;
-theStore.authUser();
+// theStore.authUser();
 startRouter(theStore);
 startPersist(theStore);
 autorun(() => theStore.log());

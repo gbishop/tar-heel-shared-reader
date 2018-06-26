@@ -23,10 +23,6 @@ class Store {
   @computed get teacherid() {
     return this.db.login;
   }
-  // auth with THR setting the id and role
-  public authUser() {
-    this.db.auth();
-  }
 
   @observable studentid: string = '';
   // set student's id
@@ -34,7 +30,8 @@ class Store {
     this.studentid = id;
   }
   // list of books to display
-  @computed get sharedBookListP() {
+  @computed({keepAlive: true}) get sharedBookListP() {
+    console.log('get sbl');
     return this.db.fetchBookList('');
   }
   // state of booklist display
@@ -44,6 +41,7 @@ class Store {
   }
   // list of recent books for this teacher
   @computed get recentBookListP() {
+    console.log('get rbl');
     return this.db.fetchBookList(this.teacherid);
   }
 

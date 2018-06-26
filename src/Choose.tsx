@@ -99,7 +99,7 @@ class Choose extends React.Component<{store: Store}, {}> {
         <button
           onClick={()=>{this.addStudent('Group: ' + this.newgroup); this.updateNewGroup('')}}
         >+</button><br/>
-        {store.recentBookListP.case({
+        {!store.studentid ? null : store.recentBookListP.case({
           pending: () => (<p>Recent books loading</p>),
           rejected: () => (<p>Recent books failed</p>),
           fulfilled: recentBooksList => (

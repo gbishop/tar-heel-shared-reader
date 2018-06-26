@@ -143,7 +143,7 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
             >
               Read another book
             </button>
-            <button onClick={() => { window.location.href = 'https://tarheelreader.org/'; }}> 
+            <button onClick={() => { store.setBookid(''); }}> 
               Go to Tar Heel Reader
             </button>
           </div>

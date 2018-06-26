@@ -62,10 +62,18 @@ const SharedBookListValidator =
     results: Array(SharedBookListItemValidator)
   });
 
+const AuthValidator =
+  Record({
+    login: String,
+    role: String,
+    hash: String
+  });
+
 // construct the typescript type
 export type SharedBook = Static<typeof SharedBookValidator>;
 export type SharedBookListItem = Static<typeof SharedBookListItemValidator>;
 export type SharedBookList = Static<typeof SharedBookListValidator>;
+export type Auth = Static<typeof AuthValidator>;
 
 export class DB {
   @observable login: string = '';
@@ -81,12 +89,20 @@ export class DB {
     this.token = token;
   }
 
-  auth() {
-    fetch(THRURL + '/login?shared=1', {
-      credentials: 'include'
-    })
-    .then(resp => resp.json())
-    .then(json => this.setLoginRole(json.login, json.role, json.hash));
+  @computed get authP(): IPromiseBasedObservable<Auth> {
+    return fromPromise(new Promise((resolve, reject) => {
+      window.fetch(THRURL + 'login/?shared=1', {
+        credentials: 'include'
+      })
+        .then(res => {
+          if (res.ok) {
+            res.json().then(obj => resolve(obj));
+          } else {
+            reject(res);
+          }
+        })
+        .catch(reject);
+    }))
   }
 
   @observable StudentListReload = 0;
@@ -133,6 +149,11 @@ export class DB {
   fetchBook(id: string) {
     return fromPromise(
       new Promise((resolve, reject) => {
+        console.log(`id "${id}"`);
+        if (id.length === 0) {
+          reject();
+          return;
+        }
         window.fetch(`/api/db/books/${id}`)
           .then(res => {
             if (res.ok) {
