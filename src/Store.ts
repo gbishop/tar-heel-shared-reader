@@ -1,4 +1,4 @@
-import { observable, computed, action } from 'mobx';
+import { observable, computed, action, ObservableMap } from 'mobx';
 import { DB, LogRecord } from './db';
 
 export const allResponses: string[] = [
@@ -38,9 +38,9 @@ class Store {
     return this.db.fetchBookList('');
   }
   // state of booklist display
-  @observable booklistOpen = observable.map();
+  @observable bookListOpen: ObservableMap<string, boolean> = observable.map();
   @action.bound bookListToggle(level: string) {
-    this.booklistOpen.set(level, !this.booklistOpen.get(level));
+    this.bookListOpen.set(level, !this.bookListOpen.get(level));
   }
   // list of recent books for this teacher
   @computed get recentBookListP() {
@@ -51,6 +51,7 @@ class Store {
   @observable bookid: string = '';
   @action.bound setBookid(s: string) {
     this.bookid = s;
+    this.pageno = 1;
   }
 
   // an observable promise for the book associated with bookid
@@ -71,7 +72,7 @@ class Store {
   @action.bound setPath(studentid: string, bookid: string, page: number) {
     this.studentid = studentid;
     this.bookid = bookid;
-    this.pageno = page;
+    this.pageno = bookid ? page : 1;
   }
   // map the state to a url
   @computed get currentPath() {
@@ -169,12 +170,14 @@ class Store {
   }
   // json string to persist the state
   @computed get persist(): string {
-    return JSON.stringify({
+    const obj = {
       layout: this.layout,
       responseSize: this.responseSize,
       pageTurnVisible: this.pageTurnVisible,
-      bookListOpen: this.booklistOpen.toJS()
-    });
+      bookListOpen: this.bookListOpen.toJSON()
+    };
+    const r = JSON.stringify(obj);
+    return r;
   }
   // restore the state from json
   @action.bound public setPersist(js: string) {
@@ -182,7 +185,7 @@ class Store {
     this.layout = v.layout;
     this.responseSize = v.responseSize;
     this.pageTurnVisible = v.pageTurnVisible;
-    Object.keys(v.bookListOpen).forEach(key => this.booklistOpen.set(key, v.bookListOpen[key]));
+    Object.keys(v.bookListOpen).forEach(key => this.bookListOpen.set(key, v.bookListOpen[key]));
   }
 
   // log state changes

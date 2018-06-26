@@ -45,7 +45,7 @@ class Choose extends React.Component<{store: Store}, {}> {
                 {level}
               </button>
               {
-                (store.booklistOpen.get(level)) ? (
+                (store.bookListOpen.get(level)) ? (
                   <ul className="Find-Results">
                     {sharedBookList
                       .results
