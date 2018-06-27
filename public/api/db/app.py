@@ -208,7 +208,7 @@ class StripPathMiddleware(object):
 if __name__ == '__main__':
     bottle.run(
         app=StripPathMiddleware(app),
-        reloader=True,
+        # reloader=True,
         debug=True,
         host='localhost',
         port=5500)

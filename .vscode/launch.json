@@ -7,9 +7,23 @@
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Launch Chrome against localhost",
+            "name": "Client",
             "url": "http://localhost:3000",
-            "webRoot": "${workspaceFolder}"
+            "webRoot": "${workspaceFolder}",
+            "preLaunchTask": "npm: start"
+        },
+        {
+            "type": "python",
+            "request": "launch",
+            "name": "Server",
+            "program": "${workspaceFolder}/public/api/db/app.py",
+            "cwd": "${workspaceFolder}/public/api/db"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Compound",
+            "configurations": ["Client", "Server"]
         }
     ]
 }
