@@ -40,7 +40,7 @@ class Store {
     this.bookListOpen.set(level, !this.bookListOpen.get(level));
   }
   // list of recent books for this teacher
-  @computed get recentBookListP() {
+  @computed get teacherBookListP() {
     console.log('get rbl');
     return this.db.fetchBookList(this.teacherid);
   }
@@ -96,7 +96,7 @@ class Store {
     return this.bookP.case({
       rejected: () => 0,
       pending: () => 0,
-      fulfilled: (book) => book.readings.length
+      fulfilled: (book) => book.pages[0].comments.length
     })
   }
   // allow excluding responses from the list

@@ -113,7 +113,7 @@ def students(db):
           where teacher = ? and student != ''
           order by student
     ''', [request.query.get('teacher')]).fetchall()
-    return {'students': result}
+    return {'students': [r['student'] for r in result]}
 
 
 @app.route('/students', method='POST')
@@ -131,6 +131,21 @@ def addStudent(db):
     return 'ok'
 
 
+def booklist(rows, level=None):
+    '''Make book list json from the db rows'''
+    result = []
+    for row in rows:
+        content = json.loads(row['content'])
+        del row['content']
+        content['image'] = content['pages'][0]['url']
+        content['pages'] = len(content['pages'])
+        content.update(row)
+        if level:
+            content['level'] = level
+        result.append(content)
+    return result
+
+
 @app.route('/books')
 @with_db
 def getBooksIndex(db):
@@ -138,42 +153,53 @@ def getBooksIndex(db):
     List all books
     '''
     teacher = request.query.get('teacher')
+    response = {'recent': [], 'yours': [], 'books': []}
     if teacher:
-        results = db.execute('''
-            select title, author, pages, slug, level, image, id
-            from sharedbooks
-            where id in
-                (select distinct book from log
-                where teacher = ?
-                order by time desc
-                limit 8)
+        # 8 most recently read books
+        recent = db.execute('''
+            select M.slug, M.status, C.content
+            from map M, content C
+            where M.contentid = C.id and
+              M.status = 'published' and C.id in
+                (select distinct contentid from log
+                 where teacher = ?
+                 order by time desc
+                 limit 8)
         ''', [teacher]).fetchall()
+        response['recent'] = booklist(recent, 'Recent')
+        # books owned by this teacher
+        yours = db.execute('''
+            select M.slug, M.status, C.content
+            from map M, content C
+            where M.contentid = C.id and
+              M.owner = ? and M.status in ('published', 'draft')
+        ''', [teacher]).fetchall()
+        response['yours'] = booklist(yours, 'Your Books')
     else:
         results = db.execute('''
-            select title, author, pages, slug, level, image, id
-            from sharedbooks
+            select M.slug, M.status, C.content
+            from map M, content C
+            where M.contentid = C.id and
+              M.status = 'published'
         ''').fetchall()
-    return {'results': [{
-        'title': r[0],
-        'author': r[1],
-        'pages': r[2],
-        'slug': r[3],
-        'level': r[4],
-        'image': r[5],
-        'id': r[6]
-    } for r in results]}
+        response['books'] = booklist(results)
+    return response
 
 
-@app.route('/books/:id')
+@app.route('/books/:slug')
 @with_db
-def getBook(db, id):
+def getBook(db, slug):
     '''
     Return json for a book
     '''
     result = db.execute('''
-        select json from sharedbooks where id = ?
-    ''', [id]).fetchone()
-    book = json.loads(result[0])
+        select C.content, M.owner, M.status
+          from map M, content C
+          where M.contentid = C.id and M.slug = ?
+    ''', [slug]).fetchone()
+    book = json.loads(result['content'])
+    book['owner'] = result['owner']
+    book['status'] = result['status']
     return book
 
 
@@ -184,11 +210,14 @@ def log(db):
     Add a record to the log
     '''
     d = request.json
+    contentid = db.execute('''
+        select contentid from map where slug = ?
+    ''', [d['book']]).fetchone()['contentid']
     db.execute('''
         insert into log
-            (time, teacher, student, book, reading, page, action) values
+            (time, teacher, student, contentid, reading, page, action) values
             (?, ?, ?, ?, ?, ?, ?)
-    ''', [datetime.now(), d['teacher'], d['student'], d['book'], d['reading'],
+    ''', [datetime.now(), d['teacher'], d['student'], contentid, d['reading'],
           d['page'], d.get('response')]).fetchall()
     return 'ok'
 

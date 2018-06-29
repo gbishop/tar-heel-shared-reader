@@ -34,7 +34,7 @@ class Choose extends React.Component<{store: Store}, {}> {
   render() {
     const store = this.props.store;
     function BookList(sharedBookList: SharedBookList, levelNames: string[]) {
-      return (
+      return sharedBookList.length === 0 ? null : (
         <div style={{textAlign: 'center'}}>
           {levelNames.map(level => (
             <div key={level}>
@@ -48,12 +48,11 @@ class Choose extends React.Component<{store: Store}, {}> {
                 (store.bookListOpen.get(level)) ? (
                   <ul className="Find-Results">
                     {sharedBookList
-                      .results
                       .filter(item => item.level === level || level === 'Recent')
                       .sort((a, b) => a.title.localeCompare(b.title))
                       .map(item => (
                         <li key={item.slug}>
-                          <button className="Find-ReadButton" onClick={() => store.setBookid(item.id.toString())}>
+                          <button className="Find-ReadButton" onClick={() => store.setBookid(item.slug)}>
                             <img src={THRURL + item.image} />
                           </button>
                           <h1>{item.title}</h1>
@@ -99,18 +98,21 @@ class Choose extends React.Component<{store: Store}, {}> {
         <button
           onClick={()=>{this.addStudent('Group: ' + this.newgroup); this.updateNewGroup('')}}
         >+</button><br/>
-        {!store.studentid ? null : store.recentBookListP.case({
+        {!store.studentid ? null : store.teacherBookListP.case({
           pending: () => (<p>Recent books loading</p>),
           rejected: () => (<p>Recent books failed</p>),
           fulfilled: recentBooksList => (
-            BookList(recentBooksList, ['Recent'])
+            <div>
+              {BookList(recentBooksList.recent, ['Recent'])}
+              {BookList(recentBooksList.yours, ['Your Books'])}
+            </div>
           )})
         }
         {!store.studentid ? null : store.sharedBookListP.case({
           pending: () => (<p>Wait for it...</p>),
-          rejected: (e) => (<p>Something went wrong</p>),
+          rejected: (e) => {console.log('e', e); return (<p>Something went wrong</p>)},
           fulfilled: sharedBookList => 
-            BookList(sharedBookList, LevelNames)
+            BookList(sharedBookList.books, LevelNames)
           })
         }
       </div>

@@ -15,7 +15,7 @@ class Reader extends React.Component<{store: Store}, {}> {
   public render() {
     const { store } = this.props;
     return store.bookP.case({
-      rejected: () => <p>Error</p>,
+      rejected: (e) => <p>Fetching the book failed</p>,
       pending: () => <p>Wait for it</p>,
       fulfilled: (book) => {
         const commentHeight = 30;
@@ -73,8 +73,8 @@ class Reader extends React.Component<{store: Store}, {}> {
 
         const npages = book.pages.length;
         const pageno = store.pageno;
-        const comment = store.pageno <= npages ?
-          book.readings[store.reading].comments[pageno] : '';
+        const comment = store.pageno < npages ?
+          book.pages[pageno].comments[store.reading] : '';
 
         return (
           <div>
