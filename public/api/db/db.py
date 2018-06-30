@@ -41,37 +41,70 @@ def with_db(func):
     return func_wrapper
 
 
+def insert(db, table, **fields):
+    sql = 'insert into %s (%s) values (%s)' % (
+            table, ', '.join(fields.keys()), ', '.join(['?']*len(fields)))
+    print(sql)
+    return db.execute(sql, tuple(fields.values()))
+
+
 @with_db
 def createTables(db):
     # log activity
     db.execute('''create table if not exists log
-        (id integer primary key,
+        (logid integer primary key,
          time timestamp,
          teacher text,
          student text,
-         contentid integer,
+         comment text,
+         slug text,
          reading integer,
          page integer,
-         action text,
-         foreign key(contentid) references content(id))''')
+         action text
+        )''')
 
-    # shared books
-    # not modified after creation
-    db.execute('''create table if not exists content
-        (id integer primary key,
-         time timestamp,      -- when created
-         parent contentid,    -- index of content this replaces
-         content text         -- book content json encoded
+    db.execute('''create table if not exists comments
+        (commentid integer primary key,
+         sharedid integer,      -- index of the sharedbook
+         reading integer,
+         pageno integer,
+         comment text,
+         foreign key(sharedid) references shared(id)
+        )''')
+
+    # thr content copied here so it can't change
+    db.execute('''create table if not exists books
+        (bookid integer primary key,
+         thrslug text,      -- the slug of the original book
+         title text,
+         author text,
+         image text,        -- cover picture url
+         pages number   -- number of pages
+        )''')
+
+    # each page has an entry
+    db.execute('''create table if not exists pages
+        (pageid integer primary key,
+         bookid integer,
+         pageno integer,    -- 0 relative
+         caption text,
+         image text,        -- url
+         width integer,     -- image size
+         height integer,
+         foreign key(bookid) references books(bookid)
         )''')
 
     # map from slug to book content
-    db.execute('''create table if not exists map
-        (id integer primary key,
+    db.execute('''create table if not exists shared
+        (sharedid integer primary key,
          slug text unique,          -- same as THR slug except for dups
+         level text,
          status text,               -- published or draft
          owner text,                -- teacher who created
-         contentid integer,         -- index of the content
-         foreign key(contentid) references content(id)
+         bookid integer,            -- index of the content
+         created timestamp,
+         modified timestamp,
+         foreign key(bookid) references books(bookid)
         )''')
 
 
@@ -79,7 +112,7 @@ def createTables(db):
 def loadTables(db):
     URL = 'https://shared.tarheelreader.org/api/sharedbooks/'
     count = db.execute('''
-        select count(*) from map
+        select count(*) from shared
     ''').fetchone()
     if count['count(*)'] == 0:
         r = urllib.request.urlopen(URL + 'index.json').read()
@@ -88,24 +121,33 @@ def loadTables(db):
             fp = urllib.request.urlopen(URL + sbi['slug'] + '.json')
             d = fp.read().decode('utf-8')
             b = json.loads(d)
-            b['level'] = b['sheet']
-            del b['sheet']
+            # add the book to the book table
+            c = insert(db, 'books', thrslug=b['slug'], title=b['title'],
+                       author=b['author'],
+                       image=b['pages'][0]['url'], pages=len(b['pages']))
+            bookid = c.lastrowid
+            # add the pages to the pages table
+            for pn, page in enumerate(b['pages']):
+                insert(db, 'pages', bookid=bookid, pageno=pn,
+                       caption=page['text'],
+                       image=page['url'], width=page['width'],
+                       height=page['height'])
+            # create the shared book entry
+            c = insert(db, 'shared', slug=b['slug'], level=b['sheet'],
+                       status='published', owner='clds', bookid=bookid,
+                       created=datetime.now(), modified=datetime.now())
+            sharedid = c.lastrowid
             try:
                 for p, page in enumerate(b['pages']):
-                    page['comments'] = [reading['comments'][p]
-                                        for reading in b['readings']]
+                    for r, reading in enumerate(b['readings']):
+                        insert(db, 'comments', sharedid=sharedid,
+                               reading=r, pageno=p,
+                               comment=reading['comments'][p])
             except IndexError:
                 print('skip', b['slug'])
+                db.rollback()
                 continue
-            del b['readings']
-            c = db.execute('''
-                insert into content (time, content) values (?, ?)''',
-                [datetime.now(), json.dumps(b)])
-            contentid = c.lastrowid
-            db.execute('''
-                insert into map
-                  (slug, status, owner, contentid) values (?, ?, ?, ?)''',
-                [b['slug'], 'published', 'clds', contentid])
+            db.commit()
 
 
 createTables()

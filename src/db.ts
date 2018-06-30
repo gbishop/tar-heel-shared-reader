@@ -8,7 +8,7 @@ export const THRURL = 'https://tarheelreader.org/';
 export interface LogRecord {
   teacher: string;
   student: string;
-  book: string;
+  bookid: string;
   reading: number;
   page: number;
   response?: string;

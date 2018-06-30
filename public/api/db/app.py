@@ -6,9 +6,8 @@ A simple db for Tar Heel Shared Reader
 import bottle
 from bottle import Bottle, request, response
 from datetime import datetime
-from db import with_db
+from db import with_db, insert
 import os.path as osp
-import json
 
 app = application = Bottle()
 
@@ -131,21 +130,6 @@ def addStudent(db):
     return 'ok'
 
 
-def booklist(rows, level=None):
-    '''Make book list json from the db rows'''
-    result = []
-    for row in rows:
-        content = json.loads(row['content'])
-        del row['content']
-        content['image'] = content['pages'][0]['url']
-        content['pages'] = len(content['pages'])
-        content.update(row)
-        if level:
-            content['level'] = level
-        result.append(content)
-    return result
-
-
 @app.route('/books')
 @with_db
 def getBooksIndex(db):
@@ -157,32 +141,33 @@ def getBooksIndex(db):
     if teacher:
         # 8 most recently read books
         recent = db.execute('''
-            select M.slug, M.status, C.content
-            from map M, content C
-            where M.contentid = C.id and
-              M.status = 'published' and C.id in
-                (select distinct contentid from log
+            select B.title, B.author, B.pages, S.slug, S.level, B.image
+            from books B, shared S
+            where B.bookid = S.bookid and
+              S.status = 'published' and S.slug in
+                (select distinct slug from log
                  where teacher = ?
                  order by time desc
                  limit 8)
         ''', [teacher]).fetchall()
-        response['recent'] = booklist(recent, 'Recent')
+        response['recent'] = recent
         # books owned by this teacher
         yours = db.execute('''
-            select M.slug, M.status, C.content
-            from map M, content C
-            where M.contentid = C.id and
-              M.owner = ? and M.status in ('published', 'draft')
+            select B.title, B.author, B.pages, S.slug, S.level, B.image
+            from books B, shared S
+            where B.bookid = S.bookid and
+                S.status in ('published', 'draft') and
+                S.owner = ?
         ''', [teacher]).fetchall()
-        response['yours'] = booklist(yours, 'Your Books')
+        response['yours'] = yours
     else:
         results = db.execute('''
-            select M.slug, M.status, C.content
-            from map M, content C
-            where M.contentid = C.id and
-              M.status = 'published'
+            select B.title, B.author, B.pages, S.slug, S.level, B.image
+            from books B, shared S
+            where B.bookid = S.bookid and
+                S.status = 'published'
         ''').fetchall()
-        response['books'] = booklist(results)
+        response['books'] = results
     return response
 
 
@@ -192,14 +177,30 @@ def getBook(db, slug):
     '''
     Return json for a book
     '''
-    result = db.execute('''
-        select C.content, M.owner, M.status
-          from map M, content C
-          where M.contentid = C.id and M.slug = ?
+    book = db.execute('''
+        select B.title, S.slug, S.status, S.level, B.author, S.owner,
+            S.sharedid, B.bookid
+        from books B, shared S
+        where B.bookid = S.bookid and S.slug = ?
     ''', [slug]).fetchone()
-    book = json.loads(result['content'])
-    book['owner'] = result['owner']
-    book['status'] = result['status']
+    pages = db.execute('''
+        select caption as text, image as url, width, height
+        from pages
+        where bookid = ?
+        order by pageno
+    ''', [book['bookid']]).fetchall()
+    comments = db.execute('''
+        select comment, pageno from comments
+        where sharedid = ?
+        order by pageno, reading
+    ''', [book['sharedid']]).fetchall()
+    for pageno, page in enumerate(pages):
+        page['comments'] = [
+            comment['comment']
+            for comment in comments
+            if comment['pageno'] == pageno
+        ]
+    book['pages'] = pages
     return book
 
 
@@ -210,15 +211,18 @@ def log(db):
     Add a record to the log
     '''
     d = request.json
-    contentid = db.execute('''
-        select contentid from map where slug = ?
-    ''', [d['book']]).fetchone()['contentid']
-    db.execute('''
-        insert into log
-            (time, teacher, student, contentid, reading, page, action) values
-            (?, ?, ?, ?, ?, ?, ?)
-    ''', [datetime.now(), d['teacher'], d['student'], contentid, d['reading'],
-          d['page'], d.get('response')]).fetchall()
+    # get the actual comment
+    if d['bookid']:
+        comment = db.execute('''
+            select C.comment from shared S, comments C
+                where S.slug = ? and S.sharedid = C.sharedid and
+                    C.pageno = ? and C.reading = ?
+        ''', (d['bookid'], d['page'], d['reading'])).fetchone()['comment']
+        d['comment'] = comment
+    d['time'] = datetime.now()
+    d['slug'] = d['bookid']
+    del d['bookid']
+    insert(db, 'log', **d)
     return 'ok'
 
 
@@ -237,7 +241,7 @@ class StripPathMiddleware(object):
 if __name__ == '__main__':
     bottle.run(
         app=StripPathMiddleware(app),
-        # reloader=True,
+        reloader=True,
         debug=True,
         host='localhost',
         port=5500)

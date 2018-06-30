@@ -74,7 +74,7 @@ class Reader extends React.Component<{store: Store}, {}> {
         const npages = book.pages.length;
         const pageno = store.pageno;
         const comment = store.pageno < npages ?
-          book.pages[pageno].comments[store.reading] : '';
+          book.pages[pageno-1].comments[store.reading] : '';
 
         return (
           <div>

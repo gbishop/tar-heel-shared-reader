@@ -191,7 +191,7 @@ class Store {
     const lr: LogRecord = {
       teacher: this.teacherid,
       student: this.studentid,
-      book: this.bookid,
+      bookid: this.bookid,
       page: this.pageno,
       reading: this.reading
     };
