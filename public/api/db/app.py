@@ -123,10 +123,8 @@ def addStudent(db):
     '''
     data = request.json
     teacher, student = data['teacher'], data['student']
-    db.execute('''
-        insert into log
-            (time, teacher, student, action) values (?, ?, ?, 'add')
-    ''', [datetime.now(), teacher, student]).fetchall()
+    insert(db, 'log', time=datetime.now(), teacher=teacher,
+           student=student, action='add')
     return 'ok'
 
 
