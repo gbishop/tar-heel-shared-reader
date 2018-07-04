@@ -44,7 +44,6 @@ def with_db(func):
 def insert(db, table, **fields):
     sql = 'insert into %s (%s) values (%s)' % (
             table, ', '.join(fields.keys()), ', '.join(['?']*len(fields)))
-    print(sql)
     return db.execute(sql, tuple(fields.values()))
 
 

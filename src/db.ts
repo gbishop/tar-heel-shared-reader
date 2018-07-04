@@ -2,8 +2,8 @@ import { Number, String, Array, Record, Static } from 'runtypes';
 import { observable, computed, action } from 'mobx';
 import { fromPromise, IPromiseBasedObservable } from 'mobx-utils';
 
-// export const THRURL = 'https://gbserver3.cs.unc.edu/';
-export const THRURL = 'https://tarheelreader.org/';
+export const THRURL = 'https://gbserver3.cs.unc.edu/';
+// export const THRURL = 'https://tarheelreader.org/';
 
 export interface LogRecord {
   teacher: string;
@@ -73,6 +73,9 @@ export class DB {
   @computed get isAdmin() {
     return this.role === 'admin';
   }
+  @computed get authentication() {
+    return `MYAUTH user:"${this.login}", role:"${this.role}", token:"${this.token}"`;
+  }
 
   @action.bound setLoginRole(login: string, role: string, token: string) {
     this.login = login;
@@ -100,7 +103,8 @@ export class DB {
 
   @computed get studentListP(): IPromiseBasedObservable<string[]> {
     return fromPromise(new Promise((resolve, reject) => {
-      window.fetch(`/api/db/students?teacher=${encodeURIComponent(this.login)}&reload=${this.StudentListReload}`)
+      const url = `/api/db/students?reload=${this.StudentListReload}`
+      window.fetch(url, {headers: {Authentication: this.authentication}})
         .then(res => {
           if (res.ok) {
             res.json().then(obj => resolve(obj.students as string[])).catch(reject);
@@ -123,7 +127,10 @@ export class DB {
       window.fetch(`/api/db/students`, {
         method: 'POST',
         body: JSON.stringify({teacher: this.login, student: studentid}),
-        headers: { 'Content-Type': 'application/json' }
+        headers: {
+          'Content-Type': 'application/json',
+          'Authentication': this.authentication
+        }
       });
       this.StudentListReload += 1;
     }

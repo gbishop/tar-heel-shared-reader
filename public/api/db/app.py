@@ -4,10 +4,13 @@ A simple db for Tar Heel Shared Reader
 '''
 
 import bottle
-from bottle import Bottle, request, response
+from bottle import Bottle, request, HTTPError
 from datetime import datetime
 from db import with_db, insert
 import os.path as osp
+import urllib.request
+import json
+import re
 
 app = application = Bottle()
 
@@ -16,6 +19,9 @@ bottle.debug(True)
 
 # cookie signing
 secret = 'Salt and light'
+
+# THR = 'https://tarheelreader.org/'
+THR = 'https://gbserver3.cs.unc.edu/'
 
 
 def static_path(filename):
@@ -56,54 +62,58 @@ def user_is_me(username, password=None):
     return username == 'gb'
 
 
-def get_user():
-    user = request.get_cookie('user', secret=secret)
-    return user
+AUTH_KEY = 'S=n[!1BFy j@#_iiunJmNrGtf@]}5E>EVU ?Tt-CWK<>\\@5el!3r_vn/M=vU&/(N'
 
 
-def set_user(user):
-    response.set_cookie('user', user, secret=secret)
+roles = {
+    'admin': 3,
+    'author': 2,
+    'participant': 1
+}
 
 
-def auth(check):
-    '''decorator to apply above functions for auth'''
-    def decorator(function):
-        def wrapper(*args, **kwargs):
-            user = get_user()
-            if not user:
-                path = app.get_url('root') + request.path[1:]
-                bottle.redirect(app.get_url('login') + '?path=' + path)
-            elif not check(user):
-                raise bottle.HTTPError(403, 'Forbidden')
-            return function(*args, **kwargs)
-        return wrapper
+def auth(min_role):
+    '''Validate auth and add user and role arguments'''
+    def decorator(func):
+        def func_wrapper(*args, **kwargs):
+            try:
+                # parse the authentication header
+                ah = request.headers.get('Authentication', '')
+                m = re.match(
+                        r'^MYAUTH '
+                        r'user:"([a-zA-Z0-9 ]+)", '
+                        r'role:"([a-z]+)", '
+                        r'token:"([0-9a-f]+)"',
+                        ah)
+                if not m:
+                    raise HTTPError
+                # validate the user
+                name, role, token = m.groups()
+                url = THR + 'login?{}'.format(urllib.parse.urlencode({
+                    'shared': 2,
+                    'login': name,
+                    'role': role,
+                    'hash': token
+                    }))
+                r = urllib.request.urlopen(url).read()
+                resp = json.loads(r.decode('utf-8'))
+                if not resp['ok']:
+                    raise HTTPError
+                # check the role
+                if roles.get(role, 0) < roles[min_role]:
+                    raise HTTPError
+            except HTTPError:
+                raise HTTPError(403, 'Forbidden')
+            return func(*args, **dict(kwargs, user=name, role=role))
+
+        return func_wrapper
     return decorator
-
-
-def allow_json(func):
-    ''' Decorator: renders as json if requested '''
-    def wrapper(*args, **kwargs):
-        result = func(*args, **kwargs)
-        if ('application/json' in request.header.get('Accept') and
-                isinstance(result, dict)):
-            return bottle.HTTPResponse(result)
-        return result
-    return wrapper
-
-
-def eprint(*args, **kwargs):
-    from time import time
-    import sys
-    global t0
-    if t0 is None:
-        t0 = time()
-    print(time() - t0, *args, file=sys.stderr, **kwargs)
-    sys.stderr.flush()
 
 
 @app.route('/students')
 @with_db
-def students(db):
+@auth('participant')
+def students(db, user, role):
     '''
     return a list of student ids
     '''
@@ -111,18 +121,19 @@ def students(db):
         select distinct student from log
           where teacher = ? and student != ''
           order by student
-    ''', [request.query.get('teacher')]).fetchall()
+    ''', [user]).fetchall()
     return {'students': [r['student'] for r in result]}
 
 
 @app.route('/students', method='POST')
 @with_db
-def addStudent(db):
+@auth('participant')
+def addStudent(db, user, role):
     '''
     Add a students for this teacher
     '''
     data = request.json
-    teacher, student = data['teacher'], data['student']
+    teacher, student = user, data['student']
     insert(db, 'log', time=datetime.now(), teacher=teacher,
            student=student, action='add')
     return 'ok'
@@ -135,7 +146,7 @@ def getBooksIndex(db):
     List all books
     '''
     teacher = request.query.get('teacher')
-    response = {'recent': [], 'yours': [], 'books': []}
+    result = {'recent': [], 'yours': [], 'books': []}
     if teacher:
         # 8 most recently read books
         recent = db.execute('''
@@ -148,7 +159,7 @@ def getBooksIndex(db):
                  order by time desc
                  limit 8)
         ''', [teacher]).fetchall()
-        response['recent'] = recent
+        result['recent'] = recent
         # books owned by this teacher
         yours = db.execute('''
             select B.title, B.author, B.pages, S.slug, S.level, B.image
@@ -157,7 +168,7 @@ def getBooksIndex(db):
                 S.status in ('published', 'draft') and
                 S.owner = ?
         ''', [teacher]).fetchall()
-        response['yours'] = yours
+        result['yours'] = yours
     else:
         results = db.execute('''
             select B.title, B.author, B.pages, S.slug, S.level, B.image
@@ -165,8 +176,8 @@ def getBooksIndex(db):
             where B.bookid = S.bookid and
                 S.status = 'published'
         ''').fetchall()
-        response['books'] = results
-    return response
+        result['books'] = results
+    return result
 
 
 @app.route('/books/:slug')
@@ -202,6 +213,48 @@ def getBook(db, slug):
     return book
 
 
+@app.route('/books', method='POST')
+@with_db
+def newBook(db):
+    '''
+    Create a new book
+    '''
+    data = request.json
+    thrslug = data['thrslug']
+    teacher = 'admin'  # FIX ME
+    # get the book content from THR
+    r = urllib.request.urlopen(THR + 'book-as-json?slug=%s' % thrslug).read()
+    b = json.loads(r.decode('utf-8'))
+    # add the content to our tables
+    c = insert(db, 'books',
+               thrslug=thrslug, title=b['title'], author=b['author'],
+               image=b['pages'][0]['url'], pages=len(b['pages']))
+    bookid = c.lastrowid
+    for pn, page in enumerate(b['pages']):
+        insert(db, 'pages', bookid=bookid, pageno=pn,
+               caption=page['text'],
+               image=page['url'], width=page['width'],
+               height=page['height'])
+    # create a unique slug
+    slugs = db.execute(
+        '''
+        select slug from shared S, books B
+            where S.bookid = B.bookid and B.thrslug = ?
+            order by slug
+        ''',
+        [thrslug]).fetchall()
+    if len(slugs) > 0:
+        slug = slugs[0] + '{}'.format(len(slugs)+1)
+    else:
+        slug = thrslug
+    # create the shared entry
+    c = insert(
+        db, 'shared',
+        slug=slug, status='draft', owner=teacher, bookid=bookid,
+        created=datetime.now(), modified=datetime.now())
+    return getBook(db, slug)
+
+
 @app.route('/log', method='POST')
 @with_db
 def log(db):
@@ -211,12 +264,13 @@ def log(db):
     d = request.json
     # get the actual comment
     if d['bookid']:
-        comment = db.execute('''
+        row = db.execute('''
             select C.comment from shared S, comments C
                 where S.slug = ? and S.sharedid = C.sharedid and
                     C.pageno = ? and C.reading = ?
-        ''', (d['bookid'], d['page'], d['reading'])).fetchone()['comment']
-        d['comment'] = comment
+        ''', (d['bookid'], d['page'], d['reading'])).fetchone()
+        if row:
+            d['comment'] = row['comment']
     d['time'] = datetime.now()
     d['slug'] = d['bookid']
     del d['bookid']
