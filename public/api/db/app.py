@@ -17,52 +17,8 @@ app = application = Bottle()
 # enable debugging
 bottle.debug(True)
 
-# cookie signing
-secret = 'Salt and light'
-
 # THR = 'https://tarheelreader.org/'
 THR = 'https://gbserver3.cs.unc.edu/'
-
-
-def static_path(filename):
-    '''
-    Produce the path to a static file
-    '''
-    p = osp.join('./static', filename)
-    m = osp.getmtime(p)
-    s = '%x' % int(m)
-    u = app.get_url('static', filename=filename)
-    return u + '?' + s
-
-
-bottle.SimpleTemplate.defaults['static'] = static_path
-
-
-@app.route('/static/<filename:path>', name='static')
-def static(filename):
-    '''
-    Serve static files in development
-    '''
-    return bottle.static_file(filename, root='./static')
-
-
-# simple minded security
-def user_is_known(username, password=None):
-    '''The user has logged in'''
-    return username
-
-
-def user_is_admin(username, password=None):
-    '''The user is authorized'''
-    return username in ['gb']
-
-
-def user_is_me(username, password=None):
-    '''The user is admin'''
-    return username == 'gb'
-
-
-AUTH_KEY = 'S=n[!1BFy j@#_iiunJmNrGtf@]}5E>EVU ?Tt-CWK<>\\@5el!3r_vn/M=vU&/(N'
 
 
 roles = {
@@ -141,7 +97,8 @@ def addStudent(db, user, role):
 
 @app.route('/books')
 @with_db
-def getBooksIndex(db):
+@auth('participant')
+def getBooksIndex(db, user, role):
     '''
     List all books
     '''
@@ -158,7 +115,7 @@ def getBooksIndex(db):
                  where teacher = ?
                  order by time desc
                  limit 8)
-        ''', [teacher]).fetchall()
+        ''', [user]).fetchall()
         result['recent'] = recent
         # books owned by this teacher
         yours = db.execute('''
@@ -167,7 +124,7 @@ def getBooksIndex(db):
             where B.bookid = S.bookid and
                 S.status in ('published', 'draft') and
                 S.owner = ?
-        ''', [teacher]).fetchall()
+        ''', [user]).fetchall()
         result['yours'] = yours
     else:
         results = db.execute('''
@@ -199,16 +156,13 @@ def getBook(db, slug):
         order by pageno
     ''', [book['bookid']]).fetchall()
     comments = db.execute('''
-        select comment, pageno from comments
+        select comment from comments
         where sharedid = ?
-        order by pageno, reading
+        order by reading, pageno
     ''', [book['sharedid']]).fetchall()
-    for pageno, page in enumerate(pages):
-        page['comments'] = [
-            comment['comment']
-            for comment in comments
-            if comment['pageno'] == pageno
-        ]
+    npages = len(pages)
+    book['comments'] = [[c['comment'] for c in comments[i:i + npages]]
+        for i in range(0, len(comments), npages)]
     book['pages'] = pages
     return book
 

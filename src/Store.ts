@@ -96,7 +96,7 @@ class Store {
     return this.bookP.case({
       rejected: () => 0,
       pending: () => 0,
-      fulfilled: (book) => book.pages[0].comments.length
+      fulfilled: (book) => book.comments.length
     })
   }
   // allow excluding responses from the list

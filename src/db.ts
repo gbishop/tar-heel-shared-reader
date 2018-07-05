@@ -20,7 +20,6 @@ const Page = Record({
   url: String,
   width: Number,
   height: Number,
-  comments: Array(String)
 });
 
 const SharedBookValidator = Record({
@@ -30,7 +29,8 @@ const SharedBookValidator = Record({
   level: String,
   author: String,
   owner: String,
-  pages: Array(Page)
+  pages: Array(Page),
+  comments: Array(Array(String))
 });
 
 const SharedBookListItemValidator = Record({
@@ -166,7 +166,8 @@ export class DB {
 
   fetchBookList(teacher: string) {
     return fromPromise(new Promise((resolve, reject) => {
-      window.fetch(`/api/db/books?teacher=${encodeURIComponent(teacher)}`)
+      window.fetch(`/api/db/books?teacher=${encodeURIComponent(teacher)}`,
+          { headers: {Authentication: this.authentication}})
         .then(res => {
           if (res.ok) {
             res.json().then(obj => resolve(SharedBookResponseValidator.check(obj))).catch(reject);
