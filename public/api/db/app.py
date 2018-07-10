@@ -142,7 +142,8 @@ def getBooksIndex(db, user, role):
 
 @app.route('/books/:slug')
 @with_db
-def getBook(db, slug):
+@auth('participant')
+def getBook(db, user, role, slug):
     '''
     Return json for a book
     '''
@@ -175,15 +176,59 @@ def getBook(db, slug):
     return book
 
 
+@app.route('/books/:slug', method='PUT')
+@with_db
+@auth('author')
+def updateBook(db, user, role, slug):
+    '''
+    Update the comments on a book
+    '''
+    data = request.json
+    comments = data['comments']
+    level = data['level']
+    status = data['status']
+    # validate the slug
+    book = db.execute('''
+        select sharedid, owner
+            from shared
+            where slug = ?''',
+        [slug]).fetchone()
+    if not book:
+        raise HTTPError(404, 'Not found')
+    sharedid = book['sharedid']
+    # and the owner
+    if user != book['owner'] and role != 'admin':
+        raise HTTPError(403, 'Forbidden')
+
+    # delete the old comments
+    db.execute('''
+        delete from comments
+            where sharedid = ?''', [book['sharedid']])
+    # keep only readings that have at least one non-empty comment
+    comments = [reading for reading in comments
+                if any(r.strip() for r in reading)]
+    # write the new comments
+    for r, reading in enumerate(comments):
+        for p, comment in enumerate(reading):
+            insert(db, 'comments', sharedid=sharedid, reading=r, pageno=p,
+                   comment=comment)
+    db.execute('''
+        update shared
+            set modified=?, level=?, status=?
+            where sharedid = ?''', [datetime.now(), level, status, sharedid])
+    return {'slug': slug}
+
+
 @app.route('/books', method='POST')
 @with_db
-def newBook(db):
+@auth('author')
+def newBook(db, user, role):
     '''
     Create a new book
     '''
     data = request.json
     thrslug = data['slug']
-    teacher = 'admin'  # FIX ME
+    teacher = user  # FIX ME
     # get the book content from THR
     url = THR + 'book-as-json?slug=%s' % thrslug
     try:

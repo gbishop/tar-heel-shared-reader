@@ -177,7 +177,8 @@ export class DB {
   }
 
   fetchBook(id: string) {
-    return this.fetchJson(`/api/db/books/${id}`, {}, SharedBookValidator);
+    return this.fetchJson(`/api/db/books/${id}`,
+      {headers: {Authentication: this.authentication}}, SharedBookValidator);
   }
 
   fetchBookList(teacher: string) {
@@ -185,22 +186,6 @@ export class DB {
       { headers: {Authentication: this.authentication}}, SharedBookResponseValidator);
   }
 
-    /*
-  fetchBookList(teacher: string) {
-    return fromPromise(new Promise((resolve, reject) => {
-      window.fetch(`/api/db/books?teacher=${encodeURIComponent(teacher)}`,
-          { headers: {Authentication: this.authentication}})
-        .then(res => {
-          if (res.ok) {
-            res.json().then(obj => resolve(SharedBookResponseValidator.check(obj))).catch(reject);
-          } else {
-            reject(res);
-          }
-        })
-        .catch(reject);
-    })) as IPromiseBasedObservable<SharedBookResponse>;
-  }
-     */
 
   createNewBook(slug: string) {
     return this.fetchJson('/api/db/books', {
@@ -212,24 +197,17 @@ export class DB {
       }},
       CreateResponseValidator);
   }
-    /*
-  createNewBook(slug: string) {
-    return new Promise((resolve, reject) => {
-      window.fetch('/api/db/books', {
-        method: 'post',
-        body: JSON.stringify({slug}),
-        headers: {
-          Authentication: this.authentication,
-          'Content-type': 'application/json; charset=utf-8'}}
-      ).then(res => {
-        if (res.ok) {
-          res.json().then(obj => resolve(CreateResponseValidator.check(obj).slug)).catch(reject);
-        } else {
-          reject(res);
-        }
-      }).catch(reject);
-    });
+
+  updateBook(slug: string, comments: string[][], level: string, status: string) {
+    const body = JSON.stringify({comments, level, status});
+    return this.fetchJson(`/api/db/books/${slug}`, {
+      method: 'put',
+      body,
+      headers: {
+        Authentication: this.authentication,
+        'Content-type': 'application/json; charset=utf-8'
+      }},
+      CreateResponseValidator);
   }
-     */
 
 }

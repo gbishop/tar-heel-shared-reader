@@ -44,6 +44,7 @@ class SingleCommentEditor extends React.Component<SingleCommentEditorProps, {}> 
 
 interface CommentEditorProps {
   book: SharedBook;
+  store: Store;
 }
 
 @observer
@@ -62,7 +63,9 @@ class CommentEditor extends React.Component<CommentEditorProps, {}> {
     this.level = this.props.book.level;
   }
   @action.bound save(status: string) {
+    const { book, store } = this.props;
     console.log('save', status);
+    store.db.updateBook(book.slug, this.comments, this.level, status);
   }
   render() {
     const book = this.props.book;
@@ -163,7 +166,7 @@ class Edit extends React.Component<{store: Store}, {}> {
       );
     } else {
       return WaitToRender(this.bookP,
-        (book) => <CommentEditor book={book}/>);
+        (book) => <CommentEditor book={book} store={store}/>);
     }
   }
 }
