@@ -11,6 +11,7 @@ import os.path as osp
 import urllib.request
 import json
 import re
+import time
 
 app = application = Bottle()
 
@@ -122,7 +123,6 @@ def getBooksIndex(db, user, role):
             select B.title, B.author, B.pages, S.slug, S.level, B.image
             from books B, shared S
             where B.bookid = S.bookid and
-                S.status in ('published', 'draft') and
                 S.owner = ?
         ''', [user]).fetchall()
         result['yours'] = yours
@@ -149,6 +149,8 @@ def getBook(db, slug):
         from books B, shared S
         where B.bookid = S.bookid and S.slug = ?
     ''', [slug]).fetchone()
+    if not book:
+        raise HTTPError(404, 'Book not found')
     pages = db.execute('''
         select caption as text, image as url, width, height
         from pages
@@ -161,9 +163,13 @@ def getBook(db, slug):
         order by reading, pageno
     ''', [book['sharedid']]).fetchall()
     npages = len(pages)
-    book['comments'] = [[c['comment'] for c in comments[i:i + npages]]
-        for i in range(0, len(comments), npages)]
+    if len(comments) == 0:
+        book['comments'] = [[''] * npages]
+    else:
+        book['comments'] = [[c['comment'] for c in comments[i:i + npages]]
+            for i in range(0, len(comments), npages)]
     book['pages'] = pages
+    time.sleep(1)
     return book
 
 
@@ -174,10 +180,14 @@ def newBook(db):
     Create a new book
     '''
     data = request.json
-    thrslug = data['thrslug']
+    thrslug = data['slug']
     teacher = 'admin'  # FIX ME
     # get the book content from THR
-    r = urllib.request.urlopen(THR + 'book-as-json?slug=%s' % thrslug).read()
+    url = THR + 'book-as-json?slug=%s' % thrslug
+    try:
+        r = urllib.request.urlopen(url).read()
+    except urllib.error.HTTPError as e:
+        raise HTTPError(e.code, e.reason)
     b = json.loads(r.decode('utf-8'))
     # add the content to our tables
     c = insert(db, 'books',
@@ -198,15 +208,16 @@ def newBook(db):
         ''',
         [thrslug]).fetchall()
     if len(slugs) > 0:
-        slug = slugs[0] + '{}'.format(len(slugs)+1)
+        slug = slugs[0]['slug'] + '.{}'.format(len(slugs) + 1)
     else:
         slug = thrslug
     # create the shared entry
     c = insert(
         db, 'shared',
         slug=slug, status='draft', owner=teacher, bookid=bookid,
+        level='',
         created=datetime.now(), modified=datetime.now())
-    return getBook(db, slug)
+    return {'slug': slug}
 
 
 @app.route('/log', method='POST')

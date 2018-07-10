@@ -5,6 +5,7 @@ import Store from './Store';
 import Reader from './Reader';
 import Choose from './Choose';
 import { THRURL } from './db';
+import Edit from './Edit';
 
 @observer
 class App extends React.Component<{store: Store}, {}> {
@@ -33,6 +34,9 @@ class App extends React.Component<{store: Store}, {}> {
 
         } else if (store.db.role.length === 0) {
           return (<p>Contact Karen to get registered for the study</p>);
+
+        } else if (store.editing) {
+          return <Edit store={store} />;
 
         } else if (store.studentid.length === 0 || store.bookid.length === 0) {
           return (

@@ -8,16 +8,15 @@ import NextResponsePage from './NextResponsePage.png';
 import BackResponsePage from './BackResponsePage.png';
 import Store, { allResponses } from './Store';
 import { SharedBook } from './db';
+import { WaitToRender } from './helpers';
+
 import './Reader.css';
 
 @observer
 class Reader extends React.Component<{store: Store}, {}> {
   public render() {
     const { store } = this.props;
-    return store.bookP.case({
-      rejected: (e) => <p>Fetching the book failed</p>,
-      pending: () => <p>Wait for it</p>,
-      fulfilled: (book) => {
+    return WaitToRender(store.bookP, (book) => {
         const commentHeight = 30;
         const containerHeight = store.screen.height - commentHeight;
         const sc = store.screen;
@@ -98,9 +97,9 @@ class Reader extends React.Component<{store: Store}, {}> {
             </div>
           </div>
         );
-      }
-    })
-  }}
+      });
+    }
+  }
 
 // Reader component
 interface Box {

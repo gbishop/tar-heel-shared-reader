@@ -2,20 +2,9 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import Store from './Store';
 import { observable, action } from 'mobx';
-import { THRURL, SharedBookList } from './db';
+import { THRURL, SharedBookList, LevelNames } from './db';
+import { WaitToRender } from './helpers';
 import './Choose.css';
-
-const LevelNames = [
-  'K-2',
-  '3rd Grade',
-  '4th Grade',
-  '5th Grade',
-  '6th Grade',
-  '7th Grade',
-  '8th Grade',
-  '9-10th Grade',
-  '11-12th Grade'
-];
 
 @observer
 class Choose extends React.Component<{store: Store}, {}> {
@@ -33,7 +22,7 @@ class Choose extends React.Component<{store: Store}, {}> {
   }
   render() {
     const store = this.props.store;
-    function BookList(sharedBookList: SharedBookList, levelNames: string[]) {
+    function BookList(sharedBookList: SharedBookList, levelNames: string[], passAll=false) {
       return sharedBookList.length === 0 ? null : (
         <div style={{textAlign: 'center'}}>
           {levelNames.map(level => (
@@ -45,10 +34,10 @@ class Choose extends React.Component<{store: Store}, {}> {
                 {level}
               </button>
               {
-                (store.bookListOpen.get(level)) ? (
+                (store.bookListOpen.get(level)) && (
                   <ul className="Find-Results">
                     {sharedBookList
-                      .filter(item => item.level === level || level === 'Recent')
+                      .filter(item => item.level === level || passAll)
                       .sort((a, b) => a.title.localeCompare(b.title))
                       .map(item => (
                         <li key={item.slug}>
@@ -60,7 +49,7 @@ class Choose extends React.Component<{store: Store}, {}> {
                         </li>
                       ))
                     }
-                  </ul>) : null
+                  </ul>)
               }
             </div>
           ))}
@@ -98,22 +87,19 @@ class Choose extends React.Component<{store: Store}, {}> {
         <button
           onClick={()=>{this.addStudent('Group: ' + this.newgroup); this.updateNewGroup('')}}
         >+</button><br/>
-        {!store.studentid ? null : store.teacherBookListP.case({
-          pending: () => (<p>Recent books loading</p>),
-          rejected: () => (<p>Recent books failed</p>),
-          fulfilled: recentBooksList => (
+        {!store.studentid ? null : WaitToRender(store.teacherBookListP, (recentBooksList) =>
             <div>
-              {BookList(recentBooksList.recent, ['Recent'])}
-              {BookList(recentBooksList.yours, ['Your Books'])}
+              {BookList(recentBooksList.recent, ['Recent'], true)}
+              {BookList(recentBooksList.yours, ['Your Books'], true)}
             </div>
-          )})
+          )
         }
-        {!store.studentid ? null : store.sharedBookListP.case({
-          pending: () => (<p>Wait for it...</p>),
-          rejected: (e) => {console.log('e', e); return (<p>Something went wrong</p>)},
-          fulfilled: sharedBookList => 
-            BookList(sharedBookList.books, LevelNames)
-          })
+        {!store.studentid ? null : WaitToRender(store.sharedBookListP, 
+          sharedBookList => 
+            <div>
+              {BookList(sharedBookList.books, LevelNames)}
+            </div>
+          )
         }
       </div>
     );

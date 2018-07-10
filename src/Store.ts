@@ -24,6 +24,10 @@ class Store {
     return this.db.login;
   }
 
+  // editing state
+  @observable editing = false;
+  @observable editSlug = '';
+
   @observable studentid: string = '';
   // set student's id
   @action.bound setstudentid(id: string) {
@@ -72,12 +76,23 @@ class Store {
     this.bookid = bookid;
     this.pageno = bookid ? page : 1;
   }
+  @action.bound setEditPath(slug: string) {
+    this.editing = true;
+    this.editSlug = slug;
+    console.log('sep', this.editing, this.editSlug);
+  }
+
   // map the state to a url
   @computed get currentPath() {
+    if (this.editing) {
+      const p = '/edit' + (this.editSlug ? '/' + this.editSlug : '');
+      console.log(p);
+      return p;
+    }
     if (!this.studentid) {
       return '/';
     }
-    return `/${encodeURIComponent(this.studentid)}/${this.bookid}` + (this.pageno > 1 ? `/${this.pageno}` : '');
+    return `/read/${encodeURIComponent(this.studentid)}/${this.bookid}` + (this.pageno > 1 ? `/${this.pageno}` : '');
   }
   // set the page number
   @action.bound public setPage(i: number) {
