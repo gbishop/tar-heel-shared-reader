@@ -46,13 +46,15 @@ const SharedBookValidator = Record({
 });
 
 const SharedBookListItemValidator = Record({
-    title: String,
-    author: String,
-    pages: Number,
-    slug: String,
-    level: String,
-    image: String
-  });
+  title: String,
+  author: String,
+  pages: Number,
+  slug: String,
+  level: String,
+  image: String,
+  status: String,
+  owner: String
+});
 
 const SharedBookListValidator = 
   Array(SharedBookListItemValidator);
@@ -87,6 +89,9 @@ export class DB {
   token: string = '';
   @computed get isAdmin() {
     return this.role === 'admin';
+  }
+  @computed get canWrite() {
+    return this.role === 'admin' || this.role === 'author';
   }
   @computed get authentication() {
     return `MYAUTH user:"${this.login}", role:"${this.role}", token:"${this.token}"`;

@@ -75,6 +75,7 @@ class Store {
     this.studentid = studentid;
     this.bookid = bookid;
     this.pageno = bookid ? page : 1;
+    this.editing = false;
   }
   @action.bound setEditPath(slug: string) {
     this.editing = true;

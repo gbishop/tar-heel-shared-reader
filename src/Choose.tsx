@@ -44,8 +44,17 @@ class Choose extends React.Component<{store: Store}, {}> {
                           <button className="Find-ReadButton" onClick={() => store.setBookid(item.slug)}>
                             <img src={THRURL + item.image} />
                           </button>
-                          <h1>{item.title}</h1>
-                          <p className="Find-Author">{item.author}</p>
+                          <h1>
+                            {item.status === 'draft' && 'Draft: '}
+                            {item.title}
+                          </h1>
+                          <p className="Find-Author">{item.author}</p><br/>
+                          {item.owner === store.db.login &&
+                          <button
+                            onClick={()=>store.setEditPath(item.slug)}
+                            title="Edit"
+                            className="EditButton"
+                          >&#x270D;</button>}
                         </li>
                       ))
                     }
@@ -87,6 +96,10 @@ class Choose extends React.Component<{store: Store}, {}> {
         <button
           onClick={()=>{this.addStudent('Group: ' + this.newgroup); this.updateNewGroup('')}}
         >+</button><br/>
+        {store.db.canWrite &&
+        <button
+          onClick={()=>store.setEditPath('')}
+        >Create a new book</button>}
         {!store.studentid ? null : WaitToRender(store.teacherBookListP, (recentBooksList) =>
             <div>
               {BookList(recentBooksList.recent, ['Recent'], true)}

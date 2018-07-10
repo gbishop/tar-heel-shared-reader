@@ -108,7 +108,8 @@ def getBooksIndex(db, user, role):
     if teacher:
         # 8 most recently read books
         recent = db.execute('''
-            select B.title, B.author, B.pages, S.slug, S.level, B.image
+            select B.title, B.author, B.pages, S.slug, S.level, B.image,
+                S.status, S.owner
             from books B, shared S
             where B.bookid = S.bookid and
               S.status = 'published' and S.slug in
@@ -120,7 +121,8 @@ def getBooksIndex(db, user, role):
         result['recent'] = recent
         # books owned by this teacher
         yours = db.execute('''
-            select B.title, B.author, B.pages, S.slug, S.level, B.image
+            select B.title, B.author, B.pages, S.slug, S.level, B.image,
+                S.status, S.owner
             from books B, shared S
             where B.bookid = S.bookid and
                 S.owner = ?
@@ -128,7 +130,8 @@ def getBooksIndex(db, user, role):
         result['yours'] = yours
     else:
         results = db.execute('''
-            select B.title, B.author, B.pages, S.slug, S.level, B.image
+            select B.title, B.author, B.pages, S.slug, S.level, B.image,
+                S.status, S.owner
             from books B, shared S
             where B.bookid = S.bookid and
                 S.status = 'published'
@@ -169,7 +172,6 @@ def getBook(db, slug):
         book['comments'] = [[c['comment'] for c in comments[i:i + npages]]
             for i in range(0, len(comments), npages)]
     book['pages'] = pages
-    time.sleep(1)
     return book
 
 

@@ -20,9 +20,9 @@ class SingleCommentEditor extends React.Component<SingleCommentEditorProps, {}> 
     comments[reading][pageno] = e.target.value;
     // if they add to the last reading, create another one
     // we'll delete fully empty readings on save
-    if (reading === comments.length - 1) {
-      this.addReading();
-    }
+    // if (reading === comments.length - 1) {
+    //   this.addReading();
+    // }
   }
   @action.bound addReading() {
     const comments = this.props.comments;
@@ -53,6 +53,9 @@ class CommentEditor extends React.Component<CommentEditorProps, {}> {
   @action.bound setLevel(s: string) {
     this.level = s;
   }
+  @action.bound addReading() {
+    this.comments.push(new Array(this.comments[0].length).fill(''));
+  }
   constructor(props: any) {
     super(props);
     this.comments = this.props.book.comments;
@@ -67,6 +70,13 @@ class CommentEditor extends React.Component<CommentEditorProps, {}> {
     return (
       <div>
         <table className="editor">
+          <caption>
+          Enter comments for each page. 
+          The TAB key will move your cursor to the next page. You may add 
+          additional readings by clicking here:
+          <button onClick={this.addReading}>Add a reading</button>. Readings that are empty on
+          every page will be deleted when you save.
+          </caption>
           <thead>
             <tr>
               <th>Page</th>
