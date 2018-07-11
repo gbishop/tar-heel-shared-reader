@@ -5,13 +5,11 @@ A simple db for Tar Heel Shared Reader
 
 import bottle
 from bottle import Bottle, request, HTTPError
-from datetime import datetime
+from datetime import datetime, timedelta
 from db import with_db, insert
-import os.path as osp
 import urllib.request
 import json
 import re
-import time
 
 app = application = Bottle()
 
@@ -37,25 +35,38 @@ def auth(min_role):
                 # parse the authentication header
                 ah = request.headers.get('Authentication', '')
                 m = re.match(
-                        r'^MYAUTH '
-                        r'user:"([a-zA-Z0-9 ]+)", '
-                        r'role:"([a-z]+)", '
-                        r'token:"([0-9a-f]+)"',
-                        ah)
+                    r'^MYAUTH '
+                    r'user:"([a-zA-Z0-9 ]+)", '
+                    r'role:"([a-z]+)", '
+                    r'token:"([0-9a-f]+)"',
+                    ah)
                 if not m:
                     raise HTTPError
                 # validate the user
                 name, role, token = m.groups()
-                url = THR + 'login?{}'.format(urllib.parse.urlencode({
-                    'shared': 2,
-                    'login': name,
-                    'role': role,
-                    'hash': token
+                # check the cache
+                db = kwargs['db']
+                row = db.execute('''
+                    select * from cache
+                        where token = ?''', [token]).fetchone()
+                if (not row or
+                        row['user'] != name or
+                        row['role'] != role or
+                        row['expires'] < datetime.now()):
+                    # cache failed so validate with THR
+                    url = THR + 'login?{}'.format(urllib.parse.urlencode({
+                        'shared': 2,
+                        'login': name,
+                        'role': role,
+                        'hash': token
                     }))
-                r = urllib.request.urlopen(url).read()
-                resp = json.loads(r.decode('utf-8'))
-                if not resp['ok']:
-                    raise HTTPError
+                    r = urllib.request.urlopen(url).read()
+                    resp = json.loads(r.decode('utf-8'))
+                    if not resp['ok']:
+                        raise HTTPError
+                    insert(db, 'cache', insertVerb='replace', token=token,
+                        user=name, role=role,
+                        expires=datetime.now() + timedelta(hours=1))
                 # check the role
                 if roles.get(role, 0) < roles[min_role]:
                     raise HTTPError

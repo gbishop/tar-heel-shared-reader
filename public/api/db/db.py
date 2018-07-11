@@ -41,9 +41,9 @@ def with_db(func):
     return func_wrapper
 
 
-def insert(db, table, **fields):
-    sql = 'insert into %s (%s) values (%s)' % (
-            table, ', '.join(fields.keys()), ', '.join(['?']*len(fields)))
+def insert(db, table, insertVerb='insert', **fields):
+    sql = '%s into %s (%s) values (%s)' % (
+        insertVerb, table, ', '.join(fields.keys()), ', '.join(['?'] * len(fields)))
     return db.execute(sql, tuple(fields.values()))
 
 
@@ -104,6 +104,13 @@ def createTables(db):
          created timestamp,
          modified timestamp,
          foreign key(bookid) references books(bookid)
+        )''')
+    # cache for tokens
+    db.execute('''create table if not exists cache
+        (token text primary key,
+         user text,
+         role text,
+         expires timestamp
         )''')
 
 
