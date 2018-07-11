@@ -93,7 +93,7 @@ def addStudent(db, user, role):
     teacher, student = user, data['student']
     insert(db, 'log', time=datetime.now(), teacher=teacher,
            student=student, action='add')
-    return 'ok'
+    return {'status': 'ok'}
 
 
 @app.route('/books')

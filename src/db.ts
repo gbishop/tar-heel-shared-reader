@@ -103,6 +103,7 @@ export class DB {
     this.token = token;
   }
 
+  // don't use fetchJson here
   @computed get authP(): IPromiseBasedObservable<Auth> {
     return fromPromise(new Promise((resolve, reject) => {
       window.fetch(THRURL + 'login/?shared=1', {
@@ -120,39 +121,32 @@ export class DB {
   }
 
   @observable StudentListReload = 0;
+  @action.bound forceReload() {
+    this.StudentListReload += 1;
+  }
 
-  @computed get studentListP(): IPromiseBasedObservable<string[]> {
-    return fromPromise(new Promise((resolve, reject) => {
-      const url = `/api/db/students?reload=${this.StudentListReload}`
-      window.fetch(url, {headers: {Authentication: this.authentication}})
-        .then(res => {
-          if (res.ok) {
-            res.json().then(obj => resolve(obj.students as string[])).catch(reject);
-          } else {
-            reject(res);
-          }
-        })
-        .catch(reject);
-    })) as IPromiseBasedObservable<string[]>;
+  @computed get studentListP() {
+    const url = `/api/db/students?reload=${this.StudentListReload}`;
+    return this.fetchJson(url, {},
+      Record({students: Array(String)}));
   }    
   @computed get studentList(): string[] {
     return this.studentListP.case({
-      fulfilled: (v) => v,
+      fulfilled: (v) => v.students,
       pending: () => [],
       rejected: (e) => []
     });
   }
   @action addStudent(studentid: string) {
     if (studentid.length > 0) {
-      window.fetch(`/api/db/students`, {
+      this.fetchJson('/api/db/students', {
         method: 'POST',
         body: JSON.stringify({teacher: this.login, student: studentid}),
         headers: {
-          'Content-Type': 'application/json',
-          'Authentication': this.authentication
+          'Content-Type': 'application/json'
         }
-      });
-      this.StudentListReload += 1;
+      }, Record({status: String}))
+      .then(this.forceReload);
     }
   }
 
@@ -165,7 +159,9 @@ export class DB {
   }
 
   fetchJson<T>(url: string, init: RequestInit, validator: Runtype<T>): IPromiseBasedObservable<T> {
-    return fromPromise(fetch(url, init)
+    const headers = {...init.headers, Authentication: this.authentication};
+    const authInit = {...init, headers};
+    return fromPromise(fetch(url, authInit)
       .then((resp) => {
         console.log('resp', resp);
         if (!resp.ok) {
@@ -178,12 +174,12 @@ export class DB {
 
   fetchBook(id: string) {
     return this.fetchJson(`/api/db/books/${id}`,
-      {headers: {Authentication: this.authentication}}, SharedBookValidator);
+      {}, SharedBookValidator);
   }
 
   fetchBookList(teacher: string) {
     return this.fetchJson(`/api/db/books?teacher=${encodeURIComponent(teacher)}`,
-      { headers: {Authentication: this.authentication}}, SharedBookResponseValidator);
+      {}, SharedBookResponseValidator);
   }
 
 
@@ -192,7 +188,6 @@ export class DB {
       method: 'post',
       body: JSON.stringify({slug}),
       headers: {
-        Authentication: this.authentication,
         'Content-type': 'application/json; charset=utf-8'
       }},
       CreateResponseValidator);
@@ -204,7 +199,6 @@ export class DB {
       method: 'put',
       body,
       headers: {
-        Authentication: this.authentication,
         'Content-type': 'application/json; charset=utf-8'
       }},
       CreateResponseValidator);
