@@ -48,7 +48,8 @@ class Choose extends React.Component<{store: Store}, {}> {
                             {item.status === 'draft' && 'Draft: '}
                             {item.title}
                           </h1>
-                          <p className="Find-Author">{item.author}</p><br/>
+                          <p className="Find-Author">by {item.author}</p><br/>
+                          <p className="Find-Author">comments by: {item.owner}</p><br/>
                           {item.owner === store.db.login &&
                           <button
                             onClick={()=>store.setEditPath(item.slug)}
