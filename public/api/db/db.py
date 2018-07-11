@@ -43,7 +43,8 @@ def with_db(func):
 
 def insert(db, table, insertVerb='insert', **fields):
     sql = '%s into %s (%s) values (%s)' % (
-        insertVerb, table, ', '.join(fields.keys()), ', '.join(['?'] * len(fields)))
+        insertVerb, table, ', '.join(fields.keys()),
+        ', '.join(['?'] * len(fields)))
     return db.execute(sql, tuple(fields.values()))
 
 
