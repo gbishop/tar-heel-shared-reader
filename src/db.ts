@@ -163,7 +163,6 @@ export class DB {
     const authInit = {...init, headers};
     return fromPromise(fetch(url, authInit)
       .then((resp) => {
-        console.log('resp', resp);
         if (!resp.ok) {
           return Promise.reject(new Error(resp.statusText));
         }
