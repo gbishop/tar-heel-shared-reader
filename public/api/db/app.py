@@ -65,6 +65,8 @@ def auth(min_role):
                     resp = json.loads(r.decode('utf-8'))
                     if not resp['ok']:
                         raise HTTPError
+                    role = resp['role']
+                    token = resp['hash']
                     insert(db, 'cache', insertVerb='replace', token=token,
                         user=name, role=role,
                         expires=datetime.now() + timedelta(minutes=1))
