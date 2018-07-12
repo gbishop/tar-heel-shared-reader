@@ -74,6 +74,7 @@ ReactDOM.render(
 );
 // registerServiceWorker();
 
+// THR will signal us here that the user has logged in
 window.addEventListener('message', (e) => {
   if (e.data === 'shared') {
     db.retryAuth();
