@@ -73,3 +73,10 @@ ReactDOM.render(
   document.getElementById('root') as HTMLElement
 );
 // registerServiceWorker();
+
+window.addEventListener('message', (e) => {
+  console.log('message', e);
+  if (e.data === 'shared') {
+    db.retryAuth();
+  }
+});

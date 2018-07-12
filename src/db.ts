@@ -103,9 +103,16 @@ export class DB {
     this.token = token;
   }
 
+  @observable authRetry = 0;
+  @action.bound retryAuth() {
+    if (this.login.length === 0) {
+      this.authRetry++;
+    }
+  }
   // don't use fetchJson here
   @computed get authP(): IPromiseBasedObservable<Auth> {
     return fromPromise(new Promise((resolve, reject) => {
+      const rt = this.authRetry;
       window.fetch(THRURL + 'login/?shared=1', {
         credentials: 'include'
       })

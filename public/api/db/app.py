@@ -53,6 +53,7 @@ def auth(min_role):
                         row['user'] != name or
                         row['role'] != role or
                         row['expires'] < datetime.now()):
+                    print('revalidate')
                     # cache failed so validate with THR
                     url = THR + 'login?{}'.format(urllib.parse.urlencode({
                         'shared': 2,
@@ -66,7 +67,7 @@ def auth(min_role):
                         raise HTTPError
                     insert(db, 'cache', insertVerb='replace', token=token,
                         user=name, role=role,
-                        expires=datetime.now() + timedelta(hours=1))
+                        expires=datetime.now() + timedelta(minutes=1))
                 # check the role
                 if roles.get(role, 0) < roles[min_role]:
                     raise HTTPError
