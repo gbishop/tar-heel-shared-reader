@@ -1,6 +1,7 @@
 import { Number, String, Array, Record, Static, Runtype } from 'runtypes';
 import { observable, computed, action } from 'mobx';
 import { fromPromise, IPromiseBasedObservable } from 'mobx-utils';
+import { saveAs } from 'file-saver';
 
 export const THRURL = 'https://gbserver3.cs.unc.edu/';
 // export const THRURL = 'https://tarheelreader.org/';
@@ -208,6 +209,15 @@ export class DB {
         'Content-type': 'application/json; charset=utf-8'
       }},
       CreateResponseValidator);
+  }
+
+  downloadLog() {
+    fetch('/api/db/log', {
+      headers: {
+        Authentication: this.authentication
+      },
+    }).then(response => response.blob())
+      .then(blob => saveAs(blob, 'thsrlog.csv'));
   }
 
 }
