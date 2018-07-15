@@ -2,11 +2,11 @@
 db wrapper for shared reader
 '''
 import sqlite3
-import contextlib
 import os
 import urllib.request
 import json
 from datetime import datetime
+import types
 
 try:
     import uwsgi  # noqa: F401
@@ -32,12 +32,13 @@ def dict_factory(cursor, row):
 def with_db(func):
     '''Add an extra argument with a database connection'''
     def func_wrapper(*args, **kwargs):
-        with contextlib.closing(sqlite3.connect(DBNAME,
-                                detect_types=DBFLAGS)) as db:
-            db.row_factory = dict_factory
-            result = func(*args, **dict(kwargs, db=db))
+        db = sqlite3.connect(DBNAME, detect_types=DBFLAGS)
+        db.row_factory = dict_factory
+        result = func(*args, **dict(kwargs, db=db))
+        if not isinstance(result, types.GeneratorType):
             db.commit()
-            return result
+            db.close()
+        return result
     return func_wrapper
 
 
@@ -60,7 +61,7 @@ def createTables(db):
          slug text,
          reading integer,
          page integer,
-         action text
+         response text
         )''')
 
     db.execute('''create table if not exists comments
@@ -148,7 +149,7 @@ def loadTables(db):
                 for p, page in enumerate(b['pages']):
                     for r, reading in enumerate(b['readings']):
                         insert(db, 'comments', sharedid=sharedid,
-                               reading=r, pageno=p,
+                               reading=r + 1, pageno=p + 1,
                                comment=reading['comments'][p])
             except IndexError:
                 print('skip', b['slug'])

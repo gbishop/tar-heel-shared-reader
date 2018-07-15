@@ -50,7 +50,7 @@ class Choose extends React.Component<{store: Store}, {}> {
                           </h1>
                           <p className="Find-Author">by {item.author}</p><br/>
                           <p className="Find-Author">comments by: {item.owner}</p><br/>
-                          {item.owner === store.db.login &&
+                          {(item.owner === store.db.login || store.db.isAdmin) &&
                           <button
                             onClick={()=>store.setEditPath(item.slug)}
                             title="Edit"
@@ -101,6 +101,8 @@ class Choose extends React.Component<{store: Store}, {}> {
         <button
           onClick={()=>store.setEditPath('')}
         >Create a new book</button>}
+        {store.db.isAdmin &&
+        <button onClick={(e)=>store.db.downloadLog()}>Download Log</button>}
         {!store.studentid ? null : WaitToRender(store.teacherBookListP, (recentBooksList) =>
             <div>
               {BookList(recentBooksList.recent, ['Recent'], true)}

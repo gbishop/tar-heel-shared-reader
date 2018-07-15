@@ -10,6 +10,7 @@ from db import with_db, insert
 import urllib.request
 import json
 import re
+import itertools
 
 app = application = Bottle()
 
@@ -69,9 +70,10 @@ def auth(min_role):
                     token = resp['hash']
                     insert(db, 'cache', insertVerb='replace', token=token,
                         user=name, role=role,
-                        expires=datetime.now() + timedelta(minutes=1))
+                        expires=datetime.now() + timedelta(hours=1))
                 # check the role
                 if roles.get(role, 0) < roles[min_role]:
+                    print('auth', role)
                     raise HTTPError
             except HTTPError:
                 raise HTTPError(403, 'Forbidden')
@@ -106,7 +108,7 @@ def addStudent(db, user, role):
     data = request.json
     teacher, student = user, data['student']
     insert(db, 'log', time=datetime.now(), teacher=teacher,
-           student=student, action='add')
+           student=student)
     return {'status': 'ok'}
 
 
@@ -224,8 +226,8 @@ def updateBook(db, user, role, slug):
     # write the new comments
     for r, reading in enumerate(comments):
         for p, comment in enumerate(reading):
-            insert(db, 'comments', sharedid=sharedid, reading=r, pageno=p,
-                   comment=comment)
+            insert(db, 'comments', sharedid=sharedid, reading=r + 1,
+                   pageno=p + 1, comment=comment)
     db.execute('''
         update shared
             set modified=?, level=?, status=?
@@ -302,6 +304,81 @@ def log(db):
     del d['bookid']
     insert(db, 'log', **d)
     return 'ok'
+
+
+csvHead = ('''Date time,Duration,Teacher,Student,Slug,Comment,'''
+           '''Reading,Page,Response,# read,# Responses\n''')
+csvRow = ('''{time},{interval:.1f},"{teacher}","{student}",{slug},'''
+          '''{comment},{reading},{page},{response},,\n''')
+csvSum = (''',{interval:.1f},"{teacher}","{student}",{slug},,,,,'''
+          '''{books},{responses}\n''')
+
+
+def noNone(d):
+    return {k: v if v is not None else '' for k, v in d.items()}
+
+
+def formatRows(style, rows):
+    yield csvHead
+    for teacher, students in itertools.groupby(rows,
+            key=lambda r: r['teacher']):
+        for student, books in itertools.groupby(students,
+                key=lambda r: r['student']):
+            bookCount = 0
+            studentResponses = 0
+            studentInterval = 0
+            for book, pages in itertools.groupby(books,
+                    key=lambda r: r['slug']):
+                bookCount += 1
+                bookResponses = 0
+                bookInterval = 0
+                prior = noNone(next(pages))
+                prior['interval'] = 0
+                for page in pages:
+                    page['interval'] = 0
+                    interval = (page['time'] - prior['time']).total_seconds()
+                    if interval > 300:
+                        interval = 0
+                    prior['interval'] = interval
+                    bookInterval += interval
+                    if prior['response']:
+                        bookResponses += 1
+                    yield csvRow.format(**prior)
+                    prior = noNone(page)
+                yield csvRow.format(**prior)
+                yield csvSum.format(
+                    **dict(prior,
+                        interval=bookInterval,
+                        books=bookCount,
+                        responses=bookResponses))
+                studentResponses += bookResponses
+                studentInterval += bookInterval
+            yield csvSum.format(
+                **dict(prior,
+                    interval=studentInterval,
+                    books=bookCount,
+                    responses=studentResponses,
+                    slug=''))
+
+
+@app.route('/log')
+@with_db
+@auth('admin')
+def report(db, user, role):
+    '''
+    dump the log into a csv
+    '''
+    rows = db.execute('''
+        select * from log
+        where teacher <> '' and
+              student <> '' and
+              slug <> ''
+        order by teacher, student, time
+    ''')
+    bottle.response.content_type = 'text/csv; charset=utf-8'
+    bottle.response.headers['Content-Disposition'] = (
+        'attachment; filename="log.csv"')
+    return formatRows('csv', rows)
 
 
 class StripPathMiddleware(object):

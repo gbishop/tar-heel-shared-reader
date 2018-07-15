@@ -20,9 +20,7 @@ class App extends React.Component<{store: Store}, {}> {
         if (store.teacherid.length === 0) {
           return (
             <div>
-              <p>Please login to Tar Heel Reader below and then click
-                <button onClick={()=>window.location.reload(true)}>here</button>
-              </p>
+              <p>Please login to Tar Heel Reader below.</p>
               <iframe
                 /* THR needs remove_action('login_init', 'send_frame_options_header'); */
                 src={`${THRURL}/login`}
@@ -33,7 +31,7 @@ class App extends React.Component<{store: Store}, {}> {
           );
 
         } else if (store.db.role.length === 0) {
-          return (<p>Contact Karen to get registered for the study</p>);
+          return (<p>Contact Karen to get registered for the study.</p>);
 
         } else if (store.editing) {
           return <Edit store={store} />;
