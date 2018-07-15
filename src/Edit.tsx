@@ -76,9 +76,10 @@ class CommentEditor extends React.Component<CommentEditorProps, {}> {
           <caption>
           Enter comments for each page. 
           The TAB key will move your cursor to the next page. You may add 
-          additional readings by clicking here:
-          <button onClick={this.addReading}>Add a reading</button>. Readings that are empty on
-          every page will be deleted when you save.
+          additional readings by clicking here&nbsp;
+          <button onClick={this.addReading}>Add a reading</button>.
+          Readings with comments that are empty on every page will be deleted
+          when you save.
           </caption>
           <thead>
             <tr>
@@ -120,8 +121,13 @@ class CommentEditor extends React.Component<CommentEditorProps, {}> {
             </select>
           </label>
         </p>
-        <button onClick={(e)=>this.save('draft')}>Save as draft</button>
-        <button onClick={(e)=>this.save('published')}>Publish</button>
+        <p>Books saved as draft are available only to you. You'll find
+          them listed in the <b>Your books</b> section.<br/>
+          <button onClick={(e)=>this.save('draft')}>Save as draft</button>
+        </p>
+        <p>Books that are published are available for everyone.<br/>
+          <button onClick={(e)=>this.save('published')}>Publish</button>
+        </p>
       </div>
     );
   }
