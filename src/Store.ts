@@ -103,7 +103,7 @@ class Store {
     }
   }
   // index to the readings array
-  @observable public reading: number = 0;
+  @observable public reading: number = 1;
   @action.bound public setReading(n: number) {
     this.reading = n;
     this.responseIndex = 0;
@@ -123,6 +123,9 @@ class Store {
 
   @observable public responseOffset = 0;
   @observable public responsesPerPage = 4;
+  @action.bound setResponsesPerPage(n: number) {
+    this.responsesPerPage = n;
+  }
 
   @computed get allowedResponses() {
     return allResponses.filter(r => !this.responsesExcluded.get(r));

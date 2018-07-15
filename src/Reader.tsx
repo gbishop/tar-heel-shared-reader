@@ -72,8 +72,8 @@ class Reader extends React.Component<{store: Store}, {}> {
 
         const npages = book.pages.length;
         const pageno = store.pageno;
-        const comment = store.pageno < npages ?
-          book.comments[store.reading][pageno] : '';
+        const comment = store.pageno <= npages ?
+          book.comments[store.reading-1][pageno-1] : '';
 
         return (
           <div>
@@ -83,7 +83,7 @@ class Reader extends React.Component<{store: Store}, {}> {
             >&#x2699;</button>
             <input 
               type="number" 
-              value={store.reading+1} 
+              value={store.reading} 
               min={1} 
               max={store.nreadings} 
               onChange={(e) => store.setReading(+e.target.value-1)}
@@ -392,7 +392,7 @@ class Controls extends React.Component<ControlsProps, {}> {
             <label>Reading:&nbsp; 
               <input
                 type="number"
-                value={store.reading + 1}
+                value={store.reading}
                 min={1}
                 max={store.nreadings}
                 onChange={e => store.setReading(+e.target.value - 1)}
@@ -401,7 +401,7 @@ class Controls extends React.Component<ControlsProps, {}> {
             <label>Side:&nbsp;
               <Layout store={store} />
             </label>
-            <label>Size:&nbsp;
+            <label>Word Size:&nbsp;
               <input
                 type="range"
                 min="0"
@@ -409,6 +409,15 @@ class Controls extends React.Component<ControlsProps, {}> {
                 value={store.responseSize}
                 onChange={e => store.setResponseSize(+e.target.value)}
               />
+            </label>
+            <label>Words per page:&nbsp;
+              <select
+                value={store.responsesPerPage}
+                onChange={e => store.setResponsesPerPage(+e.target.value)}
+              >
+                {[4,6,9,12,18].map(n =>
+                <option value={n} key={n}>{n}</option>)}
+              </select>
             </label>
             <label>Page Navigation:&nbsp;
               <input
