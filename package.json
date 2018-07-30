@@ -29,7 +29,7 @@
     "@types/node": "^10.3.4",
     "@types/react": "^16.4.1",
     "@types/react-dom": "^16.0.6",
-    "typescript": "^2.9.2"
+    "typescript": "^3.0.1"
   },
   "proxy": {
     "/api/db": {
