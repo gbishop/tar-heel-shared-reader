@@ -86,7 +86,7 @@ class Reader extends React.Component<{store: Store}, {}> {
               value={store.reading} 
               min={1} 
               max={store.nreadings} 
-              onChange={(e) => store.setReading(+e.target.value-1)}
+              onChange={(e) => store.setReading(+e.target.value)}
               style={{width: "2em"}}
             />
             <div className="comment" >{comment}</div>
@@ -395,7 +395,7 @@ class Controls extends React.Component<ControlsProps, {}> {
                 value={store.reading}
                 min={1}
                 max={store.nreadings}
-                onChange={e => store.setReading(+e.target.value - 1)}
+                onChange={e => store.setReading(+e.target.value)}
               />
             </label>
             <label>Side:&nbsp;
