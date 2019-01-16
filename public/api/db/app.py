@@ -17,8 +17,8 @@ app = application = Bottle()
 # enable debugging
 bottle.debug(True)
 
-# THR = 'https://tarheelreader.org/'
-THR = 'https://gbserver3.cs.unc.edu/'
+THR = 'https://tarheelreader.org/'
+# THR = 'https://gbserver3.cs.unc.edu/'
 
 
 roles = {

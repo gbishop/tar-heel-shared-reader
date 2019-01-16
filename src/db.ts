@@ -3,8 +3,8 @@ import { observable, computed, action } from 'mobx';
 import { fromPromise, IPromiseBasedObservable } from 'mobx-utils';
 import { saveAs } from 'file-saver';
 
-export const THRURL = 'https://gbserver3.cs.unc.edu/';
-// export const THRURL = 'https://tarheelreader.org/';
+// export const THRURL = 'https://gbserver3.cs.unc.edu/';
+export const THRURL = 'https://tarheelreader.org/';
 
 export const LevelNames = [
   'K-2',
