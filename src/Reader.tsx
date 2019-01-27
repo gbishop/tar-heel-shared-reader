@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import KeyHandler from 'react-key-handler';
-import * as ReactModal from 'react-modal';
+import ReactModal from 'react-modal';
 import NextArrow from './NextArrow.png';
 import BackArrow from './BackArrow.png';
 import NextResponsePage from './NextResponsePage.png';

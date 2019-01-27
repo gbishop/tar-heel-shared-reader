@@ -1,42 +1,43 @@
 {
-  "name": "nreader",
+  "name": "revisions",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@types/file-saver": "^1.3.0",
-    "@types/react-modal": "^3.1.2",
+    "@types/file-saver": "^2.0.0",
+    "@types/jest": "23.3.13",
+    "@types/node": "10.12.18",
+    "@types/react": "16.7.20",
+    "@types/react-dom": "16.0.11",
+    "@types/react-modal": "^3.8.0",
     "director": "^1.2.8",
-    "file-saver": "^1.3.8",
-    "mobx": "^5.0.3",
-    "mobx-react": "^5.2.3",
-    "mobx-react-devtools": "^5.0.1",
-    "mobx-utils": "^5.0.0",
-    "react": "^16.4.1",
-    "react-dom": "^16.4.1",
-    "react-key-handler": "^1.0.1",
-    "react-modal": "^3.4.5",
-    "react-scripts-ts": "2.16.0",
-    "runtypes": "^2.0.6"
+    "file-saver": "^2.0.0",
+    "http-proxy-middleware": "^0.19.1",
+    "mobx": "^5.9.0",
+    "mobx-react": "^5.4.3",
+    "mobx-react-devtools": "^6.0.3",
+    "mobx-utils": "^5.1.0",
+    "react": "^16.7.0",
+    "react-dom": "^16.7.0",
+    "react-key-handler": "^1.2.0-beta.3",
+    "react-modal": "^3.8.1",
+    "react-scripts": "2.1.3",
+    "runtypes": "^3.1.2",
+    "typescript": "3.2.4"
   },
   "scripts": {
-    "start": "react-scripts-ts start",
-    "build": "react-scripts-ts build",
-    "test": "react-scripts-ts test --env=jsdom",
-    "eject": "react-scripts-ts eject"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
-  "devDependencies": {
-    "@types/jest": "^23.1.1",
-    "@types/node": "^10.3.4",
-    "@types/react": "^16.4.1",
-    "@types/react-dom": "^16.0.6",
-    "typescript": "^3.0.1"
+  "eslintConfig": {
+    "extends": "react-app"
   },
-  "proxy": {
-    "/api/db": {
-      "target": "http://localhost:5500",
-      "pathRewrite": {
-        "^/api/db": "/"
-      }
-    }
-  }
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ],
+  "proxy": "https://shared2.tarheelreader.org"
 }
