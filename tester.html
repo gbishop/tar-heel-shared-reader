@@ -12,7 +12,15 @@
 
     <script>
         $(document).ready(() => {
-            var colors = new tracking.ColorTracker(['magenta', 'cyan', 'yellow']);
+            tracking.ColorTracker.registerColor('green', function(r, g, b) {
+                if (r < 200 && g > 125 && b < 175) {
+                    return true;
+                }
+                return false;
+            });
+
+            var colors = new tracking.ColorTracker(['green']);
+
 
             colors.on('track', (event) => {
                 if (event.data.length === 0) {

@@ -119,6 +119,19 @@ interface ReaderContentProps {
 
 @observer
 class ReaderContent extends React.Component<ReaderContentProps, {}> {
+  // TODO
+  componentDidMount() {
+    const canvas: any = this.refs.canvas;
+    const ctx: any = canvas.getContext('2d');
+    const img: any = this.refs.image;
+    
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+    }
+  }
+
   public render() {
     const {book, box, pageno, store} = this.props;
     const {width, height, top, left} = box; 
@@ -179,12 +192,15 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
       return (
         <div className="book-page" style={pageStyle}>
           <h1 className="title" style={titleStyle}>{book.title}</h1>
-          <img 
-            src={'https://tarheelreader.org' + book.pages[0].url} 
-            className="pic" 
-            style={picStyle}
-            alt=""
-          />
+          <canvas onClick={(e) => store.draw(this, e)} ref='canvas' style={{position: 'absolute'}}>
+            <img
+              ref='image'
+              src={'https://tarheelreader.org' + page.url}
+              className="pic"
+              style={picStyle}
+              alt=""
+            />
+          </canvas>
           <PageNavButtons store={store}/>
         </div>
       );
@@ -192,12 +208,16 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
       return (
         <div className="book-page" style={pageStyle}>
           <p className="page-number">{pageno}</p>
-          <img
-            src={'https://tarheelreader.org' + page.url}
-            className="pic"
-            style={picStyle}
-            alt=""
-          />
+          <canvas ref='canvas' style={{position: 'absolute'}}>
+            <img
+              ref='image'
+              src={'https://tarheelreader.org' + page.url}
+              className="pic"
+              style={picStyle}
+              alt=""
+            />
+          </canvas>
+
           <div className="caption-box">
             <p className="caption">{page.text}</p>
           </div>

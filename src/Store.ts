@@ -205,6 +205,12 @@ class Store {
     Object.keys(v.bookListOpen).forEach(key => this.bookListOpen.set(key, v.bookListOpen[key]));
   }
 
+  // TODO
+  @action.bound public draw(self, e) {
+    let left = e.clientX - self.refs.canvas.getBoundingClientRect().left;
+    let top = e.clientY - self.refs.canvas.getBoundingClientRect().top;
+  }
+
   // log state changes
   public log(response?: string) {
     const lr: LogRecord = {
