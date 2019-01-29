@@ -205,10 +205,24 @@ class Store {
     Object.keys(v.bookListOpen).forEach(key => this.bookListOpen.set(key, v.bookListOpen[key]));
   }
 
-  // TODO
+// draw rectangle around region of picture that is clicked 
+  @observable box_width: number = 150;
+  @observable box_height: number = 100;
   @action.bound public draw(self, e) {
+    let image = self.refs.image;
+    let ctx = self.refs.canvas.getContext('2d');
+    ctx.clearRect(0, 0, self.refs.canvas.width, self.refs.canvas.height);
+    ctx.drawImage(image, 0, 0);
+    ctx.lineWidth = '1';
+    ctx.strokeStyle = '#000000';
     let left = e.clientX - self.refs.canvas.getBoundingClientRect().left;
     let top = e.clientY - self.refs.canvas.getBoundingClientRect().top;
+    let left_correction = Math.floor(this.box_width / 2);
+    let top_correction = Math.floor(this.box_height / 2);
+    ctx.beginPath();
+    ctx.rect(left - left_correction, top - top_correction, this.box_width, this.box_height);
+    ctx.stroke();
+    ctx.closePath();
   }
 
   // log state changes
