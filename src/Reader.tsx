@@ -208,7 +208,7 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
       return (
         <div className="book-page" style={pageStyle}>
           <p className="page-number">{pageno}</p>
-          <canvas ref='canvas' style={{position: 'relative'}}>
+          <canvas onClick={(e) => store.draw(this, e)} ref='canvas' style={{position: 'relative'}}>
             <img
               ref='image'
               src={'https://tarheelreader.org' + page.url}
