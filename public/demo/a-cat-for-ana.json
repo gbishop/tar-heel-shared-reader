@@ -1,0 +1,100 @@
+{
+    "pages": [
+        {
+            "page": 1,
+            "x": 66,
+            "y": 165,
+            "description": "cat"
+        },
+        {
+            "page": 2,
+            "x": 66,
+            "y": 165,
+            "description": "cat"
+        },
+        {
+            "page": 3,
+            "x": 236,
+            "y": 193,
+            "description": "barn"
+        },
+        {
+            "page": 4,
+            "x": 238,
+            "y": 67,
+            "description": "puppy"
+        },
+        {
+            "page": 5,
+            "x": 136,
+            "y": 22,
+            "description": "cat"
+        },
+        {
+            "page": 6,
+            "x": 138,
+            "y": 184,
+            "description": "food"
+        },
+        {
+            "page": 7,
+            "x": 121,
+            "y": 119,
+            "description": "pet"
+        },
+        {
+            "page": 8,
+            "x": 65,
+            "y": 259,
+            "description": "toy"
+        },
+        {
+            "page": 9,
+            "x": 90,
+            "y": 109,
+            "description": "Jil"
+        },
+        {
+            "page": 10,
+            "x": 155,
+            "y": 96,
+            "description": "kitten"
+        },
+        {
+            "page": 11,
+            "x": 148,
+            "y": 152,
+            "description": "kitten"
+        },
+        {
+            "page": 12,
+            "x": 71,
+            "y": 49,
+            "description": "Ana"
+        },
+        {
+            "page": 13,
+            "x": 167,
+            "y": 124,
+            "description": "kitten"
+        },
+        {
+            "page": 14,
+            "x": 109,
+            "y": 156,
+            "description": "Sue"
+        },
+        {
+            "page": 15,
+            "x": 66,
+            "y": 165,
+            "description": "cat"
+        },
+        {
+            "page": 16,
+            "x": 66,
+            "y": 165,
+            "description": "Sue"
+        }
+    ]
+}

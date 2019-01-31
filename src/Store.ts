@@ -206,6 +206,7 @@ class Store {
   }
 
 // draw rectangle around region of picture that is clicked 
+// TODO
   @observable box_width: number = 150;
   @observable box_height: number = 100;
   @action.bound public draw(self, e) {
@@ -215,11 +216,12 @@ class Store {
     ctx.drawImage(image, 0, 0);
     ctx.lineWidth = '1';
     ctx.strokeStyle = '#000000';
-    let left = e.clientX - self.refs.canvas.getBoundingClientRect().left;
-    let top = e.clientY - self.refs.canvas.getBoundingClientRect().top;
+    let left = Math.floor(e.clientX - self.refs.canvas.getBoundingClientRect().left);
+    let top = Math.floor(e.clientY - self.refs.canvas.getBoundingClientRect().top);
     let left_correction = Math.floor(this.box_width / 2);
     let top_correction = Math.floor(this.box_height / 2);
     ctx.beginPath();
+    console.log('x', left - left_correction, 'y', top - top_correction);
     ctx.rect(left - left_correction, top - top_correction, this.box_width, this.box_height);
     ctx.stroke();
     ctx.closePath();
