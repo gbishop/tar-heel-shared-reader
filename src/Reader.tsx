@@ -119,8 +119,8 @@ interface ReaderContentProps {
 
 @observer
 class ReaderContent extends React.Component<ReaderContentProps, {}> {
-  // TODO
   componentDidMount() {
+    // render images on canvas when image has finished loading
     const canvas: any = this.refs.canvas;
     const ctx: any = canvas.getContext('2d');
     const img: any = this.refs.image;
@@ -140,13 +140,12 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
       width, height, top, left, fontSize
     };
     if (pageno > book.pages.length) {
-
       return (
         <div className="book-page" style={pageStyle}>
           <h1 className="title">What would you like to do now?</h1>
           <div className="choices">
             <button 
-              onClick={() => { store.setPage(1); }}
+              onClick={() => { store.setBookid(this.props.store.bookid); }}
             >
               Read this book again
             </button>
@@ -195,10 +194,21 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
           <canvas onClick={(e) => store.draw(this, e)} ref='canvas' style={{position: 'relative'}}>
             <img
               ref='image'
-              src={'https://tarheelreader.org' + page.url}
+              src={'https://tarheelreader.org' + book.pages[0].url}
               className="pic"
               style={picStyle}
               alt=""
+              onLoad={() => {
+                const canvas: any = this.refs.canvas;
+                const ctx: any = canvas.getContext('2d');
+                const img: any = this.refs.image;
+
+                img.onload = () => {
+                  canvas.width = img.width;
+                  canvas.height = img.height;
+                  ctx.drawImage(img, 0, 0);
+                }
+              }}
             />
           </canvas>
           <PageNavButtons store={store}/>
@@ -215,6 +225,17 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
               className="pic"
               style={picStyle}
               alt=""
+              // onLoad={() => {
+              //   const canvas: any = this.refs.canvas;
+              //   const ctx: any = canvas.getContext('2d');
+              //   const img: any = this.refs.image;
+
+              //   img.onload = () => {
+              //     canvas.width = img.width;
+              //     canvas.height = img.height;
+              //     ctx.drawImage(img, 0, 0);
+              //   }
+              // }}
             />
           </canvas>
 
