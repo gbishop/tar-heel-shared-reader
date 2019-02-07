@@ -119,19 +119,6 @@ interface ReaderContentProps {
 
 @observer
 class ReaderContent extends React.Component<ReaderContentProps, {}> {
-  componentDidMount() {
-    // render images on canvas when image has finished loading
-    const canvas: any = this.refs.canvas;
-    const ctx: any = canvas.getContext('2d');
-    const img: any = this.refs.image;
-    
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-    }
-  }
-
   public render() {
     const {book, box, pageno, store} = this.props;
     const {width, height, top, left} = box; 
@@ -171,12 +158,14 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
     let picStyle = {};
     if (verticalScale < horizontalScale) {
       picStyle = {
-        height: maxPicHeight
+        height: maxPicHeight,
+        position: 'relative'
       };
     } else {
       picStyle = {
         width: maxPicWidth,
-        marginTop: pageno === 1 ? 0 : (maxPicHeight - horizontalScale * page.height)
+        marginTop: pageno === 1 ? 0 : (maxPicHeight - horizontalScale * page.height),
+        position: 'relative'
       };
     }
 
@@ -191,26 +180,15 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
       return (
         <div className="book-page" style={pageStyle}>
           <h1 className="title" style={titleStyle}>{book.title}</h1>
-          <canvas onClick={(e) => store.draw(this, {x: e.clientX, y: e.clientY})} ref='canvas' style={{position: 'relative'}}>
-            <img
-              ref='image'
-              src={'https://tarheelreader.org' + book.pages[0].url}
-              className="pic"
-              style={picStyle}
-              alt=""
-              onLoad={() => {
-                const canvas: any = this.refs.canvas;
-                const ctx: any = canvas.getContext('2d');
-                const img: any = this.refs.image;
-
-                img.onload = () => {
-                  canvas.width = img.width;
-                  canvas.height = img.height;
-                  ctx.drawImage(img, 0, 0);
-                }
-              }}
-            />
-          </canvas>
+          <img
+            ref='image'
+            src={'https://tarheelreader.org' + book.pages[0].url}
+            className="pic"
+            style={picStyle}
+            alt=""
+            onClick={(e) => {store.draw_box(e)}}
+          />
+          { <div style={Object.assign({}, store.spotlight_css)}></div>}
           <PageNavButtons store={store}/>
         </div>
       );
@@ -218,27 +196,15 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
       return (
         <div className="book-page" style={pageStyle}>
           <p className="page-number">{pageno}</p>
-          <canvas onClick={(e) => store.draw(this, {x: e.clientX, y: e.clientY})}  ref='canvas' style={{position: 'relative'}}>
-            <img
-              ref='image'
-              src={'https://tarheelreader.org' + page.url}
-              className="pic"
-              style={picStyle}
-              alt=""
-              // onLoad={() => {
-              //   const canvas: any = this.refs.canvas;
-              //   const ctx: any = canvas.getContext('2d');
-              //   const img: any = this.refs.image;
-
-              //   img.onload = () => {
-              //     canvas.width = img.width;
-              //     canvas.height = img.height;
-              //     ctx.drawImage(img, 0, 0);
-              //   }
-              // }}
-            />
-          </canvas>
-
+          <img
+            ref='image'
+            src={'https://tarheelreader.org' + page.url}
+            className="pic"
+            style={picStyle}
+            alt=""
+            onClick={(e) => {store.draw_box(e)}}
+          />
+          { <div style={Object.assign({}, store.spotlight_css)}></div>}
           <div className="caption-box">
             <p className="caption">{page.text}</p>
           </div>

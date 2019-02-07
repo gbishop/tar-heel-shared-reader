@@ -1,5 +1,6 @@
 import { observable, computed, action, ObservableMap } from 'mobx';
 import { DB, LogRecord } from './db';
+import * as React from 'react';
 
 export const allResponses: string[] = [
   'like', 'want', 'not', 'go',
@@ -223,6 +224,28 @@ class Store {
     ctx.rect(left - left_correction, top - top_correction, this.box_width, this.box_height);
     ctx.stroke();
     ctx.closePath();
+  }
+
+  @observable spotlight_css: React.CSSProperties = {};
+
+  @action.bound public draw_box(e) {
+    let offset_x = e.currentTarget.offsetLeft;
+    let offset_y = e.currentTarget.offsetTop;
+
+    let click_x = e.clientX;
+    let click_y = e.clientY;
+
+    let box_x = offset_x + (click_x - offset_x);
+    let box_y = offset_y + (click_y - offset_y);
+
+    let box_center_x = click_x - box_x;
+    let box_center_y = click_y - box_y;
+
+    this.spotlight_css = {
+      width: '200px',
+      height: '100px',
+      backgroundColor: 'black'
+    };
   }
 
   // log state changes
