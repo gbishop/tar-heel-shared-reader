@@ -156,17 +156,22 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
     const verticalScale = maxPicHeight / page.height;
     const horizontalScale = maxPicWidth / page.width;
     let picStyle = {};
+    // TODO
+    let book_page_spotlight: React.CSSProperties = {};
+    book_page_spotlight.position = 'relative';
+    book_page_spotlight.display = 'inline-block';
     if (verticalScale < horizontalScale) {
       picStyle = {
-        height: maxPicHeight,
-        position: 'relative'
+        height: maxPicHeight
       };
+      book_page_spotlight.height = maxPicHeight;
     } else {
       picStyle = {
         width: maxPicWidth,
-        marginTop: pageno === 1 ? 0 : (maxPicHeight - horizontalScale * page.height),
-        position: 'relative'
+        marginTop: pageno === 1 ? 0 : (maxPicHeight - horizontalScale * page.height)
       };
+      book_page_spotlight.width = maxPicWidth;
+      book_page_spotlight.marginTop = pageno == 1 ? 0 : (maxPicHeight - horizontalScale * page.height);
     }
 
     if (pageno === 1) {
@@ -179,32 +184,37 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
       };
       return (
         <div className="book-page" style={pageStyle}>
+          <div className="book-page-spotlight" style={book_page_spotlight}>
+            {<div style={Object.assign({}, store.spotlight_css)}></div>}
+            <img
+              ref='image'
+              src={'https://tarheelreader.org' + book.pages[0].url}
+              className="pic"
+              style={picStyle}
+              alt=""
+              onClick={(e) => {store.draw_box(e)}}
+            />
+          </div>
+
           <h1 className="title" style={titleStyle}>{book.title}</h1>
-          <img
-            ref='image'
-            src={'https://tarheelreader.org' + book.pages[0].url}
-            className="pic"
-            style={picStyle}
-            alt=""
-            onClick={(e) => {store.draw_box(e)}}
-          />
-          { <div style={Object.assign({}, store.spotlight_css)}></div>}
           <PageNavButtons store={store}/>
         </div>
       );
     } else {
       return (
         <div className="book-page" style={pageStyle}>
+          <div className="book-page-spotlight" style={book_page_spotlight}>
+            {<div style={Object.assign({}, store.spotlight_css)}></div>}
+            <img
+              ref='image'
+              src={'https://tarheelreader.org' + page.url}
+              className="pic"
+              style={picStyle}
+              alt=""
+              onClick={(e) => {store.draw_box(e)}}
+            />
+          </div>
           <p className="page-number">{pageno}</p>
-          <img
-            ref='image'
-            src={'https://tarheelreader.org' + page.url}
-            className="pic"
-            style={picStyle}
-            alt=""
-            onClick={(e) => {store.draw_box(e)}}
-          />
-          { <div style={Object.assign({}, store.spotlight_css)}></div>}
           <div className="caption-box">
             <p className="caption">{page.text}</p>
           </div>

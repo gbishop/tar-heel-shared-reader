@@ -206,45 +206,31 @@ class Store {
     Object.keys(v.bookListOpen).forEach(key => this.bookListOpen.set(key, v.bookListOpen[key]));
   }
 
-// draw rectangle around region of picture that is clicked 
-  @observable box_width: number = 150;
-  @observable box_height: number = 100;
-  @action.bound public draw(self, coordinates) {
-    let image = self.refs.image;
-    let ctx = self.refs.canvas.getContext('2d');
-    ctx.clearRect(0, 0, self.refs.canvas.width, self.refs.canvas.height);
-    ctx.drawImage(image, 0, 0);
-    ctx.lineWidth = '1';
-    ctx.strokeStyle = '#000000';
-    let left = Math.floor(coordinates.x - self.refs.canvas.getBoundingClientRect().left);
-    let top = Math.floor(coordinates.y - self.refs.canvas.getBoundingClientRect().top);
-    let left_correction = Math.floor(this.box_width / 2);
-    let top_correction = Math.floor(this.box_height / 2);
-    ctx.beginPath();
-    ctx.rect(left - left_correction, top - top_correction, this.box_width, this.box_height);
-    ctx.stroke();
-    ctx.closePath();
-  }
-
   @observable spotlight_css: React.CSSProperties = {};
+  @observable spotlight_base: number = 100;
 
   @action.bound public draw_box(e) {
-    let offset_x = e.currentTarget.offsetLeft;
-    let offset_y = e.currentTarget.offsetTop;
+    let offset_x = e.currentTarget.parentElement.offsetLeft;
+    let offset_y = 0;
 
-    let click_x = e.clientX;
-    let click_y = e.clientY;
+    // reference to reading-container element 
+    let reading_container = document.querySelector('.reading-container') as HTMLDivElement;
+    if (reading_container !== null) {
+      offset_y = reading_container.offsetTop;
+    }
 
-    let box_x = offset_x + (click_x - offset_x);
-    let box_y = offset_y + (click_y - offset_y);
-
-    let box_center_x = click_x - box_x;
-    let box_center_y = click_y - box_y;
+    let box_center_x = e.clientX - offset_x;
+    let box_center_y = e.clientY - offset_y;
 
     this.spotlight_css = {
-      width: '200px',
-      height: '100px',
-      backgroundColor: 'black'
+      position: 'absolute',
+      width: this.spotlight_base + 'px',
+      height: this.spotlight_base +'px',
+      borderRadius: (this.spotlight_base / 2) + 'px',
+      backgroundColor: 'white',
+      left: (box_center_x - (this.spotlight_base / 2)) + 'px',
+      top: (box_center_y - (this.spotlight_base / 2)) + 'px',
+      opacity: 0.4
     };
   }
 
