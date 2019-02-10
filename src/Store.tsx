@@ -1,6 +1,7 @@
 import { observable, computed, action, ObservableMap } from 'mobx';
 import { DB, LogRecord } from './db';
 import * as React from 'react';
+import sampleJSON from './a-trip-to-the-zoo-8.json';
 
 export const allResponses: string[] = [
   'like', 'want', 'not', 'go',
@@ -209,9 +210,15 @@ class Store {
   @observable spotlight_css: React.CSSProperties = {};
   @observable spotlight_base: number = 100;
 
-  @action.bound public draw_box(e) {
+  @action.bound public draw_box(e?) {
+    // reference to the spotlight-container element 
+    let offset_x = 0;
+    let spotlight_container = document.querySelector('.book-page-spotlight') as HTMLDivElement;
+    if (spotlight_container !== null) {
+      offset_x = spotlight_container.offsetLeft;
+    }
+
     // reference to reading-container element 
-    let offset_x = e.currentTarget.parentElement.offsetLeft;
     let offset_y = 0;
     let reading_container = document.querySelector('.reading-container') as HTMLDivElement;
     if (reading_container !== null) {
@@ -235,8 +242,22 @@ class Store {
     };
 
     // relative distance from top left of image to the click location itself 
-    let relative_x = ((e.clientX - offset_x) - (this.spotlight_base / 2)) - image_coordinates.topLeft.x;
-    let relative_y = ((e.clientY - offset_y) - (this.spotlight_base / 2)) - image_coordinates.topLeft.y;
+    let relative_x;
+    let relative_y;
+    if (e === undefined) {
+      if (this.pageno > sampleJSON.pages.length) {
+        return;
+      }
+      if (this.bookid === 'a-trip-to-the-zoo-8') {
+        relative_x = sampleJSON.pages[this.pageno - 1].x;
+        relative_y = sampleJSON.pages[this.pageno - 1].y;
+      } else {
+        return;
+      }
+    } else {
+      relative_x = ((e.clientX - offset_x) - (this.spotlight_base / 2)) - image_coordinates.topLeft.x;;
+      relative_y = ((e.clientY - offset_y) - (this.spotlight_base / 2)) - image_coordinates.topLeft.y;
+    }
 
     // relative coordinates of the spotlight itself 
     let spotlight_x = image_coordinates.topLeft.x + relative_x;

@@ -236,10 +236,10 @@ class PageNavButtons extends React.Component<PageNavButtonsProps, {}> {
     if (store.pageTurnVisible) {
       return (
         <div>
-          <button className="next-link" onClick={()=>store.setPage(store.pageno+1)}>
+          <button className="next-link" onClick={()=>{store.setPage(store.pageno+1); store.draw_box();}}>
             <img src={NextArrow} alt="next"/>Next
           </button>
-          <button className="back-link" onClick={()=>store.setPage(store.pageno-1)}>
+          <button className="back-link" onClick={()=>{store.setPage(store.pageno-1); store.draw_box();}}>
             <img src={BackArrow} alt="back"/>Back
           </button>
         </div>
