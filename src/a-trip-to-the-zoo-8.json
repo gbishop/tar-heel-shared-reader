@@ -1,0 +1,64 @@
+{
+    "pages": [
+        {
+            "page": 1,
+            "x": 268,
+            "y": 174,
+            "description": "zoo" 
+        },
+        {
+            "page": 2,
+            "x": 268,
+            "y": 174,
+            "description": "zoo"
+        },
+        {
+            "page": 3,
+            "x": -71,
+            "y": 172,
+            "description": "ears"
+        },
+        {
+            "page": 4,
+            "x": -233,
+            "y": 308,
+            "description": ""
+        },
+        {
+            "page": 5,
+            "x": -215,
+            "y": 119,
+            "description": "furry, white coat"
+        },
+        {
+            "page": 6,
+            "x": -161,
+            "y": 131,
+            "description": "long neck"
+        },
+        {
+            "page": 7,
+            "x": 331,
+            "y": 164,
+            "description": "big horn"
+        },
+        {
+            "page": 8,
+            "x": 408,
+            "y": 65,
+            "description": "sharp teeth"
+        },
+        {
+            "page": 9,
+            "x": 41,
+            "y": 283,
+            "description": "hairy mane"
+        },
+        {
+            "page": 10,
+            "x": 282,
+            "y": 166,
+            "description": "zoo exit"
+        }
+    ]
+}

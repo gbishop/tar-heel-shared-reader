@@ -210,26 +210,47 @@ class Store {
   @observable spotlight_base: number = 100;
 
   @action.bound public draw_box(e) {
+    // reference to reading-container element 
     let offset_x = e.currentTarget.parentElement.offsetLeft;
     let offset_y = 0;
-
-    // reference to reading-container element 
     let reading_container = document.querySelector('.reading-container') as HTMLDivElement;
     if (reading_container !== null) {
       offset_y = reading_container.offsetTop;
     }
 
-    let box_center_x = e.clientX - offset_x;
-    let box_center_y = e.clientY - offset_y;
+    // reference to the book page image 
+    let image_reference = document.querySelector('.pic') as HTMLImageElement;
+    let image_width, image_height = 0;
+    if (image_reference !== null) {
+      image_width = image_reference.width;
+      image_height = image_reference.height;
+    }
 
+    // relative coordinates of the book page image 
+    let image_coordinates = {
+      topLeft: { x: offset_x, y: offset_y },
+      topRight: { x: offset_x + image_width, y: offset_y },
+      bottomLeft: { x: offset_x, y: offset_y + image_height },
+      bottomRight: { x: offset_x + image_width, y: offset_y + image_height }
+    };
+
+    // relative distance from top left of image to the click location itself 
+    let relative_x = ((e.clientX - offset_x) - (this.spotlight_base / 2)) - image_coordinates.topLeft.x;
+    let relative_y = ((e.clientY - offset_y) - (this.spotlight_base / 2)) - image_coordinates.topLeft.y;
+
+    // relative coordinates of the spotlight itself 
+    let spotlight_x = image_coordinates.topLeft.x + relative_x;
+    let spotlight_y = image_coordinates.topLeft.y + relative_y;
+
+    // spotlight CSS
     this.spotlight_css = {
       position: 'absolute',
       width: this.spotlight_base + 'px',
       height: this.spotlight_base +'px',
       borderRadius: (this.spotlight_base / 2) + 'px',
       backgroundColor: 'white',
-      left: (box_center_x - (this.spotlight_base / 2)) + 'px',
-      top: (box_center_y - (this.spotlight_base / 2)) + 'px',
+      left: spotlight_x,
+      top: spotlight_y,
       opacity: 0.4
     };
   }
