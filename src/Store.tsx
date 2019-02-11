@@ -213,40 +213,33 @@ class Store {
 
   // draws a spotlight on the image 
   @action.bound public draw_box(e?) {
-    // return if number of pages in book has been exceeded 
     if (this.pageno > this.npages) {
       return;
     }
 
-    // click coordinate if available 
-    let click_x;
-    let click_y;
-    if (e !== undefined) {
-      click_x = e.clientX;
-      click_y = e.clientY;
-    }
-
-    // reference to the spotlight-container element 
     let offset_x, offset_y = 0;
-    let spotlight_container = document.querySelector('.book-page-spotlight') as HTMLDivElement;
-    if (spotlight_container !== null) {
-      offset_y = spotlight_container.getBoundingClientRect().top;
-    }
-
-    // reference to the book page image 
-    let image_reference = document.querySelector('.pic') as HTMLImageElement;
+    let click_x, click_y;
+    let spotlight_x, spotlight_y;
     let image_width, image_height, previous_src;
-    if (image_reference !== null) {
+    let spotlight_container = document.querySelector('.book-page-spotlight') as HTMLDivElement;
+    let image_reference = document.querySelector('.pic') as HTMLImageElement;
+
+    if (spotlight_container !== null && image_reference !== null) {
+      offset_y = spotlight_container.getBoundingClientRect().top;
       image_width = image_reference.width;
       image_height = image_reference.height;
       previous_src = image_reference.src;
       offset_x = image_reference.offsetLeft;
     }
-
-    // fixes bug where image does not load (even with onload)
-    if (e === undefined && this.bookid === 'a-trip-to-the-zoo-8') {
+    
+    if (e === undefined) {
+      let books = ['a-tri-to-the-zoo-8'];
       let timeout = 0;
-      let id = setInterval(() => {
+      let id;
+      if (books.includes(this.bookid) === false) {
+        next(this);
+      }
+      id = setInterval(() => {
         if (this.pageno === 1 || this.pageno === 2) {
           clearInterval(id);
           next(this);
@@ -257,48 +250,40 @@ class Store {
           offset_x = image_reference.offsetLeft;
           next(this);
         } 
-  
-        // timeout if after 10 seconds image has not been updated 
         timeout += 50;
-        if (timeout === 5000) {
+        if (timeout === 10000) {
           clearInterval(id);
-          console.log('timed out.');
         }
       }, 50);
     } else {
-      next(this);
+      click_x = e.clientX;
+      click_y = e.clientY;
+      spotlight_x = (offset_x + (click_x - offset_x)) - (this.spotlight_base / 2);
+      spotlight_y = (click_y - offset_y) - (this.spotlight_base / 2);
     }
 
     function next(t) {
-      // relative distance from top left of image to the click location itself 
-      let spotlight_x = (offset_x + (click_x - offset_x)) - (t.spotlight_base / 2);
-      let spotlight_y = (click_y - offset_y) - (t.spotlight_base / 2);
-      if (e === undefined) {
         if (t.bookid === 'a-trip-to-the-zoo-8') {
           if (t.pageno !== 1 && t.pageno !== 2) {
             spotlight_x = offset_x + sampleJSON.pages[t.pageno - 1].x - (t.spotlight_base / 2);
             spotlight_y = offset_y + sampleJSON.pages[t.pageno - 1].y - (t.spotlight_base / 2);
           }
-        } else {
-          return;
-        }
-      }
-
-      // spotlight CSS
-      t.spotlight_css = {
-        position: 'fixed',
-        width: t.spotlight_base + 'px',
-        height: t.spotlight_base + 'px',
-        borderRadius: (t.spotlight_base / 2) + 'px',
-        backgroundColor: 'black',
-        left: spotlight_x + 'px',
-        top: spotlight_y + 'px',
-        opacity: 0.4
-      };
-
+        } 
       // below comment is necessary for debugging, do not delete 
       // console.log(`"x": ` + (click_x - offset_x) + `, "y": ` + (click_y - offset_y) + `, "offset_x": ` + offset_x + `, "offset_y": ` + offset_y + `,`)
     }
+
+    // set spotlight CSS
+    this.spotlight_css = {
+      position: 'absolute',
+      width: this.spotlight_base + 'px',
+      height: this.spotlight_base + 'px',
+      borderRadius: (this.spotlight_base / 2) + 'px',
+      backgroundColor: 'black',
+      left: spotlight_x + 'px',
+      top: spotlight_y + 'px',
+      opacity: 0.4
+    };
   }
 
   // log state changes
