@@ -263,12 +263,12 @@ class Store {
     }
 
     function next(t) {
-        if (t.bookid === 'a-trip-to-the-zoo-8') {
-          if (t.pageno !== 1 && t.pageno !== 2) {
-            spotlight_x = offset_x + sampleJSON.pages[t.pageno - 1].x - (t.spotlight_base / 2);
-            spotlight_y = offset_y + sampleJSON.pages[t.pageno - 1].y - (t.spotlight_base / 2);
-          }
-        } 
+      if (t.bookid === 'a-trip-to-the-zoo-8') {
+        if (t.pageno !== 1 && t.pageno !== 2) {
+          spotlight_x = offset_x + sampleJSON.pages[t.pageno - 1].x - (t.spotlight_base / 2);
+          spotlight_y = offset_y + sampleJSON.pages[t.pageno - 1].y - (t.spotlight_base / 2);
+        }
+      } 
       // below comment is necessary for debugging, do not delete 
       // console.log(`"x": ` + (click_x - offset_x) + `, "y": ` + (click_y - offset_y) + `, "offset_x": ` + offset_x + `, "offset_y": ` + offset_y + `,`)
     }
