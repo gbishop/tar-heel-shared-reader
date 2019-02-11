@@ -2,6 +2,7 @@ import { observable, computed, action, ObservableMap } from 'mobx';
 import { DB, LogRecord } from './db';
 import * as React from 'react';
 import sampleJSON from './a-trip-to-the-zoo-8.json';
+import { nextTick } from 'q';
 
 export const allResponses: string[] = [
   'like', 'want', 'not', 'go',
@@ -210,70 +211,94 @@ class Store {
   @observable spotlight_css: React.CSSProperties = {};
   @observable spotlight_base: number = 100;
 
+  // draws a spotlight on the image 
   @action.bound public draw_box(e?) {
-    // reference to the spotlight-container element 
-    let offset_x = 0;
-    let spotlight_container = document.querySelector('.book-page-spotlight') as HTMLDivElement;
-    if (spotlight_container !== null) {
-      offset_x = spotlight_container.offsetLeft;
+    // return if number of pages in book has been exceeded 
+    if (this.pageno > this.npages) {
+      return;
     }
 
-    // reference to reading-container element 
-    let offset_y = 0;
-    let reading_container = document.querySelector('.reading-container') as HTMLDivElement;
-    if (reading_container !== null) {
-      offset_y = reading_container.offsetTop;
+    // click coordinate if available 
+    let click_x;
+    let click_y;
+    if (e !== undefined) {
+      click_x = e.clientX;
+      click_y = e.clientY;
+    }
+
+    // reference to the spotlight-container element 
+    let offset_x, offset_y = 0;
+    let spotlight_container = document.querySelector('.book-page-spotlight') as HTMLDivElement;
+    if (spotlight_container !== null) {
+      offset_y = spotlight_container.getBoundingClientRect().top;
     }
 
     // reference to the book page image 
     let image_reference = document.querySelector('.pic') as HTMLImageElement;
-    let image_width, image_height = 0;
+    let image_width, image_height, previous_src;
     if (image_reference !== null) {
       image_width = image_reference.width;
       image_height = image_reference.height;
+      previous_src = image_reference.src;
+      offset_x = image_reference.offsetLeft;
     }
 
-    // relative coordinates of the book page image 
-    let image_coordinates = {
-      topLeft: { x: offset_x, y: offset_y },
-      topRight: { x: offset_x + image_width, y: offset_y },
-      bottomLeft: { x: offset_x, y: offset_y + image_height },
-      bottomRight: { x: offset_x + image_width, y: offset_y + image_height }
-    };
-
-    // relative distance from top left of image to the click location itself 
-    let relative_x;
-    let relative_y;
-    if (e === undefined) {
-      if (this.pageno > sampleJSON.pages.length) {
-        return;
-      }
-      if (this.bookid === 'a-trip-to-the-zoo-8') {
-        relative_x = sampleJSON.pages[this.pageno - 1].x;
-        relative_y = sampleJSON.pages[this.pageno - 1].y;
-      } else {
-        return;
-      }
+    // fixes bug where image does not load (even with onload)
+    if (e === undefined && this.bookid === 'a-trip-to-the-zoo-8') {
+      let timeout = 0;
+      let id = setInterval(() => {
+        if (this.pageno === 1 || this.pageno === 2) {
+          clearInterval(id);
+          next(this);
+        } else if (image_reference.src !== previous_src) {
+          clearInterval(id);
+          image_width = image_reference.width;
+          image_height = image_reference.height;
+          offset_x = image_reference.offsetLeft;
+          next(this);
+        } 
+  
+        // timeout if after 10 seconds image has not been updated 
+        timeout += 50;
+        if (timeout === 5000) {
+          clearInterval(id);
+          console.log('timed out.');
+        }
+      }, 50);
     } else {
-      relative_x = ((e.clientX - offset_x) - (this.spotlight_base / 2)) - image_coordinates.topLeft.x;;
-      relative_y = ((e.clientY - offset_y) - (this.spotlight_base / 2)) - image_coordinates.topLeft.y;
+      next(this);
     }
 
-    // relative coordinates of the spotlight itself 
-    let spotlight_x = image_coordinates.topLeft.x + relative_x;
-    let spotlight_y = image_coordinates.topLeft.y + relative_y;
+    function next(t) {
+      // relative distance from top left of image to the click location itself 
+      let spotlight_x = (offset_x + (click_x - offset_x)) - (t.spotlight_base / 2);
+      let spotlight_y = (click_y - offset_y) - (t.spotlight_base / 2);
+      if (e === undefined) {
+        if (t.bookid === 'a-trip-to-the-zoo-8') {
+          if (t.pageno !== 1 && t.pageno !== 2) {
+            spotlight_x = offset_x + sampleJSON.pages[t.pageno - 1].x - (t.spotlight_base / 2);
+            spotlight_y = offset_y + sampleJSON.pages[t.pageno - 1].y - (t.spotlight_base / 2);
+          }
+        } else {
+          return;
+        }
+      }
 
-    // spotlight CSS
-    this.spotlight_css = {
-      position: 'absolute',
-      width: this.spotlight_base + 'px',
-      height: this.spotlight_base +'px',
-      borderRadius: (this.spotlight_base / 2) + 'px',
-      backgroundColor: 'white',
-      left: spotlight_x,
-      top: spotlight_y,
-      opacity: 0.4
-    };
+      // spotlight CSS
+      t.spotlight_css = {
+        position: 'fixed',
+        width: t.spotlight_base + 'px',
+        height: t.spotlight_base + 'px',
+        borderRadius: (t.spotlight_base / 2) + 'px',
+        backgroundColor: 'black',
+        left: spotlight_x + 'px',
+        top: spotlight_y + 'px',
+        opacity: 0.4
+      };
+
+      // below comment is necessary for debugging, do not delete 
+      // console.log(`"x": ` + (click_x - offset_x) + `, "y": ` + (click_y - offset_y) + `, "offset_x": ` + offset_x + `, "offset_y": ` + offset_y + `,`)
+    }
   }
 
   // log state changes
