@@ -372,11 +372,11 @@ class Controls extends React.Component<ControlsProps, {}> {
       <div>
         <NRKeyHandler
           keyValue={'ArrowRight'}
-          onKeyHandle={()=>store.setPage(store.pageno+1)}
+          onKeyHandle={()=>{store.setPage(store.pageno+1); store.draw_box();}}
         />
         <NRKeyHandler
           keyValue={'ArrowLeft'}
-          onKeyHandle={()=>store.setPage(store.pageno-1)}
+          onKeyHandle={()=>{store.setPage(store.pageno-1); store.draw_box();}}
         />
         <NRKeyHandler
           keyValue={' '}
