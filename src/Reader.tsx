@@ -177,7 +177,7 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
       };
       return (
         <div className="book-page" style={pageStyle}>
-          <div className="book-page-spotlight">
+          <div className="book-page-spotlight" style={picStyle}>
             {<div style={Object.assign({}, store.spotlight_css)}></div>}
             <img
               src={'https://tarheelreader.org' + book.pages[0].url}

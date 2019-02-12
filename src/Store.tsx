@@ -233,7 +233,7 @@ class Store {
     }
     
     if (e === undefined) {
-      let books = ['a-tri-to-the-zoo-8'];
+      let books = ['a-trip-to-the-zoo-8'];
       let timeout = 0;
       let id;
       if (books.includes(this.bookid) === false) {
