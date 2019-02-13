@@ -224,6 +224,9 @@ class Store {
     let image_properties = e.currentTarget.getBoundingClientRect();
     let normalized_x = e.clientX - image_properties.left;
     let normalized_y = e.clientY - image_properties.top;
+    if (normalized_x < 0 || normalized_y < 0) {
+      return;
+    }
     let center_x = normalized_x - (this.spotlight_base / 2);
     let center_y = normalized_y - (this.spotlight_base / 2); 
     let percentage_x = center_x / image_properties.width * 100;
