@@ -90,6 +90,7 @@ class Reader extends React.Component<{store: Store}, {}> {
               style={{width: "2em"}}
             />
             <div className="comment" >{comment}</div>
+            {/* TODO: get top of reading-container  */}
             <div className="reading-container" style={containerStyle}>
               <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store}/>
               <Responses boxes={rboxes} responses={store.responses} store={store} doResponse={sayWord} />
@@ -167,6 +168,10 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
       };
     }
 
+    let title: JSX.Element | null = null;
+    let page_number: JSX.Element | null = null;
+    let caption_box: JSX.Element | null = null;
+
     if (pageno === 1) {
       const titleStyle = {
         height: 4 * fontSize,
@@ -175,45 +180,37 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
         margin: 0,
         display: 'block'
       };
-      return (
-        <div className="book-page" style={pageStyle}>
-          <div className="book-page-spotlight" style={picStyle}>
-            {<div style={Object.assign({}, store.spotlight_css)}></div>}
-            <img
-              src={'https://tarheelreader.org' + book.pages[0].url}
-              className="pic"
-              style={picStyle}
-              alt=""
-              onClick={(e) => {store.draw_box(e)}}
-            />
-          </div>
-
-          <h1 className="title" style={titleStyle}>{book.title}</h1>
-          <PageNavButtons store={store}/>
-        </div>
-      );
+      title = <h1 className="title noselect" style={titleStyle}>{book.title}</h1>;
     } else {
-      return (
-        <div className="book-page" style={pageStyle}>
-          <div className="book-page-spotlight">
-            {<div style={Object.assign({}, store.spotlight_css)}></div>}
-            <img
-              ref='image'
-              src={'https://tarheelreader.org' + page.url}
-              className="pic"
-              style={picStyle}
-              alt=""
-              onClick={(e) => {store.draw_box(e)}}
-            />
-          </div>
-          <p className="page-number">{pageno}</p>
-          <div className="caption-box">
-            <p className="caption">{page.text}</p>
-          </div>
-          <PageNavButtons store={store}/>
+      page_number = <p className="page-number">{pageno}</p>;
+      caption_box =           
+        <div className="caption-box">
+          <p className="caption">{page.text}</p>
         </div>
-      );
+      ;
     }
+
+    return (
+      <div className="book-page" style={pageStyle}>
+        <div 
+          className="book-page-spotlight" 
+          style={{display: 'inline-block', position: 'relative'} }
+          onClick={(e) => {store.draw_spotlight(e)}}
+        >
+          <img
+            className='noselect'
+            src={'https://tarheelreader.org' + book.pages[pageno - 1].url}
+            style={picStyle}
+            alt=""
+          />
+          {<div className='spotlight' style={Object.assign({}, store.spotlight_css)}></div>}
+        </div>
+        { page_number}
+        { caption_box}
+        { title }
+        <PageNavButtons store={store}/>
+      </div>
+    );
   }}
 
 
@@ -228,10 +225,10 @@ class PageNavButtons extends React.Component<PageNavButtonsProps, {}> {
     if (store.pageTurnVisible) {
       return (
         <div>
-          <button className="next-link" onClick={()=>{store.setPage(store.pageno+1); store.draw_box();}}>
+          <button className="next-link" onClick={()=>{store.setPage(store.pageno+1); }}>
             <img src={NextArrow} alt="next"/>Next
           </button>
-          <button className="back-link" onClick={()=>{store.setPage(store.pageno-1); store.draw_box();}}>
+          <button className="back-link" onClick={()=>{store.setPage(store.pageno-1); }}>
             <img src={BackArrow} alt="back"/>Back
           </button>
         </div>
@@ -372,11 +369,11 @@ class Controls extends React.Component<ControlsProps, {}> {
       <div>
         <NRKeyHandler
           keyValue={'ArrowRight'}
-          onKeyHandle={()=>{store.setPage(store.pageno+1); store.draw_box();}}
+          onKeyHandle={()=>{store.setPage(store.pageno+1); }}
         />
         <NRKeyHandler
           keyValue={'ArrowLeft'}
-          onKeyHandle={()=>{store.setPage(store.pageno-1); store.draw_box();}}
+          onKeyHandle={()=>{store.setPage(store.pageno-1); }}
         />
         <NRKeyHandler
           keyValue={' '}

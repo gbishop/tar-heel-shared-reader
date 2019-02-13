@@ -208,8 +208,32 @@ class Store {
     Object.keys(v.bookListOpen).forEach(key => this.bookListOpen.set(key, v.bookListOpen[key]));
   }
 
-  @observable spotlight_css: React.CSSProperties = {};
   @observable spotlight_base: number = 100;
+  @observable spotlight_coordinates = {};
+  @observable spotlight_css: React.CSSProperties = {
+    position: 'absolute',
+    width: this.spotlight_base + 'px',
+    height: this.spotlight_base + 'px',
+    borderRadius: (this.spotlight_base / 2) + 'px',
+    backgroundColor: 'black',
+    opacity: 0.4,
+    visibility: 'visible'
+  };
+
+  @action.bound public draw_spotlight(e) {
+    let image_properties = e.currentTarget.getBoundingClientRect();
+    let normalized_x = e.clientX - image_properties.left;
+    let normalized_y = e.clientY - image_properties.top;
+    let center_x = normalized_x - (this.spotlight_base / 2);
+    let center_y = normalized_y - (this.spotlight_base / 2); 
+    let percentage_x = center_x / image_properties.width * 100;
+    let percentage_y = center_y / image_properties.height * 100;
+    console.log('percentage_x', percentage_x, 'percentage_y', percentage_y);
+    // this.spotlight_css.left = (e.clientX - image_properties.left) - (this.spotlight_base / 2);
+    // this.spotlight_css.top = (e.clientY - image_properties.top) - (this.spotlight_base / 2);
+    this.spotlight_css.left = percentage_x + '%';
+    this.spotlight_css.top = percentage_y + '%';
+  }
 
   // draws a spotlight on the image 
   @action.bound public draw_box(e?) {
