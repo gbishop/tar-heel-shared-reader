@@ -236,6 +236,10 @@ class Store {
     this.spotlight_css.visibility = 'visible';
   }
 
+  @action.bound public hide_spotlight() {
+    this.spotlight_css.visibility = 'hidden';
+  }
+
   // draws a spotlight on the image 
   @action.bound public draw_box(e?) {
     if (this.pageno > this.npages) {

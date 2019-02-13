@@ -225,10 +225,10 @@ class PageNavButtons extends React.Component<PageNavButtonsProps, {}> {
     if (store.pageTurnVisible) {
       return (
         <div>
-          <button className="next-link" onClick={()=>{store.setPage(store.pageno+1); }}>
+          <button className="next-link" onClick={()=>{store.setPage(store.pageno+1); store.hide_spotlight(); }}>
             <img src={NextArrow} alt="next"/>Next
           </button>
-          <button className="back-link" onClick={()=>{store.setPage(store.pageno-1); }}>
+          <button className="back-link" onClick={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); }}>
             <img src={BackArrow} alt="back"/>Back
           </button>
         </div>
@@ -369,11 +369,11 @@ class Controls extends React.Component<ControlsProps, {}> {
       <div>
         <NRKeyHandler
           keyValue={'ArrowRight'}
-          onKeyHandle={()=>{store.setPage(store.pageno+1); }}
+          onKeyHandle={()=>{store.setPage(store.pageno+1); store.hide_spotlight(); }}
         />
         <NRKeyHandler
           keyValue={'ArrowLeft'}
-          onKeyHandle={()=>{store.setPage(store.pageno-1); }}
+          onKeyHandle={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); }}
         />
         <NRKeyHandler
           keyValue={' '}
