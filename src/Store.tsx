@@ -228,9 +228,6 @@ class Store {
     let center_y = normalized_y - (this.spotlight_base / 2); 
     let percentage_x = center_x / image_properties.width * 100;
     let percentage_y = center_y / image_properties.height * 100;
-    console.log('percentage_x', percentage_x, 'percentage_y', percentage_y);
-    // this.spotlight_css.left = (e.clientX - image_properties.left) - (this.spotlight_base / 2);
-    // this.spotlight_css.top = (e.clientY - image_properties.top) - (this.spotlight_base / 2);
     this.spotlight_css.left = percentage_x + '%';
     this.spotlight_css.top = percentage_y + '%';
   }
