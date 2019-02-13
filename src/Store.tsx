@@ -217,7 +217,7 @@ class Store {
     borderRadius: (this.spotlight_base / 2) + 'px',
     backgroundColor: 'black',
     opacity: 0.4,
-    visibility: 'visible'
+    visibility: 'hidden'
   };
 
   @action.bound public draw_spotlight(e) {
@@ -233,6 +233,7 @@ class Store {
     let percentage_y = center_y / image_properties.height * 100;
     this.spotlight_css.left = percentage_x + '%';
     this.spotlight_css.top = percentage_y + '%';
+    this.spotlight_css.visibility = 'visible';
   }
 
   // draws a spotlight on the image 

@@ -206,8 +206,8 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
           {<div className='spotlight' style={Object.assign({}, store.spotlight_css)}></div>}
         </div>
         { page_number}
-        { caption_box}
         { title }
+        { caption_box}
         <PageNavButtons store={store}/>
       </div>
     );
