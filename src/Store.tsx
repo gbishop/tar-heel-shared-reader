@@ -208,8 +208,11 @@ class Store {
     Object.keys(v.bookListOpen).forEach(key => this.bookListOpen.set(key, v.bookListOpen[key]));
   }
 
+  // width and height of diameter 
   @observable spotlight_base: number = 100;
-  @observable spotlight_coordinates = {};
+  // whether or not the spotlight demo is in effect 
+  @observable is_spotlight_demo = true;
+  // css properties of spotlight element 
   @observable spotlight_css: React.CSSProperties = {
     position: 'absolute',
     width: this.spotlight_base + 'px',
@@ -220,13 +223,11 @@ class Store {
     visibility: 'hidden'
   };
 
+  // draws a spotlight on the image 
   @action.bound public draw_spotlight(e) {
     let image_properties = e.currentTarget.getBoundingClientRect();
-    let normalized_x = e.clientX - image_properties.left;
-    let normalized_y = e.clientY - image_properties.top;
-    if (normalized_x < 0 || normalized_y < 0) {
-      return;
-    }
+    let normalized_x = (e.clientX - image_properties.left > 0) ? e.clientX - image_properties.left : 0;
+    let normalized_y = (e.clientY - image_properties.top > 0) ? e.clientY - image_properties.top : 0;
     let center_x = normalized_x - (this.spotlight_base / 2);
     let center_y = normalized_y - (this.spotlight_base / 2); 
     let percentage_x = center_x / image_properties.width * 100;
@@ -236,6 +237,7 @@ class Store {
     this.spotlight_css.visibility = 'visible';
   }
 
+  // hides the spotlight element
   @action.bound public hide_spotlight() {
     this.spotlight_css.visibility = 'hidden';
   }
