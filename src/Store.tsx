@@ -252,6 +252,7 @@ class Store {
   }
 
   @action.bound public draw_spotlight_demo() {
+    if (sampleJSON.title !== this.bookid) { return; }
     if (this.is_spotlight_demo === false || this.pageno > sampleJSON.pages.length) { return; } 
     this.spotlight_css.left = sampleJSON.pages[this.pageno - 1].x + '%';
     this.spotlight_css.top = sampleJSON.pages[this.pageno - 1].y + '%';
