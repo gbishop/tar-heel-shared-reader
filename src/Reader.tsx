@@ -202,7 +202,7 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
             style={picStyle}
             alt=""
           />
-          {<div className='spotlight' style={Object.assign({}, store.spotlight_css)}></div>}
+          {<div className='spotlight' style={Object.assign({}, store.spotlight_css)}>{store.spotlight_description}</div>}
         </div>
         { page_number}
         { title }

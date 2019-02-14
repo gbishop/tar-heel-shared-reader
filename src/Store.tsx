@@ -213,14 +213,21 @@ class Store {
   @observable is_spotlight_demo = true;
   // css properties of spotlight element 
   @observable spotlight_css: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     position: 'absolute',
     width: this.spotlight_base + 'px',
     height: this.spotlight_base + 'px',
     borderRadius: (this.spotlight_base / 2) + 'px',
     backgroundColor: 'black',
     opacity: 0.4,
-    visibility: 'hidden'
+    visibility: 'hidden',
+    textAlign: 'center',
+    color: 'white'
   };
+  // description of spotlight 
+  @observable spotlight_description = "";
 
   // draws a spotlight on the image 
   @action.bound public draw_spotlight(e) {
@@ -257,6 +264,7 @@ class Store {
     this.spotlight_css.left = sampleJSON.pages[this.pageno - 1].x + '%';
     this.spotlight_css.top = sampleJSON.pages[this.pageno - 1].y + '%';
     this.spotlight_css.visibility = 'visible';
+    this.spotlight_description = sampleJSON.pages[this.pageno - 1].description;
   }
 
   // hides the spotlight element
