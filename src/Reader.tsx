@@ -90,7 +90,6 @@ class Reader extends React.Component<{store: Store}, {}> {
               style={{width: "2em"}}
             />
             <div className="comment" >{comment}</div>
-            {/* TODO: get top of reading-container  */}
             <div className="reading-container" style={containerStyle}>
               <ReaderContent box={cbox} book={book} pageno={store.pageno} store={store}/>
               <Responses boxes={rboxes} responses={store.responses} store={store} doResponse={sayWord} />
@@ -225,10 +224,10 @@ class PageNavButtons extends React.Component<PageNavButtonsProps, {}> {
     if (store.pageTurnVisible) {
       return (
         <div>
-          <button className="next-link" onClick={()=>{store.setPage(store.pageno+1); store.hide_spotlight(); }}>
+          <button className="next-link" onClick={()=>{store.setPage(store.pageno+1); store.hide_spotlight(); store.draw_spotlight_demo(); }}>
             <img src={NextArrow} alt="next"/>Next
           </button>
-          <button className="back-link" onClick={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); }}>
+          <button className="back-link" onClick={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); store.draw_spotlight_demo(); }}>
             <img src={BackArrow} alt="back"/>Back
           </button>
         </div>
@@ -369,11 +368,11 @@ class Controls extends React.Component<ControlsProps, {}> {
       <div>
         <NRKeyHandler
           keyValue={'ArrowRight'}
-          onKeyHandle={()=>{store.setPage(store.pageno+1); store.hide_spotlight(); }}
+          onKeyHandle={()=>{store.setPage(store.pageno+1); store.hide_spotlight(); store.draw_spotlight_demo(); }}
         />
         <NRKeyHandler
           keyValue={'ArrowLeft'}
-          onKeyHandle={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); }}
+          onKeyHandle={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); store.draw_spotlight_demo(); }}
         />
         <NRKeyHandler
           keyValue={' '}
