@@ -133,6 +133,10 @@ fieldset label {
   user-select: none; 
 }
 
+.book-page-image {
+  filter: brightness(50%);
+}
+
 [role="tablist"] {
   list-style-type: none;
   padding: 0;

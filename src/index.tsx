@@ -39,7 +39,6 @@ function startRouter(store: Store) {
   router.init();
 
   // update url on state changes
-  // TODO
   autorun(() => {
     const path = baseUrl + store.currentPath;
     if (path !== window.location.pathname) {

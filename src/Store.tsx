@@ -186,6 +186,8 @@ class Store {
   @action.bound public resize() {
     this.screen.width = window.innerWidth;
     this.screen.height = window.innerHeight;
+    // TODO: update location of demo spotlight on window resize
+    // this.draw_spotlight_demo();
   }
   // json string to persist the state
   @computed get persist(): string {
@@ -211,7 +213,7 @@ class Store {
   @observable spotlight_base: number = 100;
   // whether or not the spotlight demo is in effect 
   @observable is_spotlight_demo = true;
-  // css properties of spotlight element 
+  // css properties of spotlight element
   @observable spotlight_css: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
@@ -220,11 +222,10 @@ class Store {
     width: this.spotlight_base + 'px',
     height: this.spotlight_base + 'px',
     borderRadius: (this.spotlight_base / 2) + 'px',
-    backgroundColor: 'black',
-    opacity: 0.4,
     visibility: 'hidden',
     textAlign: 'center',
-    color: 'white'
+    color: 'white',
+    border: '1px solid black'
   };
   // description of spotlight 
   @observable spotlight_description = "";
@@ -254,6 +255,12 @@ class Store {
     this.spotlight_css.left = percentage_x + '%';
     this.spotlight_css.top = percentage_y + '%';
     this.spotlight_css.visibility = 'visible';
+
+    // TODO
+    let spotlight_area = Math.PI * (this.spotlight_base / 2) ^ 2;
+    let picture_area = image_properties.width * image_properties.height;
+    console.log('spotlight area', spotlight_area, 'picture area', picture_area);
+    console.log((spotlight_area / picture_area * 100) + '%');
 
     // console.log(`{ "x": ` + percentage_x + `, "y": ` + percentage_y + `, "description": "" },`);
   }

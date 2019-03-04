@@ -11,6 +11,7 @@ import { SharedBook } from './db';
 import { WaitToRender } from './helpers';
 
 import './Reader.css';
+import { url } from 'inspector';
 
 @observer
 class Reader extends React.Component<{store: Store}, {}> {
@@ -155,17 +156,22 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
     const maxPicWidth = width;
     const verticalScale = maxPicHeight / page.height;
     const horizontalScale = maxPicWidth / page.width;
-    let picStyle = {};
+    // todo
+    let imageStyle: React.CSSProperties = {
+      content: `url(https://tarheelreader.org` + book.pages[pageno - 1].url + `)`,
+      position: 'relative'
+    };
+    let spotlight_style: React.CSSProperties = {
+      display: 'inline-block',
+      position: 'relative'
+    };
     if (verticalScale < horizontalScale) {
-      picStyle = {
-        height: maxPicHeight
-      };
+      imageStyle['height'] = maxPicHeight;
     } else {
-      picStyle = {
-        width: maxPicWidth,
-        marginTop: pageno === 1 ? 0 : (maxPicHeight - horizontalScale * page.height)
-      };
+      imageStyle['width'] = maxPicWidth;
+      imageStyle['marginTop'] = pageno === 1 ? 0 : (maxPicHeight - horizontalScale * page.height);
     }
+    imageStyle['pointerEvents'] = 'none';
 
     let title: JSX.Element | null = null;
     let page_number: JSX.Element | null = null;
@@ -193,15 +199,10 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
       <div className="book-page" style={pageStyle}>
         <div 
           className="book-page-spotlight" 
-          style={{display: 'inline-block', position: 'relative'} }
+          style={spotlight_style}
           onClick={(e) => {store.draw_spotlight(e)}}
         >
-          <img
-            className='noselect'
-            src={'https://tarheelreader.org' + book.pages[pageno - 1].url}
-            style={picStyle}
-            alt=""
-          />
+          <div className="book-page-image" style={imageStyle} ref='myreference'></div>
           {<div className='spotlight' style={Object.assign({}, store.spotlight_css)}>{store.spotlight_description}</div>}
         </div>
         { page_number}
