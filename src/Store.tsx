@@ -225,7 +225,7 @@ class Store {
     visibility: 'hidden',
     textAlign: 'center',
     color: 'white',
-    border: '1px solid black'
+    border: '5px solid red'
   };
   // description of spotlight 
   @observable spotlight_description = "";

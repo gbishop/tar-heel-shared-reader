@@ -156,7 +156,7 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
     const maxPicWidth = width;
     const verticalScale = maxPicHeight / page.height;
     const horizontalScale = maxPicWidth / page.width;
-    // todo
+
     let imageStyle: React.CSSProperties = {
       content: `url(https://tarheelreader.org` + book.pages[pageno - 1].url + `)`,
       position: 'relative'
