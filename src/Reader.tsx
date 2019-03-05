@@ -163,7 +163,10 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
     };
     let spotlight_style: React.CSSProperties = {
       display: 'inline-block',
-      position: 'relative'
+      position: 'relative',
+      overflow: 'hidden',
+      margin: 'auto 0',
+      padding: '0'
     };
     if (verticalScale < horizontalScale) {
       imageStyle['height'] = maxPicHeight;
