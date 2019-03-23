@@ -256,11 +256,10 @@ class Store {
     this.spotlight_css.top = percentage_y + '%';
     this.spotlight_css.visibility = 'visible';
 
-    // TODO
     let spotlight_area = Math.PI * (this.spotlight_base / 2) ^ 2;
     let picture_area = image_properties.width * image_properties.height;
-    console.log('spotlight area', spotlight_area, 'picture area', picture_area);
-    console.log((spotlight_area / picture_area * 100) + '%');
+    // console.log('spotlight area', spotlight_area, 'picture area', picture_area);
+    // console.log((spotlight_area / picture_area * 100) + '%');
 
     // console.log(`{ "x": ` + percentage_x + `, "y": ` + percentage_y + `, "description": "" },`);
   }
@@ -268,10 +267,10 @@ class Store {
   @action.bound public draw_spotlight_demo() {
     if (sampleJSON.title !== this.bookid) { return; }
     if (this.is_spotlight_demo === false || this.pageno > sampleJSON.pages.length) { return; } 
-    this.spotlight_css.left = sampleJSON.pages[this.pageno - 1].x + '%';
-    this.spotlight_css.top = sampleJSON.pages[this.pageno - 1].y + '%';
+    this.spotlight_css.left = sampleJSON.pages[this.pageno - 1][0].x + '%';
+    this.spotlight_css.top = sampleJSON.pages[this.pageno - 1][0].y + '%';
     this.spotlight_css.visibility = 'visible';
-    this.spotlight_description = sampleJSON.pages[this.pageno - 1].description;
+    this.spotlight_description = sampleJSON.pages[this.pageno - 1][0].description;
   }
 
   // hides the spotlight element

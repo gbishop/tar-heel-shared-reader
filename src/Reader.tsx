@@ -206,7 +206,10 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
           onClick={(e) => {store.draw_spotlight(e)}}
         >
           <div className="book-page-image" style={imageStyle} ref='myreference'></div>
-          {<div className='spotlight' style={Object.assign({}, store.spotlight_css)}>{store.spotlight_description}</div>}
+          { <div className='spotlight' style={Object.assign({}, store.spotlight_css)}>{store.spotlight_description}</div> }
+          {/* { <div hidden className='spotlight-2' style={Object.assign({}, store.spotlight_css)}>{store.spotlight_description}</div> } */}
+          {/* { <div hidden className='spotlight-2' style={Object.assign({}, store.spotlight_css)}>{store.spotlight_description}</div> } */}
+          {/* { <div hidden className='spotlight-2' style={Object.assign({}, store.spotlight_css)}>{store.spotlight_description}</div> } */}
         </div>
         { page_number}
         { title }
