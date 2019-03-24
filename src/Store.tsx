@@ -186,8 +186,6 @@ class Store {
   @action.bound public resize() {
     this.screen.width = window.innerWidth;
     this.screen.height = window.innerHeight;
-    // TODO: update location of demo spotlight on window resize
-    // this.draw_spotlight_demo();
   }
   // json string to persist the state
   @computed get persist(): string {
@@ -209,26 +207,64 @@ class Store {
     Object.keys(v.bookListOpen).forEach(key => this.bookListOpen.set(key, v.bookListOpen[key]));
   }
 
+  // sets the correct spotlight index
+  @action.bound public set_spotlight_index(word: string) {
+    this.spotlight_descriptions.forEach((item, ind) => {
+      if (word === item && word !== "") {
+        this.spotlight_index = ind;
+      }
+    });
+  }
+
+  // description of spotlight 
+  @observable spotlight_descriptions = [
+    sampleJSON.pages[0][0].description, 
+    sampleJSON.pages[0][1].description, 
+    sampleJSON.pages[0][2].description, 
+    sampleJSON.pages[0][3].description
+  ];
+  // index that determines which spotlight description to select from spotlight_descriptions 
+  @observable spotlight_index = 0;
   // width and height of diameter 
   @observable spotlight_base: number = 100;
   // whether or not the spotlight demo is in effect 
   @observable is_spotlight_demo = true;
   // css properties of spotlight element
-  @observable spotlight_css: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'absolute',
-    width: this.spotlight_base + 'px',
-    height: this.spotlight_base + 'px',
-    borderRadius: (this.spotlight_base / 2) + 'px',
-    visibility: 'hidden',
-    textAlign: 'center',
-    color: 'white',
-    boxShadow: '0px 0px 4px 10px rgba(0,0,0,0.5) inset, 0px 0px 0px 1000px rgba(0,0,0,0.5)'
-  };
-  // description of spotlight 
-  @observable spotlight_description = "";
+  @observable spotlight_css: React.CSSProperties = this.set_initial_spotlight_css();
+
+  public set_initial_spotlight_css() {
+    let spotlight_css: React.CSSProperties = {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'absolute',
+      width: this.spotlight_base + 'px',
+      height: this.spotlight_base + 'px',
+      borderRadius: (this.spotlight_base / 2) + 'px',
+      visibility: 'hidden',
+      textAlign: 'center',
+      color: 'white',
+      boxShadow: '0px 0px 4px 10px rgba(0,0,0,0.5) inset, 0px 0px 0px 1000px rgba(0,0,0,0.5)',
+    };
+    if (this.is_spotlight_demo) {
+      let title: string | undefined = '';
+      let pageno = Number(window.location.pathname.split('/').pop());
+      if (isNaN(pageno)) {
+        pageno = 1;
+        title = window.location.pathname.split('/').pop();
+      } else {
+        let history = window.location.pathname.split('/');
+        title = history[history.length - 2];
+      }
+
+      if (pageno > sampleJSON.pages.length) { return spotlight_css; } 
+
+      spotlight_css.left = sampleJSON.pages[pageno - 1][0].x + '%';;
+      spotlight_css.top = sampleJSON.pages[pageno - 1][0].y + '%';
+      spotlight_css.visibility = 'visible';
+    } 
+    return spotlight_css;
+  }
 
   // draws a spotlight on the image 
   @action.bound public draw_spotlight(e) {
@@ -256,21 +292,24 @@ class Store {
     this.spotlight_css.top = percentage_y + '%';
     this.spotlight_css.visibility = 'visible';
 
-    let spotlight_area = Math.PI * (this.spotlight_base / 2) ^ 2;
-    let picture_area = image_properties.width * image_properties.height;
+    // let spotlight_area = Math.PI * (this.spotlight_base / 2) ^ 2;
+    // let picture_area = image_properties.width * image_properties.height;
     // console.log('spotlight area', spotlight_area, 'picture area', picture_area);
     // console.log((spotlight_area / picture_area * 100) + '%');
 
     // console.log(`{ "x": ` + percentage_x + `, "y": ` + percentage_y + `, "description": "" },`);
   }
 
-  @action.bound public draw_spotlight_demo() {
+  @action.bound public draw_spotlight_demo(index: number) {
     if (sampleJSON.title !== this.bookid) { return; }
     if (this.is_spotlight_demo === false || this.pageno > sampleJSON.pages.length) { return; } 
-    this.spotlight_css.left = sampleJSON.pages[this.pageno - 1][0].x + '%';
-    this.spotlight_css.top = sampleJSON.pages[this.pageno - 1][0].y + '%';
+    this.spotlight_css.left = sampleJSON.pages[this.pageno - 1][index].x + '%';
+    this.spotlight_css.top = sampleJSON.pages[this.pageno - 1][index].y + '%';
     this.spotlight_css.visibility = 'visible';
-    this.spotlight_description = sampleJSON.pages[this.pageno - 1][0].description;
+    this.spotlight_descriptions = ["", "", "", ""];
+    sampleJSON.pages[this.pageno - 1].forEach((item, ind) => {
+      this.spotlight_descriptions[ind] = sampleJSON.pages[this.pageno - 1][ind].description;
+    });
   }
 
   // hides the spotlight element

@@ -59,7 +59,7 @@ class Reader extends React.Component<{store: Store}, {}> {
 
         function saySelectedWord() {
           if (store.responseIndex >= 0 && store.responseIndex < store.nresponses) {
-            sayWord(store.word);
+            sayWord(store.spotlight_descriptions[store.responseIndex]);
           }
         }
 
@@ -197,7 +197,7 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
         </div>
       ;
     }
-
+    
     return (
       <div className="book-page" style={pageStyle}>
         <div 
@@ -206,10 +206,7 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
           onClick={(e) => {store.draw_spotlight(e)}}
         >
           <div className="book-page-image" style={imageStyle} ref='myreference'></div>
-          { <div className='spotlight' style={Object.assign({}, store.spotlight_css)}>{store.spotlight_description}</div> }
-          {/* { <div hidden className='spotlight-2' style={Object.assign({}, store.spotlight_css)}>{store.spotlight_description}</div> } */}
-          {/* { <div hidden className='spotlight-2' style={Object.assign({}, store.spotlight_css)}>{store.spotlight_description}</div> } */}
-          {/* { <div hidden className='spotlight-2' style={Object.assign({}, store.spotlight_css)}>{store.spotlight_description}</div> } */}
+          { <div className='spotlight' style={Object.assign({}, store.spotlight_css)}>{store.spotlight_descriptions[store.spotlight_index]}</div> }
         </div>
         { page_number}
         { title }
@@ -231,10 +228,10 @@ class PageNavButtons extends React.Component<PageNavButtonsProps, {}> {
     if (store.pageTurnVisible) {
       return (
         <div>
-          <button className="next-link" onClick={()=>{store.setPage(store.pageno+1); store.hide_spotlight(); store.draw_spotlight_demo(); }}>
+          <button className="next-link" onClick={()=>{store.setPage(store.pageno+1); store.hide_spotlight(); store.spotlight_index = 0; store.draw_spotlight_demo(store.spotlight_index); }}>
             <img src={NextArrow} alt="next"/>Next
           </button>
-          <button className="back-link" onClick={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); store.draw_spotlight_demo(); }}>
+          <button className="back-link" onClick={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); store.spotlight_index = 0; store.draw_spotlight_demo(store.spotlight_index); }}>
             <img src={BackArrow} alt="back"/>Back
           </button>
         </div>
@@ -277,7 +274,7 @@ class Responses extends React.Component<ResponsesProps, {}> {
       const responseGroup = chunk.map((w, j) => (
         <ResponseButton
           key={w}
-          word={w}
+          word={store.spotlight_descriptions[j]}
           index={index++}
           style={bstyle}
           store={store}
@@ -332,7 +329,7 @@ class ResponseButton extends React.Component<ResponseButtonProps, {}> {
     return (
       <button
         className={`${isFocused ? 'selected' : ''}`}
-        onClick={() => doResponse(word)}
+        onClick={() => {doResponse(word); store.set_spotlight_index(word); store.draw_spotlight_demo(store.spotlight_index);}}
         style={style}
       >
         <figure>
@@ -375,11 +372,11 @@ class Controls extends React.Component<ControlsProps, {}> {
       <div>
         <NRKeyHandler
           keyValue={'ArrowRight'}
-          onKeyHandle={()=>{store.setPage(store.pageno+1); store.hide_spotlight(); store.draw_spotlight_demo(); }}
+          onKeyHandle={()=>{store.setPage(store.pageno+1); store.hide_spotlight(); store.spotlight_index = 0; store.draw_spotlight_demo(store.spotlight_index); }}
         />
         <NRKeyHandler
           keyValue={'ArrowLeft'}
-          onKeyHandle={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); store.draw_spotlight_demo(); }}
+          onKeyHandle={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); store.spotlight_index = 0; store.draw_spotlight_demo(store.spotlight_index); }}
         />
         <NRKeyHandler
           keyValue={' '}
