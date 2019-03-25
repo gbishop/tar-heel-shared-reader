@@ -252,6 +252,9 @@ class Store {
       if (isNaN(pageno)) {
         pageno = 1;
         title = window.location.pathname.split('/').pop();
+      } else if (window.location.pathname.split('/').length <= 2) {
+        pageno = 1;
+        console.log('here');
       } else {
         let history = window.location.pathname.split('/');
         title = history[history.length - 2];
@@ -259,6 +262,7 @@ class Store {
 
       if (pageno > sampleJSON.pages.length) { return spotlight_css; } 
 
+      console.log("pageno is", sampleJSON.pages[pageno - 1]);
       spotlight_css.left = sampleJSON.pages[pageno - 1][0].x + '%';;
       spotlight_css.top = sampleJSON.pages[pageno - 1][0].y + '%';
       spotlight_css.visibility = 'visible';
