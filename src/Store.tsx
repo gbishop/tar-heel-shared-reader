@@ -216,6 +216,30 @@ class Store {
     });
   }
 
+  // updates value of spotligth index as necessary 
+  @action.bound public update_spotlight_index() {
+    if (sampleJSON.title !== this.bookid) { return; }
+    if (this.is_spotlight_demo === false || this.pageno > sampleJSON.pages.length) { return; } 
+    if ((this.responseOffset + this.responsesPerPage === this.allowedResponses.length) === false) {
+      return;
+    }
+    if (this.should_ignore_spacebar_clicks) {
+      return;
+    }
+    let number_spotlight_descriptions = 0;
+    this.spotlight_descriptions.forEach((elem) => {
+      if (elem !== "") {
+        number_spotlight_descriptions++;
+      }
+    });
+    this.spotlight_index++;
+    if (this.spotlight_index >= number_spotlight_descriptions) {
+      this.should_ignore_spacebar_clicks = true;
+      this.actual_ignored_spacebar_presses = 1;
+      this.spotlight_index = 0;
+    }
+  }
+
   // description of spotlight 
   @observable spotlight_descriptions = [
     sampleJSON.pages[0][0].description, 
@@ -225,6 +249,12 @@ class Store {
   ];
   // index that determines which spotlight description to select from spotlight_descriptions 
   @observable spotlight_index = 0;
+  // how many keyboard spacebar clicks should be ignored when navigating the response buttons 
+  @observable number_ignored_spacebar_presses = 2;
+  // how many keyboard spacebar clicks have actually been ignored when navigating the response buttons
+  @observable actual_ignored_spacebar_presses = 1;
+  // spacebar keys should be ignored 
+  @observable should_ignore_spacebar_clicks = true;
   // width and height of diameter 
   @observable spotlight_base: number = 100;
   // whether or not the spotlight demo is in effect 
@@ -262,8 +292,6 @@ class Store {
         title = history[history.length - 2];
         return spotlight_css;
       }
-
-      // if (pageno > sampleJSON.pages.length) { console.log('is this an edge case'); return spotlight_css; } 
 
       spotlight_css.left = sampleJSON.pages[pageno - 1][0].x + '%';;
       spotlight_css.top = sampleJSON.pages[pageno - 1][0].y + '%';
@@ -309,6 +337,9 @@ class Store {
   @action.bound public draw_spotlight_demo(index: number) {
     if (sampleJSON.title !== this.bookid) { return; }
     if (this.is_spotlight_demo === false || this.pageno > sampleJSON.pages.length) { return; } 
+    if ((this.responseOffset + this.responsesPerPage === this.allowedResponses.length) === false) {
+      return;
+    }
     this.spotlight_css.left = sampleJSON.pages[this.pageno - 1][index].x + '%';
     this.spotlight_css.top = sampleJSON.pages[this.pageno - 1][index].y + '%';
     this.spotlight_css.visibility = 'visible';

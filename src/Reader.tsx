@@ -9,9 +9,11 @@ import BackResponsePage from './BackResponsePage.png';
 import Store, { allResponses } from './Store';
 import { SharedBook } from './db';
 import { WaitToRender } from './helpers';
+let sampleJSON = require('./things-in-a-classroom.json');
 
 import './Reader.css';
 import { url } from 'inspector';
+import { Never } from 'runtypes';
 
 @observer
 class Reader extends React.Component<{store: Store}, {}> {
@@ -59,7 +61,12 @@ class Reader extends React.Component<{store: Store}, {}> {
 
         function saySelectedWord() {
           if (store.responseIndex >= 0 && store.responseIndex < store.nresponses) {
-            sayWord(store.spotlight_descriptions[store.responseIndex]);
+            // TODO:
+            if (store.responseOffset + store.responsesPerPage === store.allowedResponses.length) {
+              sayWord(store.spotlight_descriptions[store.responseIndex]);
+            } else {
+              sayWord(store.word);
+            }
           }
         }
 
@@ -270,18 +277,38 @@ class Responses extends React.Component<ResponsesProps, {}> {
       const nbstyle = {};
       nbstyle[pax] = bstyle[pax] / 2;
       nbstyle[sax] = bstyle[sax];
-      const dstyle = { top: box.top, left: box.left, width: box.width, height: box.height };
-      const responseGroup = chunk.map((w, j) => (
-        <ResponseButton
-          key={w}
-          word={store.spotlight_descriptions[j]}
-          index={index++}
-          style={bstyle}
-          store={store}
-          doResponse={doResponse}
-        />
-      ));
+      const dstyle = { top: box.top, left: box.left, width: box.width, height: box.height }; 
+      let responseGroup: JSX.Element[] = [];
+      if (store.responseOffset + store.responsesPerPage === store.allowedResponses.length) {
+        for (let i = 0; i < store.responsesPerPage; i++) {
+          if (sampleJSON.pages[store.pageno - 1][i] !== undefined) {
+            responseGroup.push(
+              <ResponseButton
+                key={sampleJSON.pages[store.pageno - 1][i].description}
+                word={sampleJSON.pages[store.pageno - 1][i].description}
+                index={index++}
+                style={bstyle}
+                store={store}
+                doResponse={doResponse}
+              />
+            );
+          } 
+        }
+      } else {
+        responseGroup = chunk.map((w, j) => (
+          <ResponseButton
+            key={w}
+            word={w}
+            index={index++}
+            style={bstyle}
+            store={store}
+            doResponse={doResponse}
+          />
+        ));
+      }
+
       return (
+        // TODO
         <div key={i} style={dstyle} className="response-container">
           <button
             style={nbstyle}
@@ -378,13 +405,24 @@ class Controls extends React.Component<ControlsProps, {}> {
           keyValue={'ArrowLeft'}
           onKeyHandle={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); store.spotlight_index = 0; store.draw_spotlight_demo(store.spotlight_index); }}
         />
+        {/* TODO */}
         <NRKeyHandler
           keyValue={' '}
-          onKeyHandle={store.nextResponseIndex}
+          onKeyHandle={(e) => {
+            store.nextResponseIndex(); 
+            store.update_spotlight_index(); 
+            if (store.should_ignore_spacebar_clicks) {
+              store.actual_ignored_spacebar_presses++;
+              if (store.actual_ignored_spacebar_presses === store.number_ignored_spacebar_presses) {
+                store.should_ignore_spacebar_clicks = false;
+              }
+            }
+            store.draw_spotlight_demo(store.spotlight_index); 
+          }}
         />
         <NRKeyHandler
           keyValue={'Enter'}
-          onKeyHandle={doResponse}
+          onKeyHandle={() => {doResponse();}}
         />
         <NRKeyHandler
           keyValue="Escape"
