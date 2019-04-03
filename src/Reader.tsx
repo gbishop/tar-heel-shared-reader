@@ -12,8 +12,6 @@ import { WaitToRender } from './helpers';
 let sampleJSON = require('./things-in-a-classroom.json');
 
 import './Reader.css';
-import { url } from 'inspector';
-import { Never } from 'runtypes';
 
 @observer
 class Reader extends React.Component<{store: Store}, {}> {
@@ -61,7 +59,6 @@ class Reader extends React.Component<{store: Store}, {}> {
 
         function saySelectedWord() {
           if (store.responseIndex >= 0 && store.responseIndex < store.nresponses) {
-            // TODO:
             if (store.responseOffset + store.responsesPerPage === store.allowedResponses.length) {
               sayWord(store.spotlight_descriptions[store.responseIndex]);
             } else {
@@ -235,10 +232,10 @@ class PageNavButtons extends React.Component<PageNavButtonsProps, {}> {
     if (store.pageTurnVisible) {
       return (
         <div>
-          <button className="next-link" onClick={()=>{store.setPage(store.pageno+1); store.hide_spotlight(); store.spotlight_index = 0; store.draw_spotlight_demo(store.spotlight_index); }}>
+          <button className="next-link" onClick={()=>{store.setPage(store.pageno+1); store.hide_spotlight(); store.draw_spotlight_demo(store.spotlight_index); }}>
             <img src={NextArrow} alt="next"/>Next
           </button>
-          <button className="back-link" onClick={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); store.spotlight_index = 0; store.draw_spotlight_demo(store.spotlight_index); }}>
+          <button className="back-link" onClick={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); store.draw_spotlight_demo(store.spotlight_index); }}>
             <img src={BackArrow} alt="back"/>Back
           </button>
         </div>
@@ -279,7 +276,7 @@ class Responses extends React.Component<ResponsesProps, {}> {
       nbstyle[sax] = bstyle[sax];
       const dstyle = { top: box.top, left: box.left, width: box.width, height: box.height }; 
       let responseGroup: JSX.Element[] = [];
-      if (store.responseOffset + store.responsesPerPage === store.allowedResponses.length) {
+      if (store.responseOffset + store.responsesPerPage === store.allowedResponses.length && sampleJSON.pages[store.pageno - 1] !== undefined) {
         for (let i = 0; i < store.responsesPerPage; i++) {
           if (sampleJSON.pages[store.pageno - 1][i] !== undefined) {
             responseGroup.push(
@@ -293,6 +290,21 @@ class Responses extends React.Component<ResponsesProps, {}> {
               />
             );
           } 
+        }
+        if (responseGroup.length < store.responsesPerPage) {
+          let difference = store.responsesPerPage - responseGroup.length;
+          for (let i = 0; i < difference; i++) {
+            responseGroup.push(
+              <ResponseButton
+                key={`empty${i}`}
+                word={' '}
+                index={index++}
+                style={bstyle}
+                store={store}
+                doResponse={doResponse}
+              />
+            );
+          }
         }
       } else {
         responseGroup = chunk.map((w, j) => (
@@ -308,7 +320,6 @@ class Responses extends React.Component<ResponsesProps, {}> {
       }
 
       return (
-        // TODO
         <div key={i} style={dstyle} className="response-container">
           <button
             style={nbstyle}
@@ -399,24 +410,26 @@ class Controls extends React.Component<ControlsProps, {}> {
       <div>
         <NRKeyHandler
           keyValue={'ArrowRight'}
-          onKeyHandle={()=>{store.setPage(store.pageno+1); store.hide_spotlight(); store.spotlight_index = 0; store.draw_spotlight_demo(store.spotlight_index); }}
+          onKeyHandle={()=>{store.setPage(store.pageno+1); store.hide_spotlight(); store.draw_spotlight_demo(store.spotlight_index); }}
         />
         <NRKeyHandler
           keyValue={'ArrowLeft'}
-          onKeyHandle={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); store.spotlight_index = 0; store.draw_spotlight_demo(store.spotlight_index); }}
+          onKeyHandle={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); store.draw_spotlight_demo(store.spotlight_index); }}
         />
         {/* TODO */}
         <NRKeyHandler
           keyValue={' '}
           onKeyHandle={(e) => {
-            store.nextResponseIndex(); 
-            store.update_spotlight_index(); 
+            store.nextResponseIndex();
+            if (sampleJSON.title !== store.bookid) { return; }
+            if (store.is_spotlight_demo === false || store.pageno > sampleJSON.pages.length) { return; } 
+            if ((store.responseOffset + store.responsesPerPage === store.allowedResponses.length) === false) { return; }
             if (store.should_ignore_spacebar_clicks) {
-              store.actual_ignored_spacebar_presses++;
-              if (store.actual_ignored_spacebar_presses === store.number_ignored_spacebar_presses) {
-                store.should_ignore_spacebar_clicks = false;
-              }
+              store.should_ignore_spacebar_clicks = false;
+              store.draw_spotlight_demo(store.spotlight_index); 
+              return;
             }
+            store.update_spotlight_index(); 
             store.draw_spotlight_demo(store.spotlight_index); 
           }}
         />

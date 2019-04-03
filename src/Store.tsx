@@ -220,12 +220,8 @@ class Store {
   @action.bound public update_spotlight_index() {
     if (sampleJSON.title !== this.bookid) { return; }
     if (this.is_spotlight_demo === false || this.pageno > sampleJSON.pages.length) { return; } 
-    if ((this.responseOffset + this.responsesPerPage === this.allowedResponses.length) === false) {
-      return;
-    }
-    if (this.should_ignore_spacebar_clicks) {
-      return;
-    }
+    if ((this.responseOffset + this.responsesPerPage === this.allowedResponses.length) === false) { return; }
+    if (sampleJSON.pages[this.pageno - 1][this.responseIndex] === undefined) { return; }
     let number_spotlight_descriptions = 0;
     this.spotlight_descriptions.forEach((elem) => {
       if (elem !== "") {
@@ -234,8 +230,6 @@ class Store {
     });
     this.spotlight_index++;
     if (this.spotlight_index >= number_spotlight_descriptions) {
-      this.should_ignore_spacebar_clicks = true;
-      this.actual_ignored_spacebar_presses = 1;
       this.spotlight_index = 0;
     }
   }
@@ -249,10 +243,6 @@ class Store {
   ];
   // index that determines which spotlight description to select from spotlight_descriptions 
   @observable spotlight_index = 0;
-  // how many keyboard spacebar clicks should be ignored when navigating the response buttons 
-  @observable number_ignored_spacebar_presses = 2;
-  // how many keyboard spacebar clicks have actually been ignored when navigating the response buttons
-  @observable actual_ignored_spacebar_presses = 1;
   // spacebar keys should be ignored 
   @observable should_ignore_spacebar_clicks = true;
   // width and height of diameter 
@@ -260,45 +250,19 @@ class Store {
   // whether or not the spotlight demo is in effect 
   @observable is_spotlight_demo = true;
   // css properties of spotlight element
-  @observable spotlight_css: React.CSSProperties = this.set_initial_spotlight_css();
-
-  public set_initial_spotlight_css() {
-    let spotlight_css: React.CSSProperties = {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      position: 'absolute',
-      width: this.spotlight_base + 'px',
-      height: this.spotlight_base + 'px',
-      borderRadius: (this.spotlight_base / 2) + 'px',
-      visibility: 'hidden',
-      textAlign: 'center',
-      color: 'white',
-      boxShadow: '0px 0px 4px 10px rgba(0,0,0,0.5) inset, 0px 0px 0px 1000px rgba(0,0,0,0.5)',
-    };
-    if (this.is_spotlight_demo) {
-      let title: string | undefined = '';
-      let pageno = Number(window.location.pathname.split('/').pop());
-      if (isNaN(pageno)) {
-        pageno = 1;
-        title = window.location.pathname.split('/').pop();
-        if (title !== sampleJSON.title){
-          return spotlight_css;
-        }
-      } else if (window.location.pathname.split('/').length <= 2) {
-        return spotlight_css;
-      } else {
-        let history = window.location.pathname.split('/');
-        title = history[history.length - 2];
-        return spotlight_css;
-      }
-
-      spotlight_css.left = sampleJSON.pages[pageno - 1][0].x + '%';;
-      spotlight_css.top = sampleJSON.pages[pageno - 1][0].y + '%';
-      spotlight_css.visibility = 'visible';
-    } 
-    return spotlight_css;
-  }
+  @observable spotlight_css: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    width: this.spotlight_base + 'px',
+    height: this.spotlight_base + 'px',
+    borderRadius: (this.spotlight_base / 2) + 'px',
+    visibility: 'hidden',
+    textAlign: 'center',
+    color: 'white',
+    boxShadow: '0px 0px 4px 10px rgba(0,0,0,0.5) inset, 0px 0px 0px 1000px rgba(0,0,0,0.5)',
+  };
 
   // draws a spotlight on the image 
   @action.bound public draw_spotlight(e) {
@@ -337,11 +301,16 @@ class Store {
   @action.bound public draw_spotlight_demo(index: number) {
     if (sampleJSON.title !== this.bookid) { return; }
     if (this.is_spotlight_demo === false || this.pageno > sampleJSON.pages.length) { return; } 
-    if ((this.responseOffset + this.responsesPerPage === this.allowedResponses.length) === false) {
+    if ((this.responseOffset + this.responsesPerPage === this.allowedResponses.length) === false) { return; }
+    if (sampleJSON.pages[this.pageno - 1][this.spotlight_index] === undefined) { return; }
+
+    if (this.responseIndex > this.spotlight_index) {
+      this.spotlight_css.visibility = 'hidden';
       return;
     }
-    this.spotlight_css.left = sampleJSON.pages[this.pageno - 1][index].x + '%';
-    this.spotlight_css.top = sampleJSON.pages[this.pageno - 1][index].y + '%';
+
+    this.spotlight_css.left = sampleJSON.pages[this.pageno - 1][this.spotlight_index].x + '%';
+    this.spotlight_css.top = sampleJSON.pages[this.pageno - 1][this.spotlight_index].y + '%';
     this.spotlight_css.visibility = 'visible';
     this.spotlight_descriptions = ["", "", "", ""];
     sampleJSON.pages[this.pageno - 1].forEach((item, ind) => {
