@@ -209,29 +209,23 @@ class Store {
 
   // sets the correct spotlight index
   @action.bound public set_spotlight_index(word: string) {
-    this.spotlight_descriptions.forEach((item, ind) => {
-      if (word === item && word !== "") {
-        this.spotlight_index = ind;
+    for (let i = 0; i < this.spotlight_descriptions.length; i++) {
+      if (word === this.spotlight_descriptions[i] && word !== "") {
+        this.spotlight_index = i;
+        break;
+      } else {
+        this.spotlight_index = -1;
       }
-    });
+    }
   }
 
-  // updates value of spotligth index as necessary 
-  @action.bound public update_spotlight_index() {
-    if (sampleJSON.title !== this.bookid) { return; }
-    if (this.is_spotlight_demo === false || this.pageno > sampleJSON.pages.length) { return; } 
-    if ((this.responseOffset + this.responsesPerPage === this.allowedResponses.length) === false) { return; }
-    if (sampleJSON.pages[this.pageno - 1][this.responseIndex] === undefined) { return; }
-    let number_spotlight_descriptions = 0;
-    this.spotlight_descriptions.forEach((elem) => {
-      if (elem !== "") {
-        number_spotlight_descriptions++;
-      }
+  // updates the spotligth_descriptions array
+  @action.bound public update_spotlight_descriptions() {
+    if (sampleJSON.pages[this.pageno - 1] === undefined) { return; }
+    this.spotlight_descriptions = ["", "", "", ""];
+    sampleJSON.pages[this.pageno - 1].forEach((item, ind) => {
+      this.spotlight_descriptions[ind] = sampleJSON.pages[this.pageno - 1][ind].description;
     });
-    this.spotlight_index++;
-    if (this.spotlight_index >= number_spotlight_descriptions) {
-      this.spotlight_index = 0;
-    }
   }
 
   // description of spotlight 
@@ -243,8 +237,8 @@ class Store {
   ];
   // index that determines which spotlight description to select from spotlight_descriptions 
   @observable spotlight_index = 0;
-  // spacebar keys should be ignored 
-  @observable should_ignore_spacebar_clicks = true;
+  // the spotlight text
+  @observable spotlight_text = '';
   // width and height of diameter 
   @observable spotlight_base: number = 100;
   // whether or not the spotlight demo is in effect 
@@ -302,15 +296,10 @@ class Store {
     if (sampleJSON.title !== this.bookid) { return; }
     if (this.is_spotlight_demo === false || this.pageno > sampleJSON.pages.length) { return; } 
     if ((this.responseOffset + this.responsesPerPage === this.allowedResponses.length) === false) { return; }
-    if (sampleJSON.pages[this.pageno - 1][this.spotlight_index] === undefined) { return; }
-
-    if (this.responseIndex > this.spotlight_index) {
-      this.spotlight_css.visibility = 'hidden';
-      return;
-    }
-
-    this.spotlight_css.left = sampleJSON.pages[this.pageno - 1][this.spotlight_index].x + '%';
-    this.spotlight_css.top = sampleJSON.pages[this.pageno - 1][this.spotlight_index].y + '%';
+    if (sampleJSON.pages[this.pageno - 1][index] === undefined) { this.spotlight_css.visibility = 'hidden'; return; }
+    
+    this.spotlight_css.left = sampleJSON.pages[this.pageno - 1][index].x + '%';
+    this.spotlight_css.top = sampleJSON.pages[this.pageno - 1][index].y + '%';
     this.spotlight_css.visibility = 'visible';
     this.spotlight_descriptions = ["", "", "", ""];
     sampleJSON.pages[this.pageno - 1].forEach((item, ind) => {

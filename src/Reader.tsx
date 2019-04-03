@@ -210,7 +210,7 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
           onClick={(e) => {store.draw_spotlight(e)}}
         >
           <div className="book-page-image" style={imageStyle} ref='myreference'></div>
-          { <div className='spotlight' style={Object.assign({}, store.spotlight_css)}>{store.spotlight_descriptions[store.spotlight_index]}</div> }
+          { <div className='spotlight' style={Object.assign({}, store.spotlight_css)}>{store.spotlight_text}</div> }
         </div>
         { page_number}
         { title }
@@ -232,10 +232,10 @@ class PageNavButtons extends React.Component<PageNavButtonsProps, {}> {
     if (store.pageTurnVisible) {
       return (
         <div>
-          <button className="next-link" onClick={()=>{store.setPage(store.pageno+1); store.hide_spotlight(); store.draw_spotlight_demo(store.spotlight_index); }}>
+          <button className="next-link" onClick={()=>{store.setPage(store.pageno+1); store.hide_spotlight(); }}>
             <img src={NextArrow} alt="next"/>Next
           </button>
-          <button className="back-link" onClick={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); store.draw_spotlight_demo(store.spotlight_index); }}>
+          <button className="back-link" onClick={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); }}>
             <img src={BackArrow} alt="back"/>Back
           </button>
         </div>
@@ -367,7 +367,13 @@ class ResponseButton extends React.Component<ResponseButtonProps, {}> {
     return (
       <button
         className={`${isFocused ? 'selected' : ''}`}
-        onClick={() => {doResponse(word); store.set_spotlight_index(word); store.draw_spotlight_demo(store.spotlight_index);}}
+        onClick={() => {
+          doResponse(word); 
+          store.update_spotlight_descriptions();
+          store.set_spotlight_index(word); 
+          store.spotlight_text = word;
+          store.draw_spotlight_demo(store.spotlight_index);
+        }}
         style={style}
       >
         <figure>
@@ -406,6 +412,9 @@ class Controls extends React.Component<ControlsProps, {}> {
       }
     };
 
+    // update spotlight descriptions before event handlers are registered 
+    store.update_spotlight_descriptions();
+
     return (
       <div>
         <NRKeyHandler
@@ -416,26 +425,25 @@ class Controls extends React.Component<ControlsProps, {}> {
           keyValue={'ArrowLeft'}
           onKeyHandle={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); store.draw_spotlight_demo(store.spotlight_index); }}
         />
-        {/* TODO */}
         <NRKeyHandler
           keyValue={' '}
-          onKeyHandle={(e) => {
+          onKeyHandle={() => {
             store.nextResponseIndex();
-            if (sampleJSON.title !== store.bookid) { return; }
-            if (store.is_spotlight_demo === false || store.pageno > sampleJSON.pages.length) { return; } 
-            if ((store.responseOffset + store.responsesPerPage === store.allowedResponses.length) === false) { return; }
-            if (store.should_ignore_spacebar_clicks) {
-              store.should_ignore_spacebar_clicks = false;
-              store.draw_spotlight_demo(store.spotlight_index); 
-              return;
-            }
-            store.update_spotlight_index(); 
-            store.draw_spotlight_demo(store.spotlight_index); 
+            store.spotlight_text = store.spotlight_descriptions[store.responseIndex];
+            store.draw_spotlight_demo(store.responseIndex); 
           }}
         />
         <NRKeyHandler
           keyValue={'Enter'}
-          onKeyHandle={() => {doResponse();}}
+          onKeyHandle={() => { 
+            doResponse(); 
+            if (store.responseIndex >= 0 && store.responseIndex < store.nresponses) {
+              if (store.responseOffset + store.responsesPerPage === store.allowedResponses.length) {
+                store.set_spotlight_index(store.spotlight_descriptions[store.responseIndex]);
+                store.draw_spotlight_demo(store.spotlight_index);
+              }
+            }
+          }}
         />
         <NRKeyHandler
           keyValue="Escape"
