@@ -276,7 +276,8 @@ class Responses extends React.Component<ResponsesProps, {}> {
       nbstyle[sax] = bstyle[sax];
       const dstyle = { top: box.top, left: box.left, width: box.width, height: box.height }; 
       let responseGroup: JSX.Element[] = [];
-      if (store.responseOffset + store.responsesPerPage === store.allowedResponses.length && sampleJSON.pages[store.pageno - 1] !== undefined) {
+      if (store.responseOffset + store.responsesPerPage === store.allowedResponses.length && 
+        sampleJSON.pages[store.pageno - 1] !== undefined && store.bookid === sampleJSON.title) {
         for (let i = 0; i < store.responsesPerPage; i++) {
           if (sampleJSON.pages[store.pageno - 1][i] !== undefined) {
             responseGroup.push(
