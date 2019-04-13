@@ -292,6 +292,13 @@ class Store {
     // console.log(`{ "x": ` + percentage_x + `, "y": ` + percentage_y + `, "description": "" },`);
   }
 
+  // TODO
+  // given serialized spotlight properties, prints out the 
+  // spotlight to the console
+  public print_spotlight(x, y, description) {
+    // console.log(`{"x}`)
+  }
+
   @action.bound public draw_spotlight_demo(index: number) {
     if (sampleJSON.title !== this.bookid) { return; }
     if (this.is_spotlight_demo === false || this.pageno > sampleJSON.pages.length) { return; } 
