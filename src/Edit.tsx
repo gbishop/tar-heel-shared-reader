@@ -113,7 +113,7 @@ class CommentEditor extends React.Component<CommentEditorProps, {}> {
                             style={(store.editor_images_styles.length === 0) ? {} : Object.assign({}, store.editor_images_styles[pn])} 
                             onMouseEnter={(e) => {store.toggle_blur(e, book.pages.length); store.toggle_spotlight_editor_text(e, book.pages.length)}}
                             onMouseLeave={(e) => {store.toggle_blur(e, book.pages.length); store.toggle_spotlight_editor_text(e, book.pages.length)}}
-                            onClick={() => {store.toggle_spotlight_editor(); store.toggle_page_blur(); }}
+                            onClick={() => {store.toggle_spotlight_editor(THRURL + page.url); store.toggle_page_blur(); }}
                             src={THRURL + page.url} 
                         /> 
                       }
@@ -135,9 +135,11 @@ class CommentEditor extends React.Component<CommentEditorProps, {}> {
         </tbody>
         </table>
 
+        {/* TODO */}
         <div className="spotlight-editor" 
           style={Object.assign({}, store.spotlight_editor_css)}
         >
+          <img src={ store.spotlight_editor_image_source } />
         </div>
 
         <p>

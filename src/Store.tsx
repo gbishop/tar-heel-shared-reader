@@ -372,8 +372,10 @@ class Store {
     visibility: "hidden"
   };
 
-  @action.bound toggle_spotlight_editor() {
+  @observable spotlight_editor_image_source = "";
+  @action.bound toggle_spotlight_editor(source) {
     this.spotlight_editor_css["visibility"] = (this.spotlight_editor_css["visibility"] === "visible") ? "hidden" : "visible";
+    this.spotlight_editor_image_source = source;
   }
 
   @observable spotlight_image_texts : React.CSSProperties [] = [];
