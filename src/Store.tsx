@@ -288,7 +288,6 @@ class Store {
     // let picture_area = image_properties.width * image_properties.height;
     // console.log('spotlight area', spotlight_area, 'picture area', picture_area);
     // console.log((spotlight_area / picture_area * 100) + '%');
-
     // console.log(`{ "x": ` + percentage_x + `, "y": ` + percentage_y + `, "description": "" },`);
   }
 
@@ -317,6 +316,64 @@ class Store {
   // hides the spotlight element
   @action.bound public hide_spotlight() {
     this.spotlight_css.visibility = 'hidden';
+  }
+
+  // blurs the images on the editor page 
+  @observable editor_images : object[] = [];
+  @observable editor_images_styles : React.CSSProperties [] = [];
+  @action.bound public toggle_blur(e, length) {
+    let editor_images_styles: React.CSSProperties [] = Array(length).fill({});
+    let index = e.currentTarget.id.replace("edit-page-image-", "") - 1;
+
+    if (this.editor_images_styles.length === 0) {
+      editor_images_styles.map((item, ind) => {
+        if (ind === index) {
+          editor_images_styles[ind] = {
+            "filter": "blur(2px)",
+            "WebkitFilter": "blur(2px)"
+          };
+        } else {
+          editor_images_styles[ind] = {
+            "filter": "blur(0xp)",
+            "WebkitFilter": "blur(0px)"
+          };
+        }
+      });
+    } else {
+      this.editor_images_styles.map((item, ind) => {
+        if (ind === index) {
+          editor_images_styles[ind] = {
+            "filter": (item["filter"] === "blur(0px)") ? "blur(2px)" : "blur(0px)",
+            "WebkitFilter": (item["WebkitFilter"] === "blur(0px)") ? "blur(2px)" : "blur(0px)"
+          };
+        } else {
+          editor_images_styles[ind] = {
+            "filter": item["filter"],
+            "WebkitFilter": item["WebkitFilter"]
+          };
+        }
+      });
+    }
+
+    this.editor_images_styles = editor_images_styles;
+  }
+
+  // toggles the spotlight editor on the edit page 
+  @observable spotlight_editor_css : React.CSSProperties = {
+    boxShadow: "0px 0px 0px 1px black",
+    width: "80%",
+    height: "80%",
+    position: "fixed",
+    left: "50%",
+    top: "50%",
+    transform: "translate(-50%, -50%)",
+    borderRadius: "5px",
+    backgroundColor: "lightslategray",
+    visibility: "hidden"
+  };
+
+  @action.bound toggle_spotlight_editor() {
+    this.spotlight_editor_css["visibility"] = (this.spotlight_editor_css["visibility"] === "visible") ? "hidden" : "visible";
   }
 
   // log state changes

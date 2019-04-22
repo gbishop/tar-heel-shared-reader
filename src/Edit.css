@@ -21,3 +21,19 @@
 table.editor {
   border-collapse: collapse;
 }
+
+.edit-page-image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-page-image-text {
+  position: absolute;
+  text-align: center;
+  color: white;
+}
+
+.edit-page-image img:hover {
+  cursor: pointer;
+}

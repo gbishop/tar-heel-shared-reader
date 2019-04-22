@@ -70,6 +70,8 @@ class CommentEditor extends React.Component<CommentEditorProps, {}> {
   render() {
     const book = this.props.book;
     const nreadings = this.comments.length;
+    const store = this.props.store;
+    
     return (
       <div>
         <table className="editor">
@@ -90,28 +92,48 @@ class CommentEditor extends React.Component<CommentEditorProps, {}> {
           </thead>
           <tbody>
             {
-            book.pages.map((page, pn) =>
-            this.comments.map((comment, rn) =>
-            <tr key={`${pn}:${rn}`}>
-              {rn===0 && <td rowSpan={nreadings}>{pn+1}</td>}
-              {rn===0 && <td rowSpan={nreadings}>
-                <figure>
-                  <img src={THRURL + page.url} />
-                  <figcaption>{page.text}</figcaption>
-                </figure>
-              </td>}
-              <td>{rn+1}:&nbsp;
-                <SingleCommentEditor
-                  comments={this.comments}
-                  pageno={pn}
-                  reading={rn}
-                />
-              </td>
-            </tr>
-          ))
+              book.pages.map((page, pn) => 
+              this.comments.map((comment, rn) =>
+              <tr key={`${pn}:${rn}`}>
+                {rn===0 && <td rowSpan={nreadings}>{pn+1}</td>}
+                {rn===0 && <td rowSpan={nreadings}>
+                <div className="edit-page-image-container">
+                  <div className="edit-page-image">
+                    <figure>
+                      {
+                        <img 
+                            id={"edit-page-image-" + (pn + 1)} 
+                            key={"edit-page-image-" + (pn + 1)} 
+                            style={(store.editor_images_styles.length === 0) ? {} : Object.assign({}, store.editor_images_styles[pn])} 
+                            onMouseEnter={(e) => store.toggle_blur(e, book.pages.length)}
+                            onMouseLeave={(e) => store.toggle_blur(e, book.pages.length)}
+                            onClick={() => store.toggle_spotlight_editor()}
+                            src={THRURL + page.url} 
+                        /> 
+                      }
+                      <figcaption>{page.text}</figcaption>
+                    </figure>
+                  </div>
+                </div>
+                </td>}
+                <td>{rn+1}:&nbsp;
+                  <SingleCommentEditor
+                    comments={this.comments}
+                    pageno={pn}
+                    reading={rn}
+                  />
+                </td>
+              </tr>
+            ))
           }
         </tbody>
         </table>
+
+        <div className="spotlight-editor" 
+          style={Object.assign({}, store.spotlight_editor_css)}
+        >
+        </div>
+
         <p>
           <label>Set the level:&nbsp;
             <select value={this.level} onChange={(e)=>this.setLevel(e.target.value)}>
@@ -178,3 +200,4 @@ class Edit extends React.Component<{store: Store}, {}> {
 }
 
 export default Edit;
+
