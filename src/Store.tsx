@@ -376,6 +376,43 @@ class Store {
     this.spotlight_editor_css["visibility"] = (this.spotlight_editor_css["visibility"] === "visible") ? "hidden" : "visible";
   }
 
+  @observable spotlight_image_texts : React.CSSProperties [] = [];
+  @action.bound toggle_spotlight_editor_text(e, length) {
+    let temporary : React.CSSProperties [] = Array(length).fill({});
+    let index = e.currentTarget.id.replace("edit-page-image-", "") - 1;
+
+    if (this.spotlight_image_texts.length === 0) {
+      temporary.forEach((item, ind) => {
+        if (ind === index) {
+          temporary[ind] = {
+            visibility: "visible",
+            color: "black"
+          };
+        } else {
+          temporary[ind] = {
+            visibility: "hidden",
+            color: "black"
+          };
+        }
+      });
+    } else {
+      this.spotlight_image_texts.forEach((item, ind) => {
+        if (ind === index) {
+          temporary[ind] = {
+            visibility: (item['visibility'] === "hidden") ? "visible": "hidden",
+            color: "black"
+          };
+        } else {
+          temporary[ind] = {
+            visibility: "hidden",
+            color: "black"
+          };
+        }
+      });
+    }
+    this.spotlight_image_texts = temporary;
+  }
+
   // log state changes
   public log(response?: string) {
     const lr: LogRecord = {

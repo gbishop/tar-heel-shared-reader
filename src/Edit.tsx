@@ -99,14 +99,20 @@ class CommentEditor extends React.Component<CommentEditorProps, {}> {
                 {rn===0 && <td rowSpan={nreadings}>
                 <div className="edit-page-image-container">
                   <div className="edit-page-image">
+                    <div 
+                      className="edit-page-image-text" 
+                      style={(store.spotlight_image_texts.length === 0) ? {visibility: "hidden", color: "black"} : Object.assign({}, store.spotlight_image_texts[pn])}
+                    >
+                      Spotlight Editor
+                    </div>
                     <figure>
                       {
                         <img 
                             id={"edit-page-image-" + (pn + 1)} 
                             key={"edit-page-image-" + (pn + 1)} 
                             style={(store.editor_images_styles.length === 0) ? {} : Object.assign({}, store.editor_images_styles[pn])} 
-                            onMouseEnter={(e) => store.toggle_blur(e, book.pages.length)}
-                            onMouseLeave={(e) => store.toggle_blur(e, book.pages.length)}
+                            onMouseEnter={(e) => {store.toggle_blur(e, book.pages.length); store.toggle_spotlight_editor_text(e, book.pages.length)}}
+                            onMouseLeave={(e) => {store.toggle_blur(e, book.pages.length); store.toggle_spotlight_editor_text(e, book.pages.length)}}
                             onClick={() => store.toggle_spotlight_editor()}
                             src={THRURL + page.url} 
                         /> 
