@@ -74,7 +74,7 @@ class CommentEditor extends React.Component<CommentEditorProps, {}> {
     
     return (
       <div>
-        <table className="editor">
+        <table className="editor" style={Object.assign({}, store.table_css)}>
           <caption>
           Enter comments for each page. 
           The TAB key will move your cursor to the next page. You may add 
@@ -103,7 +103,7 @@ class CommentEditor extends React.Component<CommentEditorProps, {}> {
                       className="edit-page-image-text" 
                       style={(store.spotlight_image_texts.length === 0) ? {visibility: "hidden", color: "black"} : Object.assign({}, store.spotlight_image_texts[pn])}
                     >
-                      Spotlight Editor
+                      Open Spotlight Editor
                     </div>
                     <figure>
                       {
@@ -113,7 +113,7 @@ class CommentEditor extends React.Component<CommentEditorProps, {}> {
                             style={(store.editor_images_styles.length === 0) ? {} : Object.assign({}, store.editor_images_styles[pn])} 
                             onMouseEnter={(e) => {store.toggle_blur(e, book.pages.length); store.toggle_spotlight_editor_text(e, book.pages.length)}}
                             onMouseLeave={(e) => {store.toggle_blur(e, book.pages.length); store.toggle_spotlight_editor_text(e, book.pages.length)}}
-                            onClick={() => store.toggle_spotlight_editor()}
+                            onClick={() => {store.toggle_spotlight_editor(); store.toggle_page_blur(); }}
                             src={THRURL + page.url} 
                         /> 
                       }

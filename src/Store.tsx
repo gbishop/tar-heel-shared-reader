@@ -368,7 +368,7 @@ class Store {
     top: "50%",
     transform: "translate(-50%, -50%)",
     borderRadius: "5px",
-    backgroundColor: "lightslategray",
+    backgroundColor: "white",
     visibility: "hidden"
   };
 
@@ -411,6 +411,14 @@ class Store {
       });
     }
     this.spotlight_image_texts = temporary;
+  }
+
+  // blurs the edit page when the spotlight editor is active
+  @observable table_css : React.CSSProperties = {};
+  @action.bound toggle_page_blur() {
+    let temporary = Object.assign({}, this.table_css);
+    temporary['filter'] = (temporary['filter'] === "blur(5px)") ? "blur(0px)": "blur(5px)";
+    this.table_css = temporary;
   }
 
   // log state changes
