@@ -9,10 +9,10 @@ import './index.css';
 // https://github.com/flatiron/director/issues/349 explains
 // why I need the strange path.
 import { Router } from 'director/build/director';
-import { autorun, configure } from 'mobx';
-configure({
-  enforceActions: true
-});
+import { autorun } from 'mobx';
+// configure({
+//   enforceActions: true
+// });
 
 // unregister the service worker if we installed it.
 navigator.serviceWorker.getRegistrations().then(registrations => 
@@ -39,7 +39,6 @@ function startRouter(store: Store) {
   router.init();
 
   // update url on state changes
-  // TODO
   autorun(() => {
     const path = baseUrl + store.currentPath;
     if (path !== window.location.pathname) {

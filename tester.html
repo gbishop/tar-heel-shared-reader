@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src='bower_components/jquery/dist/jquery.min.js'></script>
+    <script src='bower_components/tracking/build/tracking-min.js'></script>
+</head>
+
+<body>
+    <div id='demo-container'>
+        <img id='demo-image' src='./public/img/balloons.jpg'>
+    </div>
+
+    <script>
+        $(document).ready(() => {
+            tracking.ColorTracker.registerColor('green', function(r, g, b) {
+                if (r < 200 && g > 125 && b < 175) {
+                    return true;
+                }
+                return false;
+            });
+
+            var colors = new tracking.ColorTracker(['green']);
+
+
+            colors.on('track', (event) => {
+                if (event.data.length === 0) {
+                    
+                } else {
+                    event.data.forEach((rect) => {
+                        var box = $(`<div id='demo-box' style='position: absolute;'></div>`);
+                        $(box).css({
+                            border: '2px solid black',
+                            width: rect.width + 'px',
+                            height: rect.height + 'px',
+                            left: ($('#demo-image').offset().left + rect.x) + 'px',
+                            top: ($('#demo-image').offset().top + rect.y) + 'px'
+                        });
+                        $('#demo-container').append(box);
+                    });
+                }
+            });
+
+            tracking.track('#demo-image', colors);
+        }); 
+    </script>
+</body>
+
+</html>

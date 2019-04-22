@@ -70,9 +70,11 @@ class CommentEditor extends React.Component<CommentEditorProps, {}> {
   render() {
     const book = this.props.book;
     const nreadings = this.comments.length;
+    const store = this.props.store;
+    
     return (
       <div>
-        <table className="editor">
+        <table className="editor" style={Object.assign({}, store.table_css)}>
           <caption>
           Enter comments for each page. 
           The TAB key will move your cursor to the next page. You may add 
@@ -90,28 +92,56 @@ class CommentEditor extends React.Component<CommentEditorProps, {}> {
           </thead>
           <tbody>
             {
-            book.pages.map((page, pn) =>
-            this.comments.map((comment, rn) =>
-            <tr key={`${pn}:${rn}`}>
-              {rn===0 && <td rowSpan={nreadings}>{pn+1}</td>}
-              {rn===0 && <td rowSpan={nreadings}>
-                <figure>
-                  <img src={THRURL + page.url} />
-                  <figcaption>{page.text}</figcaption>
-                </figure>
-              </td>}
-              <td>{rn+1}:&nbsp;
-                <SingleCommentEditor
-                  comments={this.comments}
-                  pageno={pn}
-                  reading={rn}
-                />
-              </td>
-            </tr>
-          ))
+              book.pages.map((page, pn) => 
+              this.comments.map((comment, rn) =>
+              <tr key={`${pn}:${rn}`}>
+                {rn===0 && <td rowSpan={nreadings}>{pn+1}</td>}
+                {rn===0 && <td rowSpan={nreadings}>
+                <div className="edit-page-image-container">
+                  <div className="edit-page-image">
+                    <div 
+                      className="edit-page-image-text" 
+                      style={(store.spotlight_image_texts.length === 0) ? {visibility: "hidden", color: "black"} : Object.assign({}, store.spotlight_image_texts[pn])}
+                    >
+                      Open Spotlight Editor
+                    </div>
+                    <figure>
+                      {
+                        <img 
+                            id={"edit-page-image-" + (pn + 1)} 
+                            key={"edit-page-image-" + (pn + 1)} 
+                            style={(store.editor_images_styles.length === 0) ? {} : Object.assign({}, store.editor_images_styles[pn])} 
+                            onMouseEnter={(e) => {store.toggle_blur(e, book.pages.length); store.toggle_spotlight_editor_text(e, book.pages.length)}}
+                            onMouseLeave={(e) => {store.toggle_blur(e, book.pages.length); store.toggle_spotlight_editor_text(e, book.pages.length)}}
+                            onClick={() => {store.toggle_spotlight_editor(THRURL + page.url); store.toggle_page_blur(); }}
+                            src={THRURL + page.url} 
+                        /> 
+                      }
+                      <figcaption>{page.text}</figcaption>
+                    </figure>
+                  </div>
+                </div>
+                </td>}
+                <td>{rn+1}:&nbsp;
+                  <SingleCommentEditor
+                    comments={this.comments}
+                    pageno={pn}
+                    reading={rn}
+                  />
+                </td>
+              </tr>
+            ))
           }
         </tbody>
         </table>
+
+        {/* TODO */}
+        <div className="spotlight-editor" 
+          style={Object.assign({}, store.spotlight_editor_css)}
+        >
+          <img src={ store.spotlight_editor_image_source } />
+        </div>
+
         <p>
           <label>Set the level:&nbsp;
             <select value={this.level} onChange={(e)=>this.setLevel(e.target.value)}>
@@ -178,3 +208,4 @@ class Edit extends React.Component<{store: Store}, {}> {
 }
 
 export default Edit;
+

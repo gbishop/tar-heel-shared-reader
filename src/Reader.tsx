@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import KeyHandler from 'react-key-handler';
-import * as ReactModal from 'react-modal';
+import ReactModal from 'react-modal';
 import NextArrow from './NextArrow.png';
 import BackArrow from './BackArrow.png';
 import NextResponsePage from './NextResponsePage.png';
@@ -9,6 +9,7 @@ import BackResponsePage from './BackResponsePage.png';
 import Store, { allResponses } from './Store';
 import { SharedBook } from './db';
 import { WaitToRender } from './helpers';
+let sampleJSON = require('./things-in-a-classroom.json');
 
 import './Reader.css';
 
@@ -58,7 +59,11 @@ class Reader extends React.Component<{store: Store}, {}> {
 
         function saySelectedWord() {
           if (store.responseIndex >= 0 && store.responseIndex < store.nresponses) {
-            sayWord(store.word);
+            if (store.responseOffset + store.responsesPerPage === store.allowedResponses.length) {
+              sayWord(store.spotlight_descriptions[store.responseIndex]);
+            } else {
+              sayWord(store.word);
+            }
           }
         }
 
@@ -127,13 +132,12 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
       width, height, top, left, fontSize
     };
     if (pageno > book.pages.length) {
-
       return (
         <div className="book-page" style={pageStyle}>
           <h1 className="title">What would you like to do now?</h1>
           <div className="choices">
             <button 
-              onClick={() => { store.setPage(1); }}
+              onClick={() => { store.setBookid(this.props.store.bookid); }}
             >
               Read this book again
             </button>
@@ -156,17 +160,29 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
     const maxPicWidth = width;
     const verticalScale = maxPicHeight / page.height;
     const horizontalScale = maxPicWidth / page.width;
-    let picStyle = {};
+
+    let imageStyle: React.CSSProperties = {
+      content: `url(https://tarheelreader.org` + book.pages[pageno - 1].url + `)`,
+      position: 'relative'
+    };
+    let spotlight_style: React.CSSProperties = {
+      display: 'inline-block',
+      position: 'relative',
+      overflow: 'hidden',
+      margin: 'auto 0',
+      padding: '0'
+    };
     if (verticalScale < horizontalScale) {
-      picStyle = {
-        height: maxPicHeight
-      };
+      imageStyle['height'] = maxPicHeight;
     } else {
-      picStyle = {
-        width: maxPicWidth,
-        marginTop: pageno === 1 ? 0 : (maxPicHeight - horizontalScale * page.height)
-      };
+      imageStyle['width'] = maxPicWidth;
+      imageStyle['marginTop'] = pageno === 1 ? 0 : (maxPicHeight - horizontalScale * page.height);
     }
+    imageStyle['pointerEvents'] = 'none';
+
+    let title: JSX.Element | null = null;
+    let page_number: JSX.Element | null = null;
+    let caption_box: JSX.Element | null = null;
 
     if (pageno === 1) {
       const titleStyle = {
@@ -176,35 +192,32 @@ class ReaderContent extends React.Component<ReaderContentProps, {}> {
         margin: 0,
         display: 'block'
       };
-      return (
-        <div className="book-page" style={pageStyle}>
-          <h1 className="title" style={titleStyle}>{book.title}</h1>
-          <img 
-            src={'https://tarheelreader.org' + book.pages[0].url} 
-            className="pic" 
-            style={picStyle}
-            alt=""
-          />
-          <PageNavButtons store={store}/>
-        </div>
-      );
+      title = <h1 className="title noselect" style={titleStyle}>{book.title}</h1>;
     } else {
-      return (
-        <div className="book-page" style={pageStyle}>
-          <p className="page-number">{pageno}</p>
-          <img
-            src={'https://tarheelreader.org' + page.url}
-            className="pic"
-            style={picStyle}
-            alt=""
-          />
-          <div className="caption-box">
-            <p className="caption">{page.text}</p>
-          </div>
-          <PageNavButtons store={store}/>
+      page_number = <p className="page-number">{pageno}</p>;
+      caption_box =           
+        <div className="caption-box">
+          <p className="caption">{page.text}</p>
         </div>
-      );
+      ;
     }
+    
+    return (
+      <div className="book-page" style={pageStyle}>
+        <div 
+          className="book-page-spotlight" 
+          style={spotlight_style}
+          onClick={(e) => {store.draw_spotlight(e)}}
+        >
+          <div className="book-page-image" style={imageStyle} ref='myreference'></div>
+          { <div className='spotlight' style={Object.assign({}, store.spotlight_css)}>{store.spotlight_text}</div> }
+        </div>
+        { page_number}
+        { title }
+        { caption_box}
+        <PageNavButtons store={store}/>
+      </div>
+    );
   }}
 
 
@@ -219,10 +232,10 @@ class PageNavButtons extends React.Component<PageNavButtonsProps, {}> {
     if (store.pageTurnVisible) {
       return (
         <div>
-          <button className="next-link" onClick={()=>store.setPage(store.pageno+1)}>
+          <button className="next-link" onClick={()=>{store.setPage(store.pageno+1); store.hide_spotlight(); }}>
             <img src={NextArrow} alt="next"/>Next
           </button>
-          <button className="back-link" onClick={()=>store.setPage(store.pageno-1)}>
+          <button className="back-link" onClick={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); }}>
             <img src={BackArrow} alt="back"/>Back
           </button>
         </div>
@@ -261,17 +274,52 @@ class Responses extends React.Component<ResponsesProps, {}> {
       const nbstyle = {};
       nbstyle[pax] = bstyle[pax] / 2;
       nbstyle[sax] = bstyle[sax];
-      const dstyle = { top: box.top, left: box.left, width: box.width, height: box.height };
-      const responseGroup = chunk.map((w, j) => (
-        <ResponseButton
-          key={w}
-          word={w}
-          index={index++}
-          style={bstyle}
-          store={store}
-          doResponse={doResponse}
-        />
-      ));
+      const dstyle = { top: box.top, left: box.left, width: box.width, height: box.height }; 
+      let responseGroup: JSX.Element[] = [];
+      if (store.responseOffset + store.responsesPerPage === store.allowedResponses.length && 
+        sampleJSON.pages[store.pageno - 1] !== undefined && store.bookid === sampleJSON.title) {
+        for (let i = 0; i < store.responsesPerPage; i++) {
+          if (sampleJSON.pages[store.pageno - 1][i] !== undefined) {
+            responseGroup.push(
+              <ResponseButton
+                key={sampleJSON.pages[store.pageno - 1][i].description}
+                word={sampleJSON.pages[store.pageno - 1][i].description}
+                index={index++}
+                style={bstyle}
+                store={store}
+                doResponse={doResponse}
+              />
+            );
+          } 
+        }
+        if (responseGroup.length < store.responsesPerPage) {
+          let difference = store.responsesPerPage - responseGroup.length;
+          for (let i = 0; i < difference; i++) {
+            responseGroup.push(
+              <ResponseButton
+                key={`empty${i}`}
+                word={' '}
+                index={index++}
+                style={bstyle}
+                store={store}
+                doResponse={doResponse}
+              />
+            );
+          }
+        }
+      } else {
+        responseGroup = chunk.map((w, j) => (
+          <ResponseButton
+            key={w}
+            word={w}
+            index={index++}
+            style={bstyle}
+            store={store}
+            doResponse={doResponse}
+          />
+        ));
+      }
+
       return (
         <div key={i} style={dstyle} className="response-container">
           <button
@@ -320,7 +368,13 @@ class ResponseButton extends React.Component<ResponseButtonProps, {}> {
     return (
       <button
         className={`${isFocused ? 'selected' : ''}`}
-        onClick={() => doResponse(word)}
+        onClick={() => {
+          doResponse(word); 
+          store.update_spotlight_descriptions();
+          store.set_spotlight_index(word); 
+          store.spotlight_text = word;
+          store.draw_spotlight_demo(store.spotlight_index);
+        }}
         style={style}
       >
         <figure>
@@ -359,23 +413,38 @@ class Controls extends React.Component<ControlsProps, {}> {
       }
     };
 
+    // update spotlight descriptions before event handlers are registered 
+    store.update_spotlight_descriptions();
+
     return (
       <div>
         <NRKeyHandler
           keyValue={'ArrowRight'}
-          onKeyHandle={()=>store.setPage(store.pageno+1)}
+          onKeyHandle={()=>{store.setPage(store.pageno+1); store.hide_spotlight(); store.draw_spotlight_demo(store.spotlight_index); }}
         />
         <NRKeyHandler
           keyValue={'ArrowLeft'}
-          onKeyHandle={()=>store.setPage(store.pageno-1)}
+          onKeyHandle={()=>{store.setPage(store.pageno-1); store.hide_spotlight(); store.draw_spotlight_demo(store.spotlight_index); }}
         />
         <NRKeyHandler
           keyValue={' '}
-          onKeyHandle={store.nextResponseIndex}
+          onKeyHandle={() => {
+            store.nextResponseIndex();
+            store.spotlight_text = store.spotlight_descriptions[store.responseIndex];
+            store.draw_spotlight_demo(store.responseIndex); 
+          }}
         />
         <NRKeyHandler
           keyValue={'Enter'}
-          onKeyHandle={doResponse}
+          onKeyHandle={() => { 
+            doResponse(); 
+            if (store.responseIndex >= 0 && store.responseIndex < store.nresponses) {
+              if (store.responseOffset + store.responsesPerPage === store.allowedResponses.length) {
+                store.set_spotlight_index(store.spotlight_descriptions[store.responseIndex]);
+                store.draw_spotlight_demo(store.spotlight_index);
+              }
+            }
+          }}
         />
         <NRKeyHandler
           keyValue="Escape"

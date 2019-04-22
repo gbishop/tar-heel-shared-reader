@@ -1,0 +1,19 @@
+{
+  "name": "tar-heel-shared-reader",
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "homepage": "https://github.com/naeimzarei/tar-heel-shared-reader",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^3.3.1",
+    "tracking": "^1.1.3"
+  }
+}
